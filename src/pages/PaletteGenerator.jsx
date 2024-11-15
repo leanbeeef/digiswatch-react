@@ -20,7 +20,6 @@ import { getColorInfo } from '../utils/ColorConversions';
 import namer from 'color-namer';
 import tinycolor from 'tinycolor2';
 import { TinyColor } from '@ctrl/tinycolor';
-import { ColorContext } from '../ColorContext'; // Import your ColorContext
 
 const ItemType = 'CARD';
 
@@ -100,7 +99,6 @@ const DraggableCard = ({ color, colorName, textColor, index, moveCard, onClick, 
 
 const PaletteGenerator = () => {
     const [currentPalette, setCurrentPalette] = useState([]);
-    const { handleColorChange } = useContext(ColorContext); // Access handleColorChange
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedColor, setSelectedColor] = useState(null);
     const [colorInfo, setColorInfo] = useState({});
@@ -108,16 +106,10 @@ const PaletteGenerator = () => {
     const [showCopyOptions, setShowCopyOptions] = useState(false);
     const [selectedColorInfo, setSelectedColorInfo] = useState(null);
     const [showSidebar, setShowSidebar] = useState(false);
-    // const [baseColor, setBaseColor] = useState('#7E7E7E');
     
 
     useEffect(() => {
-        const initialPalette = generateRandomPalette();
-        setCurrentPalette(initialPalette.map((color) => {
-            const nameResult = namer(color).ntc[0];
-            const textColor = getTextColor(color);
-            return { hex: color, name: nameResult.name, textColor };
-        }));
+        handleGenerate(); // Generate the initial palette
     }, []);
 
     const moveCard = (fromIndex, toIndex) => {
@@ -176,11 +168,13 @@ const PaletteGenerator = () => {
 
     const handleGenerate = () => {
         const newPalette = generateRandomPalette();
-        setCurrentPalette(newPalette.map((color) => {
-            const nameResult = namer(color).ntc[0];
-            const textColor = getTextColor(color);
-            return { hex: color, name: nameResult.name, textColor };
-        }));
+        setCurrentPalette(
+            newPalette.map((color) => ({
+                hex: color,
+                name: namer(color).ntc[0].name,
+                textColor: getTextColor(color),
+            }))
+        );
     };
 
     return (
@@ -190,8 +184,6 @@ const PaletteGenerator = () => {
                     show={showSidebar}
                     onClose={() => setShowSidebar(false)}
                     onGenerate={handleGenerate}
-                    onColorChange={handleColorChange} // Passing handleColorChange to Sidebar
-                    onBlindnessSimulate={() => { }}
                 />
                 <Row className="flex-grow-1 justify-content-center m-0" style={{ display: 'flex' }}>
                     {currentPalette.map((colorObj, index) => (

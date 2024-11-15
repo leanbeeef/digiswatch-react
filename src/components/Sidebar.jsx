@@ -43,7 +43,18 @@ const Sidebar = ({ show, onClose, onGenerate, onColorChange, onHarmonyChange, on
         </Nav>
 
         {/* Generate Button */}
-        <Button variant="primary" className="w-100 mb-3" onClick={onGenerate}>
+        <Button
+          variant="primary"
+          className="w-100 mb-3"
+          onClick={() => {
+            console.log('Generate button clicked');
+            if (onGenerate) {
+              onGenerate(); // Call the function passed from parent
+            } else {
+              console.warn('onGenerate is not defined'); // Log a warning if it's missing
+            }
+          }}
+        >
           Generate
         </Button>
 

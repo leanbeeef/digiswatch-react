@@ -3,10 +3,15 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Header from './components/Header';
+import { AuthProvider } from './AuthContext'; // Adjust the path to where your AuthContext is located
 import Sidebar from './components/Sidebar';
 import Footer from './components/Footer';
 import PaletteGenerator from './pages/PaletteGenerator';
+import PopularPalettes from './pages/PopularPalettes';
 import ColorProvider from './ColorContext';
+import SignUp from "./pages/SignUp";
+import Login from "./pages/Login";
+import Profile from "./pages/Profile"
 import './index.css';
 
 function App() {
@@ -17,6 +22,7 @@ function App() {
 
   return (
     <ColorProvider> {/* Wrap the entire app in ColorProvider */}
+    <AuthProvider>
       <Router>
         <div className="full-page">
           <Header onOpenSidebar={openSidebar} />
@@ -25,12 +31,17 @@ function App() {
             <Routes>
               <Route path="/" element={<Navigate to="/palette-generator" replace />} />
               <Route path="/palette-generator" element={<PaletteGenerator />} />
+              <Route path="/popular-palettes" element={<PopularPalettes />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/profile" element={<Profile />} />
               {/* Add other routes as needed */}
             </Routes>
           </main>
           <ConditionalFooter />
         </div>
       </Router>
+      </AuthProvider>
     </ColorProvider>
   );
 }
@@ -40,7 +51,7 @@ const ConditionalFooter = () => {
   const location = useLocation();
 
   // List of routes where you want the footer to be displayed
-  const footerRoutes = ['/another-route', '/another-route'];
+  const footerRoutes = ['/pop', '/another-route'];
 
   return footerRoutes.includes(location.pathname) ? <Footer /> : null;
 };

@@ -13,6 +13,13 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Disable text selection globally */
+* {
+  user-select: none; /* Prevent text selection */
+  -webkit-user-select: none; /* For Safari */
+  -ms-user-select: none; /* For older IE versions */
+}
+
 a {
   font-weight: 500;
   color: #646cff;

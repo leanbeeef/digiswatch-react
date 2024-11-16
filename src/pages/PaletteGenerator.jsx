@@ -106,11 +106,24 @@ const PaletteGenerator = () => {
     const [showCopyOptions, setShowCopyOptions] = useState(false);
     const [selectedColorInfo, setSelectedColorInfo] = useState(null);
     const [showSidebar, setShowSidebar] = useState(false);
-    
+
 
     useEffect(() => {
         handleGenerate(); // Generate the initial palette
     }, []);
+
+    // Generate a random palette
+    const handleGenerate = () => {
+        console.log('Generating a new palette...');
+        const newPalette = generateRandomPalette();
+        setCurrentPalette(
+            newPalette.map((color) => ({
+                hex: color,
+                name: namer(color).ntc[0].name,
+                textColor: getTextColor(color),
+            }))
+        );
+    };
 
     const moveCard = (fromIndex, toIndex) => {
         setCurrentPalette((prevPalette) => {
@@ -166,24 +179,17 @@ const PaletteGenerator = () => {
         setShowCopyOptions(false);
     };
 
-    const handleGenerate = () => {
-        const newPalette = generateRandomPalette();
-        setCurrentPalette(
-            newPalette.map((color) => ({
-                hex: color,
-                name: namer(color).ntc[0].name,
-                textColor: getTextColor(color),
-            }))
-        );
-    };
-
     return (
         <DndProvider backend={HTML5Backend}>
             <Container fluid className="p-0 d-flex flex-column" style={{ height: '100%' }}>
+
                 <Sidebar
                     show={showSidebar}
                     onClose={() => setShowSidebar(false)}
-                    onGenerate={handleGenerate}
+                    onGenerate={() => {
+                        console.log('Inline handleGenerate called from Sidebar');
+                        handleGenerate(); // Ensure this function is invoked
+                    }}
                 />
                 <Row className="flex-grow-1 justify-content-center m-0" style={{ display: 'flex' }}>
                     {currentPalette.map((colorObj, index) => (

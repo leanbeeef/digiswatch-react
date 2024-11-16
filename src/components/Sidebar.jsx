@@ -1,67 +1,64 @@
 // src/components/Sidebar.jsx
 
-import React, { useState, useContext } from 'react';
-import { Offcanvas, Button, Nav, Form, InputGroup, Dropdown, DropdownButton } from 'react-bootstrap';
-import { ColorContext } from '../ColorContext'; // Import your context
+import React, { useContext } from 'react';
+import { Offcanvas, Button, Nav } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../AuthContext'; // Import the authentication context
 
-const Sidebar = ({ show, onClose, onGenerate, onColorChange, onHarmonyChange, onBlindnessSimulate }) => {
-  const [baseColor] = useState('#7E7E7E');
-  const [selectedHarmony, setSelectedHarmony] = useState('monochromatic');
-  const [harmonyDescription, setHarmonyDescription] = useState('Select a harmony type to see its description.');
-  const [colorBlindnessType, setColorBlindnessType] = useState('None');
-  const { handleColorChange } = useContext(ColorContext); // Use context to get color change handler
+const Sidebar = ({ show, onClose }) => {
+  const { currentUser, logout } = useContext(AuthContext); // Access user state and logout function
+  const navigate = useNavigate();
 
-  // Harmony descriptions for display
-  const harmonyDescriptions = {
-    analogous: "Analogous colors are next to each other on the color wheel.",
-    monochromatic: "Monochromatic colors are different shades of the same hue.",
-    complementary: "Complementary colors are opposite each other on the color wheel.",
-    splitComplementary: "Split complementary uses a base color and two adjacent colors of its complement.",
-    triadic: "Triadic colors are evenly spaced around the color wheel.",
-    tetradic: "Tetradic colors form a rectangle on the color wheel.",
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/'); // Redirect to home after logout
+    } catch (err) {
+      console.error('Error during logout:', err);
+    }
   };
 
-  const handleHarmonySelect = (harmony) => {
-    setSelectedHarmony(harmony);
-    setHarmonyDescription(harmonyDescriptions[harmony] || 'Select a harmony type to see its description.');
-    onHarmonyChange(harmony); // Call the onHarmonyChange prop when harmony changes
-  };
+  // Navigate to login, signup, or profile pages
+  const handleLogin = () => navigate('/login');
+  const handleSignUp = () => navigate('/signup');
+  const handleProfile = () => navigate('/profile');
 
   return (
     <Offcanvas show={show} onHide={onClose} placement="end">
       <Offcanvas.Header closeButton>
         <Offcanvas.Title>Gadgets</Offcanvas.Title>
       </Offcanvas.Header>
-      <Offcanvas.Body>
-        {/* Navigation Links */}
-        <Nav className="flex-column mb-4">
-          <Nav.Link href="/palette-generator">Palette Generator</Nav.Link>
-          <Nav.Link href="/popular-palettes">Popular Palettes</Nav.Link>
-          <Nav.Link href="/contrast-checker">Contrast Checker</Nav.Link>
-          <Nav.Link href="/image-extractor">Image Color Extractor</Nav.Link>
-          <Nav.Link href="/text-extractor">Image Text Extractor</Nav.Link>
-        </Nav>
+      <Offcanvas.Body className="d-flex flex-column justify-content-between">
+        <div>
+          {/* Navigation Links */}
+          <Nav className="flex-column mb-4">
+            <Nav.Link href="/palette-generator">Palette Generator</Nav.Link>
+            <Nav.Link href="/popular-palettes">Popular Palettes</Nav.Link>
+          </Nav>
+        </div>
 
-        {/* Generate Button */}
-        <Button
-          variant="primary"
-          className="w-100 mb-3"
-          onClick={() => {
-            console.log('Generate button clicked');
-            if (onGenerate) {
-              onGenerate(); // Call the function passed from parent
-            } else {
-              console.warn('onGenerate is not defined'); // Log a warning if it's missing
-            }
-          }}
-        >
-          Generate
-        </Button>
-
-        {/* Login Button */}
-        <Button variant="primary" className="mt-4 w-100">
-          Login
-        </Button>
+        {/* Auth Buttons */}
+        <div className="mt-auto">
+          {!currentUser ? (
+            <>
+              <Button variant="outline-primary" className="w-100 mb-2" onClick={handleLogin}>
+                Login
+              </Button>
+              <Button variant="primary" className="w-100" onClick={handleSignUp}>
+                Sign Up
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="info" className="w-100 mb-2" onClick={handleProfile}>
+                Profile
+              </Button>
+              <Button variant="danger" className="w-100" onClick={handleLogout}>
+                Logout
+              </Button>
+            </>
+          )}
+        </div>
       </Offcanvas.Body>
     </Offcanvas>
   );

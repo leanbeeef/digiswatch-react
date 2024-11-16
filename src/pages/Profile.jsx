@@ -1,275 +1,232 @@
+// src/pages/Profile.jsx
+
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Form, Modal } from 'react-bootstrap';
-import { FaEdit, FaSave, FaShareAlt, FaTrash, FaCamera } from 'react-icons/fa';
+import { Container, Row, Col, Card, Button, Modal, Form } from 'react-bootstrap';
 import { useAuth } from '../AuthContext';
-import { db, storage } from "../firebase"; // Firestore and Storage
-import {
-  doc,
-  collection,
-  getDoc,
-  getDocs,
-  updateDoc,
-  setDoc,
-  deleteDoc,
-} from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db, storage } from '../firebase';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import SharePalette from '../components/SharePalette';
 
 const Profile = () => {
-  const { currentUser, logout } = useAuth();
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [profilePicture, setProfilePicture] = useState(null);
-  const [previewImage, setPreviewImage] = useState(null);
+  const { currentUser } = useAuth();
+  const [profileData, setProfileData] = useState({});
   const [savedPalettes, setSavedPalettes] = useState([]);
   const [createdPalettes, setCreatedPalettes] = useState([]);
-  const [selectedPalette, setSelectedPalette] = useState(null);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [newUsername, setNewUsername] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [profilePicture, setProfilePicture] = useState(null);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [selectedPalette, setSelectedPalette] = useState(null);
 
   useEffect(() => {
     if (currentUser) {
       fetchProfile();
-      fetchSavedPalettes();
-      fetchCreatedPalettes();
+      fetchPalettes();
     }
   }, [currentUser]);
 
   const fetchProfile = async () => {
     try {
-      const profileDoc = doc(db, "users", currentUser.uid);
-      const profileData = (await getDoc(profileDoc)).data();
-      setUsername(profileData?.username || '');
-      setEmail(currentUser.email);
-      setProfilePicture(profileData?.profilePicture || null);
+      const profileDoc = doc(db, 'users', currentUser.uid);
+      const docSnap = await getDoc(profileDoc);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setProfileData(data);
+        setNewUsername(data.username || '');
+        setNewEmail(currentUser.email || '');
+      }
     } catch (error) {
-      console.error("Error fetching profile: ", error);
+      console.error('Error fetching profile: ', error);
     }
   };
 
-  const fetchSavedPalettes = async () => {
+  const fetchPalettes = async () => {
     try {
-      const palettesCollection = collection(db, "users", currentUser.uid, "palettes");
-      const querySnapshot = await getDocs(palettesCollection);
-      const palettes = [];
-      querySnapshot.forEach((doc) => {
-        palettes.push({ id: doc.id, ...doc.data() });
-      });
-      setSavedPalettes(palettes);
+      // Fetch saved palettes
+      const savedPalettesDoc = doc(db, 'users', currentUser.uid);
+      const savedSnap = await getDoc(savedPalettesDoc);
+
+      if (savedSnap.exists()) {
+        setSavedPalettes(savedSnap.data().palettes || []);
+      }
+
+      // Fetch created palettes (example: replace with actual implementation)
+      setCreatedPalettes([
+        { name: 'My Custom Palette', colors: ['#123456', '#654321', '#abcdef', '#ff0000'] },
+      ]);
     } catch (error) {
-      console.error("Error fetching saved palettes: ", error);
-    }
-  };
-
-  const fetchCreatedPalettes = async () => {
-    try {
-      const createdCollection = collection(db, "users", currentUser.uid, "createdPalettes");
-      const querySnapshot = await getDocs(createdCollection);
-      const palettes = [];
-      querySnapshot.forEach((doc) => {
-        palettes.push({ id: doc.id, ...doc.data() });
-      });
-      setCreatedPalettes(palettes);
-    } catch (error) {
-      console.error("Error fetching created palettes: ", error);
-    }
-  };
-
-  const handleProfilePictureUpload = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setPreviewImage(URL.createObjectURL(file));
-      const storageRef = ref(storage, `profiles/${currentUser.uid}`);
-      await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(storageRef);
-      setProfilePicture(downloadURL);
-
-      // Update Firestore with the profile picture URL
-      const profileDoc = doc(db, "users", currentUser.uid);
-      await updateDoc(profileDoc, { profilePicture: downloadURL });
+      console.error('Error fetching palettes: ', error);
     }
   };
 
   const handleUpdateProfile = async () => {
-    if (!currentUser) {
-        alert("No user is logged in.");
-        return;
-    }
-    
     try {
-        const profileDoc = doc(db, "users", currentUser.uid);
-        await updateDoc(profileDoc, { username }); // Add other fields if necessary
-        alert("Profile updated successfully!");
+      const profileDoc = doc(db, 'users', currentUser.uid);
+      await updateDoc(profileDoc, {
+        username: newUsername,
+        email: newEmail,
+      });
+      alert('Profile updated successfully!');
+      setEditingProfile(false);
     } catch (error) {
-        if (error.code === "permission-denied") {
-            alert("You don't have permission to update this profile.");
-        } else {
-            console.error("Error updating profile:", error);
-            alert("Failed to update profile. Please try again.");
-        }
+      console.error('Error updating profile: ', error);
+      alert('Failed to update profile. Please try again.');
     }
-};
+  };
 
+  const handleUploadProfilePicture = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const storageRef = ref(storage, `profile_pictures/${currentUser.uid}`);
+      await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(storageRef);
+      setProfilePicture(downloadURL);
+      await updateDoc(doc(db, 'users', currentUser.uid), { profilePicture: downloadURL });
+      alert('Profile picture updated successfully!');
+    }
+  };
 
   const handleShareClick = (palette) => {
     setSelectedPalette(palette);
     setShowShareModal(true);
   };
 
-  const handleDeletePalette = async (paletteId, type) => {
-    try {
-      const collectionName = type === "saved" ? "palettes" : "createdPalettes";
-      const paletteRef = doc(db, "users", currentUser.uid, collectionName, paletteId);
-      await deleteDoc(paletteRef);
-      if (type === "saved") {
-        setSavedPalettes((prev) => prev.filter((p) => p.id !== paletteId));
-      } else {
-        setCreatedPalettes((prev) => prev.filter((p) => p.id !== paletteId));
-      }
-    } catch (error) {
-      console.error("Error deleting palette: ", error);
-    }
-  };
-
   return (
-    <Container className="mt-4">
-      <Row className="mb-4">
-        <Col md={4} className="text-center">
-          <div className="profile-picture-container">
-            {previewImage || profilePicture ? (
-              <img
-                src={previewImage || profilePicture}
-                alt="Profile"
-                className="rounded-circle"
-                style={{ width: '150px', height: '150px', objectFit: 'cover' }}
-              />
-            ) : (
-              <div
-                className="rounded-circle bg-light d-flex justify-content-center align-items-center"
-                style={{ width: '150px', height: '150px' }}
-              >
-                <FaCamera size={40} />
-              </div>
-            )}
-            <Form.Control
-              type="file"
-              accept="image/*"
-              onChange={handleProfilePictureUpload}
-              className="mt-2"
-            />
-          </div>
-        </Col>
-        <Col md={8}>
-          <h2>Profile</h2>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Username</Form.Label>
-              <Form.Control
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Email</Form.Label>
-              <Form.Control type="email" value={email} disabled />
-            </Form.Group>
-            <Button onClick={handleUpdateProfile} variant="primary">
-              Update Profile
-            </Button>
-          </Form>
-        </Col>
-      </Row>
-
-      <h3>Saved Palettes</h3>
-      <Row>
-        {savedPalettes.map((palette) => (
-          <Col xs={12} md={6} lg={4} key={palette.id} className="mb-4">
-            <Card className="h-100 shadow-sm border-0">
-              <Card.Body className="d-flex flex-column align-items-center">
-                <h5 className="mb-3 text-center">{palette.name}</h5>
-                <div className="palette-display d-flex w-100">
-                  {palette.colors.map((color, idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        backgroundColor: color,
-                        flex: 1,
-                        height: "60px",
-                        marginRight: idx !== palette.colors.length - 1 ? "2px" : "0",
-                      }}
-                      title={color}
-                    ></div>
-                  ))}
-                </div>
-                <div className="d-flex justify-content-between align-items-center w-100 mt-3">
-                  <Button
-                    variant="link"
-                    onClick={() => handleShareClick(palette)}
-                  >
-                    <FaShareAlt />
-                  </Button>
-                  <Button
-                    variant="danger"
-                    onClick={() => handleDeletePalette(palette.id, "saved")}
-                  >
-                    <FaTrash />
-                  </Button>
-                </div>
+    <section style={{ backgroundColor: '#eee' }}>
+      <Container className="py-5">
+        <Row>
+          <Col>
+            <nav aria-label="breadcrumb" className="bg-body-tertiary rounded-3 p-3 mb-4">
+              <ol className="breadcrumb mb-0">
+                <li className="breadcrumb-item"><a href="/">Home</a></li>
+                <li className="breadcrumb-item active" aria-current="page">User Profile</li>
+              </ol>
+            </nav>
+          </Col>
+        </Row>
+        <Row>
+          <Col lg={4}>
+            <Card className="mb-4 text-center">
+              <Card.Body>
+                <img
+                  src={profilePicture || 'https://via.placeholder.com/150'}
+                  alt="avatar"
+                  className="rounded-circle img-fluid"
+                  style={{ width: '150px' }}
+                />
+                <h5 className="my-3">{profileData.username || 'Your Name'}</h5>
+                <Form.Control type="file" onChange={handleUploadProfilePicture} />
+                <Button variant="outline-primary" className="mt-3" onClick={() => setEditingProfile(true)}>
+                  Edit Profile
+                </Button>
               </Card.Body>
             </Card>
           </Col>
-        ))}
-      </Row>
-
-      <h3>Created Palettes</h3>
-      <Row>
-        {createdPalettes.map((palette) => (
-          <Col xs={12} md={6} lg={4} key={palette.id} className="mb-4">
-            <Card className="h-100 shadow-sm border-0">
-              <Card.Body className="d-flex flex-column align-items-center">
-                <h5 className="mb-3 text-center">{palette.name}</h5>
-                <div className="palette-display d-flex w-100">
-                  {palette.colors.map((color, idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        backgroundColor: color,
-                        flex: 1,
-                        height: "60px",
-                        marginRight: idx !== palette.colors.length - 1 ? "2px" : "0",
-                      }}
-                      title={color}
-                    ></div>
-                  ))}
-                </div>
-                <div className="d-flex justify-content-between align-items-center w-100 mt-3">
-                  <Button
-                    variant="link"
-                    onClick={() => handleShareClick(palette)}
-                  >
-                    <FaShareAlt />
-                  </Button>
-                  <Button
-                    variant="danger"
-                    onClick={() => handleDeletePalette(palette.id, "created")}
-                  >
-                    <FaTrash />
-                  </Button>
-                </div>
+          <Col lg={8}>
+            <Card className="mb-4">
+              <Card.Body>
+                {editingProfile ? (
+                  <>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Username</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={newUsername}
+                        onChange={(e) => setNewUsername(e.target.value)}
+                      />
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Email</Form.Label>
+                      <Form.Control
+                        type="email"
+                        value={newEmail}
+                        onChange={(e) => setNewEmail(e.target.value)}
+                      />
+                    </Form.Group>
+                    <Button variant="primary" onClick={handleUpdateProfile}>
+                      Save Changes
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <p><strong>Username:</strong> {profileData.username}</p>
+                    <p><strong>Email:</strong> {currentUser.email}</p>
+                  </>
+                )}
               </Card.Body>
             </Card>
+            <Row>
+              <Col md={6}>
+                <h5>Saved Palettes</h5>
+                {savedPalettes.map((palette, index) => (
+                  <Card key={index} className="mb-3">
+                    <Card.Body>
+                      <h6>{palette.name}</h6>
+                      <div className="palette-display d-flex">
+                        {palette.colors.map((color, idx) => (
+                          <div
+                            key={idx}
+                            style={{
+                              backgroundColor: color,
+                              flex: 1,
+                              height: '30px',
+                            }}
+                          />
+                        ))}
+                      </div>
+                      <Button
+                        variant="link"
+                        onClick={() => handleShareClick(palette)}
+                      >
+                        Share
+                      </Button>
+                    </Card.Body>
+                  </Card>
+                ))}
+              </Col>
+              <Col md={6}>
+                <h5>Created Palettes</h5>
+                {createdPalettes.map((palette, index) => (
+                  <Card key={index} className="mb-3">
+                    <Card.Body>
+                      <h6>{palette.name}</h6>
+                      <div className="palette-display d-flex">
+                        {palette.colors.map((color, idx) => (
+                          <div
+                            key={idx}
+                            style={{
+                              backgroundColor: color,
+                              flex: 1,
+                              height: '30px',
+                            }}
+                          />
+                        ))}
+                      </div>
+                      <Button
+                        variant="link"
+                        onClick={() => handleShareClick(palette)}
+                      >
+                        Share
+                      </Button>
+                    </Card.Body>
+                  </Card>
+                ))}
+              </Col>
+            </Row>
           </Col>
-        ))}
-      </Row>
-
-      {selectedPalette && (
-        <SharePalette
-          show={showShareModal}
-          onClose={() => setShowShareModal(false)}
-          palette={selectedPalette}
-        />
-      )}
-    </Container>
+        </Row>
+        {selectedPalette && (
+          <SharePalette
+            show={showShareModal}
+            onClose={() => setShowShareModal(false)}
+            palette={selectedPalette}
+          />
+        )}
+      </Container>
+    </section>
   );
 };
 

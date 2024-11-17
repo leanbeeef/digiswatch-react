@@ -1,48 +1,32 @@
-// src/pages/Profile.jsx
-
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Modal, Form, Image } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Modal, Form, Image, Toast } from 'react-bootstrap';
 import { useAuth } from '../AuthContext';
-import { db, storage } from '../firebase';
-import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { FaShare, FaTrashAlt } from 'react-icons/fa';
+import { db } from '../firebase';
+import { doc, collection, getDocs, getDoc, updateDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import SharePalette from '../components/SharePalette';
-import axios from 'axios';
+import avatars from '../utils/avatarImages';
 
 const Profile = () => {
     const { currentUser } = useAuth();
     const [profileData, setProfileData] = useState({});
-    const [savedPalettes, setSavedPalettes] = useState([]);
-    const [createdPalettes, setCreatedPalettes] = useState([]);
+    const [savedPalettes, setSavedPalettes] = useState([]); // Saved palettes from Firestore
+    const [createdPalettes, setCreatedPalettes] = useState([]); // Created palettes from Firestore
     const [editingProfile, setEditingProfile] = useState(false);
     const [newUsername, setNewUsername] = useState('');
     const [newEmail, setNewEmail] = useState('');
     const [avatar, setAvatar] = useState('');
-    const [avatars, setAvatars] = useState([]);
     const [showShareModal, setShowShareModal] = useState(false);
     const [selectedPalette, setSelectedPalette] = useState(null);
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
+    const [toastVariant, setToastVariant] = useState('success'); // 'success' or 'danger'
 
     useEffect(() => {
-        const fetchAvatars = async () => {
-            try {
-                const generatedAvatars = [];
-                for (let i = 0; i < 6; i++) {
-                    // Generate unique avatar URLs using a random seed
-                    const response = await axios.get(`https://avatars.dicebear.com/api/initials/${Math.random().toString(36).substring(7)}.svg`, {
-                        responseType: 'text',
-                    });
-                    generatedAvatars.push(response.config.url);
-                }
-                setAvatars(generatedAvatars);
-            } catch (err) {
-                console.error('Error fetching avatars: ', err);
-                setError('Failed to load avatars. Please try again.');
-            }
-        };
         if (currentUser) {
             fetchProfile();
-            fetchPalettes();
-            fetchAvatars();
+            fetchSavedPalettes();
+            fetchCreatedPalettes(); // Fetch created palettes
         }
     }, [currentUser]);
 
@@ -56,38 +40,42 @@ const Profile = () => {
                 setProfileData(data);
                 setNewUsername(data.username || '');
                 setNewEmail(currentUser.email || '');
-                setAvatar(data.avatar || '');
+                setAvatar(data.avatar || avatars[0].src); // Default to the first avatar
             }
         } catch (error) {
             console.error('Error fetching profile: ', error);
         }
     };
 
-    const generateAvatars = async (seed) => {
-        const baseUrl = `https://avatars.dicebear.com/api/identicon/`;
-        const generatedAvatars = [];
-        for (let i = 0; i < 6; i++) {
-            generatedAvatars.push(`${baseUrl}${seed}-${i}.svg`);
+    const fetchSavedPalettes = async () => {
+        try {
+            const palettesCollection = collection(db, 'users', currentUser.uid, 'palettes');
+            const querySnapshot = await getDocs(palettesCollection);
+
+            const fetchedPalettes = querySnapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            }));
+
+            setSavedPalettes(fetchedPalettes);
+        } catch (error) {
+            console.error('Error fetching saved palettes: ', error);
         }
-        setAvatars(generatedAvatars);
     };
 
-    const fetchPalettes = async () => {
+    const fetchCreatedPalettes = async () => {
         try {
-            // Fetch saved palettes
-            const savedPalettesDoc = doc(db, 'users', currentUser.uid);
-            const savedSnap = await getDoc(savedPalettesDoc);
+            const palettesCollection = collection(db, 'users', currentUser.uid, 'createdPalettes');
+            const querySnapshot = await getDocs(palettesCollection);
 
-            if (savedSnap.exists()) {
-                setSavedPalettes(savedSnap.data().palettes || []);
-            }
+            const fetchedPalettes = querySnapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            }));
 
-            // Fetch created palettes (example: replace with actual implementation)
-            setCreatedPalettes([
-                { name: 'My Custom Palette', colors: ['#123456', '#654321', '#abcdef', '#ff0000'] },
-            ]);
+            setCreatedPalettes(fetchedPalettes);
         } catch (error) {
-            console.error('Error fetching palettes: ', error);
+            console.error('Error fetching created palettes: ', error);
         }
     };
 
@@ -95,30 +83,27 @@ const Profile = () => {
         try {
             const profileDocRef = doc(db, "users", currentUser.uid);
 
-            // Check if the document exists
             const profileDocSnap = await getDoc(profileDocRef);
 
             if (profileDocSnap.exists()) {
-                // Update the document if it exists
                 await updateDoc(profileDocRef, {
                     username: newUsername,
                     email: newEmail,
+                    avatar,
                 });
-                alert("Profile updated successfully!");
             } else {
-                // Create the document if it doesn't exist
                 await setDoc(profileDocRef, {
                     username: newUsername,
                     email: newEmail,
-                    createdAt: new Date().toISOString(), // Add any additional fields you want
+                    avatar,
+                    createdAt: new Date().toISOString(),
                 });
-                alert("Profile created and updated successfully!");
             }
 
+            setShowToast(true); // Show success toast
             setEditingProfile(false);
         } catch (error) {
             console.error("Error updating profile: ", error);
-            alert("Failed to update profile. Please try again.");
         }
     };
 
@@ -127,22 +112,72 @@ const Profile = () => {
         setShowShareModal(true);
     };
 
+    const handleDeletePalette = async (paletteId, collectionType = 'palettes') => {
+        if (!paletteId) {
+            setToastMessage('Palette ID is missing.');
+            setToastVariant('danger');
+            setShowToast(true);
+            return;
+        }
+
+        try {
+            const paletteDocRef = doc(db, 'users', currentUser.uid, collectionType, paletteId);
+
+            // Attempt to delete the document
+            await deleteDoc(paletteDocRef);
+
+            // Update the UI after deletion
+            if (collectionType === 'palettes') {
+                setSavedPalettes((prev) => prev.filter((palette) => palette.id !== paletteId));
+            } else if (collectionType === 'createdPalettes') {
+                setCreatedPalettes((prev) => prev.filter((palette) => palette.id !== paletteId));
+            }
+
+            setToastMessage('Palette deleted successfully.');
+            setToastVariant('success');
+        } catch (error) {
+            console.error('Error deleting palette: ', error.message);
+            setToastMessage('Failed to delete the palette. Please check your permissions and try again.');
+            setToastVariant('danger');
+        } finally {
+            setShowToast(true);
+        }
+    };
+
     return (
         <section style={{ backgroundColor: '#eee' }}>
-            <Container className="py-5">
-                <Row>
-                    <Col>
-                        <nav aria-label="breadcrumb" className="bg-body-tertiary rounded-3 p-3 mb-4">
-                            <ol className="breadcrumb mb-0">
-                                <li className="breadcrumb-item"><a href="/">Home</a></li>
-                                <li className="breadcrumb-item active" aria-current="page">User Profile</li>
-                            </ol>
-                        </nav>
-                    </Col>
-                </Row>
-                <Row>
+            <Container className="py-5 full-height-minus-header">
+                {/* Toast for Profile Update Success */}
+                <Toast
+                    onClose={() => setShowToast(false)}
+                    show={showToast}
+                    delay={3000}
+                    autohide
+                    style={{
+                        position: 'fixed',
+                        bottom: '10px',
+                        right: '10px',
+                        zIndex: 1050,
+                    }}
+                >
+                    {/* Disable the default closeButton */}
+                    <Toast.Header className="text-bg-primary" closeButton={false}>
+                        <strong className="me-auto">Profile</strong>
+                        <button
+                            type="button"
+                            className="btn-close bold"
+                            style={{ filter: 'invert(1)' }} // Makes it white
+                            aria-label="Close"
+                            onClick={() => setShowToast(false)}
+                        ></button>
+                    </Toast.Header>
+                    <Toast.Body>Profile updated successfully!</Toast.Body>
+                </Toast>
+
+
+                <Row className='h-100'>
                     <Col lg={4}>
-                        <Card className="mb-4 text-center">
+                        <Card className="mb-4 text-center h-100">
                             <Card.Body>
                                 <Image
                                     src={avatar || 'https://via.placeholder.com/150'}
@@ -152,8 +187,8 @@ const Profile = () => {
                                     className="mb-3"
                                 />
                                 <h5 className="my-3">{profileData.username || 'Your Name'}</h5>
-                                <p className="text-muted mb-1">{profileData.email}</p>
-                                <Button variant="primary" onClick={() => setEditingProfile(true)}>Edit Profile</Button>
+                                <p className="text-muted mb-3">{profileData.email}</p>
+                                <Button variant="primary" className='position-absolute bottom-0 start-50 translate-middle-x mb-5' onClick={() => setEditingProfile(true)}>Edit Profile</Button>
                             </Card.Body>
                         </Card>
                     </Col>
@@ -177,36 +212,37 @@ const Profile = () => {
                                                 value={newEmail}
                                                 onChange={(e) => setNewEmail(e.target.value)}
                                             />
-                                            <Form.Group controlId="avatars" className="mt-3">
-                                                <Form.Label>Choose an Avatar</Form.Label>
-                                                <div className="d-flex flex-wrap">
-                                                    {avatars.map((avatarUrl, idx) => (
-                                                        <Image
-                                                            key={idx}
-                                                            src={avatarUrl}
-                                                            alt={`Avatar ${idx}`}
-                                                            roundedCircle
-                                                            className={`m-2 ${avatar === avatarUrl ? 'border border-primary' : ''}`}
-                                                            style={{
-                                                                width: '60px',
-                                                                height: '60px',
-                                                                cursor: 'pointer',
-                                                            }}
-                                                            onClick={() => setAvatar(avatarUrl)}
-                                                        />
-                                                    ))}
-                                                </div>
-                                            </Form.Group>
+                                        </Form.Group>
+                                        <Form.Group controlId="avatars" className="mt-3">
+                                            <Form.Label>Choose an Avatar</Form.Label>
+                                            <div className="d-flex flex-wrap">
+                                                {avatars.map((avatarItem) => (
+                                                    <Image
+                                                        key={avatarItem.id}
+                                                        src={avatarItem.src}
+                                                        alt={`Avatar ${avatarItem.id}`}
+                                                        roundedCircle
+                                                        className={`m-2 ${avatar === avatarItem.src ? 'border border-primary' : ''}`}
+                                                        style={{
+                                                            width: '60px',
+                                                            height: '60px',
+                                                            cursor: 'pointer',
+                                                        }}
+                                                        onClick={() => setAvatar(avatarItem.src)}
+                                                    />
+                                                ))}
+                                            </div>
                                         </Form.Group>
                                         <Button variant="primary" onClick={handleUpdateProfile}>
                                             Save Changes
                                         </Button>
                                     </>
                                 ) : (
-                                    <>
-                                        <p><strong>Username:</strong> {profileData.username}</p>
-                                        <p><strong>Email:</strong> {currentUser.email}</p>
-                                    </>
+                                    // Do not display the editable fields when not in edit mode
+                                    <div>
+                                        <h5>Welcome to your profile!</h5>
+                                        <p>View your saved and created palettes below.</p>
+                                    </div>
                                 )}
                             </Card.Body>
                         </Card>
@@ -214,7 +250,7 @@ const Profile = () => {
                             <Col md={6}>
                                 <h5>Saved Palettes</h5>
                                 {savedPalettes.map((palette, index) => (
-                                    <Card key={index} className="mb-3">
+                                    <Card key={palette.id} className="mb-3">
                                         <Card.Body>
                                             <h6>{palette.name}</h6>
                                             <div className="palette-display d-flex">
@@ -229,12 +265,34 @@ const Profile = () => {
                                                     />
                                                 ))}
                                             </div>
-                                            <Button
-                                                variant="link"
-                                                onClick={() => handleShareClick(palette)}
-                                            >
-                                                Share
-                                            </Button>
+                                            <div className="d-flex justify-content-between mt-2">
+                                                <Button
+                                                    variant="link"
+                                                    onClick={() => handleShareClick(palette)}
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        fontSize: '1.2rem',
+                                                        color: '#007bff',
+                                                    }}
+                                                >
+                                                    <FaShare />
+                                                </Button>
+                                                <Button
+                                                    variant="link"
+                                                    onClick={() => handleDeletePalette(palette.id)}
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        fontSize: '1.2rem',
+                                                        color: 'red',
+                                                    }}
+                                                >
+                                                    <FaTrashAlt />
+                                                </Button>
+                                            </div>
                                         </Card.Body>
                                     </Card>
                                 ))}
@@ -242,7 +300,7 @@ const Profile = () => {
                             <Col md={6}>
                                 <h5>Created Palettes</h5>
                                 {createdPalettes.map((palette, index) => (
-                                    <Card key={index} className="mb-3">
+                                    <Card key={palette.id} className="mb-3">
                                         <Card.Body>
                                             <h6>{palette.name}</h6>
                                             <div className="palette-display d-flex">
@@ -257,12 +315,34 @@ const Profile = () => {
                                                     />
                                                 ))}
                                             </div>
-                                            <Button
-                                                variant="link"
-                                                onClick={() => handleShareClick(palette)}
-                                            >
-                                                Share
-                                            </Button>
+                                            <div className="d-flex justify-content-between mt-2">
+                                                <Button
+                                                    variant="link"
+                                                    onClick={() => handleShareClick(palette)}
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        fontSize: '1.2rem',
+                                                        color: '#007bff',
+                                                    }}
+                                                >
+                                                    <FaShare />
+                                                </Button>
+                                                <Button
+                                                    variant="link"
+                                                    onClick={() => handleDeletePalette(palette.id, 'createdPalettes')}
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        fontSize: '1.2rem',
+                                                        color: 'red',
+                                                    }}
+                                                >
+                                                    <FaTrashAlt />
+                                                </Button>
+                                            </div>
                                         </Card.Body>
                                     </Card>
                                 ))}
@@ -277,6 +357,31 @@ const Profile = () => {
                         palette={selectedPalette}
                     />
                 )}
+
+                <Toast
+                    onClose={() => setShowToast(false)}
+                    show={showToast}
+                    delay={3000}
+                    autohide
+                    style={{
+                        position: 'fixed',
+                        bottom: '10px',
+                        right: '10px',
+                        zIndex: 1050,
+                    }}
+                >
+                    <Toast.Header className={`text-bg-${toastVariant}`} closeButton={false}>
+                        <strong className="me-auto">Notification</strong>
+                        <button
+                            type="button"
+                            className="btn-close bold"
+                            style={{ filter: 'invert(1)' }} // Makes it white for dark headers
+                            aria-label="Close"
+                            onClick={() => setShowToast(false)}
+                        ></button>
+                    </Toast.Header>
+                    <Toast.Body>{toastMessage}</Toast.Body>
+                </Toast>
             </Container>
         </section>
     );

@@ -11,7 +11,6 @@
   },
   "dependencies": {
     "@ctrl/tinycolor": "^4.1.0",
-    "axios": "^1.7.7",
     "bootstrap": "^5.3.3",
     "chroma-js": "^3.1.2",
     "color-convert": "^2.0.1",

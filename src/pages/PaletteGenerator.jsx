@@ -295,7 +295,7 @@ const PaletteGenerator = () => {
                         borderRadius: '50%',
                         width: '60px',
                         height: '60px',
-                        zIndex: 1050,
+                        zIndex: 900,
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',

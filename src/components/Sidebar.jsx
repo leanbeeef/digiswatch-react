@@ -28,7 +28,7 @@ const Sidebar = ({ show, onClose }) => {
       <Offcanvas.Header closeButton>
         <Offcanvas.Title>Gadgets</Offcanvas.Title>
       </Offcanvas.Header>
-      <Offcanvas.Body className="d-flex flex-column justify-content-between sidebar-body">
+      <Offcanvas.Body className="d-flex flex-column justify-content-between sidebar-body z-">
         <div>
           {/* Navigation Links */}
           <Nav className="flex-column mb-4 sidebar-nav">

@@ -59,14 +59,17 @@ const DraggableCard = ({ color, colorName, textColor, index, moveCard, onClick, 
     return (
         <Col
             ref={ref}
+            xs={12}
+            sm={6}
+            md={4}
+            lg={2}
             className="p-0 d-flex"
             style={{
-                flex: 1,
                 opacity: isDragging ? 0.5 : 1,
             }}
         >
             <Card
-                style={{ backgroundColor: color, color: textColor, borderRadius: '0' }}
+                style={{ backgroundColor: color, color: textColor }}
                 className="w-100 text-center d-flex flex-column justify-content-center full-height-minus-header"
             >
                 <Card.Body className="d-flex flex-column justify-content-center">

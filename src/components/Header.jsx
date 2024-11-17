@@ -1,42 +1,41 @@
 // src/components/Header.jsx
 
-import React, { useState } from 'react';
-import { Navbar, Container, Nav, Form, Button } from 'react-bootstrap';
+import React from 'react';
+import { Navbar, Container, Button } from 'react-bootstrap';
 import logoLight from '../assets/ds_hz_black.svg';
-import logoDark from '../assets/ds_hz_white.svg';
 
 const Header = ({ onOpenSidebar }) => {
-  const [theme, setTheme] = useState('theme-light');
-
-  const handleThemeChange = (e) => {
-    setTheme(e.target.value);
-    document.documentElement.setAttribute('data-theme', e.target.value);
-  };
-
   return (
     <Navbar bg="light" expand="lg" className="py-3">
-      <Container fluid>
-        <Navbar.Brand href="/">
-          <img
-            src={theme === 'theme-light' ? logoLight : logoDark}
-            alt="DigiSwatch Logo"
-            height="40"
-          />
-        </Navbar.Brand>
-        <Nav className="ms-auto d-flex align-items-center">
-          <Form.Select
-            className="me-3 w-auto"
-            value={theme}
-            onChange={handleThemeChange}
-            aria-label="Select Theme"
+      <Container fluid className="d-flex align-items-center justify-content-between">
+        {/* Logo and Sidebar Toggle Button */}
+        <div className="d-flex align-items-center">
+          <Navbar.Brand href="/" className="d-flex align-items-center me-2">
+            <img
+              src={logoLight}
+              alt="DigiSwatch Logo"
+              height="40"
+            />
+          </Navbar.Brand>
+          <Button
+            variant="outline-primary"
+            className="d-flex align-items-center ms-2 d-lg-none"
+            onClick={onOpenSidebar}
+            aria-label="Open Sidebar"
           >
-            <option value="theme-light">Light</option>
-            <option value="theme-dark">Dark</option>
-          </Form.Select>
-          <Button variant="outline-primary" onClick={onOpenSidebar}>
-            Gadgets
+            <i className="fas fa-bars"></i>
           </Button>
-        </Nav>
+        </div>
+
+        {/* Sidebar Toggle Button for larger screens */}
+        <Button
+          variant="outline-primary"
+          className="d-none d-lg-flex align-items-center sidebar-toggle-btn"
+          onClick={onOpenSidebar}
+          aria-label="Open Sidebar"
+        >
+          <i className="fas fa-bars"></i>
+        </Button>
       </Container>
     </Navbar>
   );

@@ -12,6 +12,7 @@ import ColorProvider from './ColorContext';
 import SignUp from "./pages/SignUp";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile"
+import Home from "./pages/Home"
 import './index.css';
 
 function App() {
@@ -27,9 +28,10 @@ function App() {
         <div className="full-page">
           <Header onOpenSidebar={openSidebar} />
           <Sidebar show={sidebarOpen} onClose={closeSidebar} />
-          <main className="main-content full-height-minus-header">
+          <main className="main-content full-height-minus-header overflow-hidden">
             <Routes>
-              <Route path="/" element={<Navigate to="/palette-generator" replace />} />
+              <Route path="/" element={<Navigate to="/home" replace />} />
+              <Route path="/home" element={<Home />} />
               <Route path="/palette-generator" element={<PaletteGenerator />} />
               <Route path="/popular-palettes" element={<PopularPalettes />} />
               <Route path="/signup" element={<SignUp />} />

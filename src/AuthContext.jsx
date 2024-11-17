@@ -1,4 +1,3 @@
-// src/AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   getAuth,
@@ -9,8 +8,9 @@ import {
   GoogleAuthProvider,
   signOut,
 } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore'; // Firestore imports
+import { db } from './firebase'; // Import Firestore configuration
 
-// Create and export AuthContext
 export const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
@@ -20,10 +20,31 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true); // Tracks if Firebase auth is still initializing
   const auth = getAuth();
 
+  // Fetch additional user data from Firestore
+  const fetchUserData = async (user) => {
+    if (!user) return null;
+
+    try {
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
+      if (userDoc.exists()) {
+        return { ...user, ...userDoc.data() }; // Merge Firebase user and Firestore data
+      }
+    } catch (error) {
+      console.error('Error fetching user data from Firestore:', error);
+    }
+    return user; // Return Firebase user if Firestore data is unavailable
+  };
+
   // Track authentication state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const enrichedUser = await fetchUserData(user);
+        setCurrentUser(enrichedUser);
+      } else {
+        setCurrentUser(null);
+      }
       setLoading(false); // Authentication state initialized
     });
     return unsubscribe; // Cleanup the listener on component unmount
@@ -32,8 +53,9 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      setCurrentUser(userCredential.user);
-      return userCredential.user;
+      const enrichedUser = await fetchUserData(userCredential.user);
+      setCurrentUser(enrichedUser);
+      return enrichedUser;
     } catch (error) {
       console.error('Login Error:', error);
       throw error;
@@ -43,8 +65,9 @@ export const AuthProvider = ({ children }) => {
   const signUp = async (email, password) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      setCurrentUser(userCredential.user);
-      return userCredential.user;
+      const enrichedUser = await fetchUserData(userCredential.user);
+      setCurrentUser(enrichedUser);
+      return enrichedUser;
     } catch (error) {
       console.error('Sign Up Error:', error);
       throw error;
@@ -55,8 +78,9 @@ export const AuthProvider = ({ children }) => {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider); // Or use signInWithRedirect(auth, provider)
-      setCurrentUser(result.user);
-      return result.user;
+      const enrichedUser = await fetchUserData(result.user);
+      setCurrentUser(enrichedUser);
+      return enrichedUser;
     } catch (error) {
       console.error('Google Sign In Error:', error);
       throw error;

@@ -166,8 +166,8 @@ const PopularPalettes = () => {
                           idx === 0
                             ? "8px 0 0 8px"
                             : idx === palette.colors.length - 1
-                            ? "0 8px 8px 0"
-                            : "0",
+                              ? "0 8px 8px 0"
+                              : "0",
                         marginRight: idx !== palette.colors.length - 1 ? "2px" : "0",
                       }}
                       title={color}

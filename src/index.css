@@ -191,6 +191,8 @@ body,
 
   .navbar {
     padding: 0.5rem 1rem;
+    flex-direction: row;
+    flex-wrap: nowrap;
   }
 
   .btn-outline-primary {

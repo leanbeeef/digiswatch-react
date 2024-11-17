@@ -32,6 +32,9 @@ const Sidebar = ({ show, onClose }) => {
         <div>
           {/* Navigation Links */}
           <Nav className="flex-column mb-4 sidebar-nav">
+            <Nav.Link onClick={() => handleNavigate('/home')} className="sidebar-link">
+              Home
+            </Nav.Link>
             <Nav.Link onClick={() => handleNavigate('/palette-generator')} className="sidebar-link">
               Palette Generator
             </Nav.Link>

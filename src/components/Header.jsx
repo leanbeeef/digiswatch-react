@@ -1,41 +1,71 @@
-// src/components/Header.jsx
-
-import React from 'react';
-import { Navbar, Container, Button } from 'react-bootstrap';
+import React, { useContext } from 'react';
+import { Navbar, Container, Button, Image } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../AuthContext'; // Access authentication context
 import logoLight from '../assets/ds_hz_black.svg';
+import avatars from '../utils/avatarImages'; // Assuming avatars are used
 
 const Header = ({ onOpenSidebar }) => {
+  const { currentUser } = useContext(AuthContext); // Access currentUser
+  const navigate = useNavigate();
+
+  const handleProfileClick = () => {
+    navigate('/profile');
+  };
+
+  const handleLoginClick = () => {
+    navigate('/login');
+  };
+
   return (
     <Navbar bg="light" expand="lg" className="py-3">
       <Container fluid className="d-flex align-items-center justify-content-between">
-        {/* Logo and Sidebar Toggle Button */}
+        {/* Left Section: Logo */}
+        <Navbar.Brand href="/" className="d-flex align-items-center">
+          <img src={logoLight} alt="DigiSwatch Logo" height="40" className="me-2" />
+        </Navbar.Brand>
+
+        {/* Right Section: User Info and Sidebar Toggle */}
         <div className="d-flex align-items-center">
-          <Navbar.Brand href="/" className="d-flex align-items-center me-2">
-            <img
-              src={logoLight}
-              alt="DigiSwatch Logo"
-              height="40"
-            />
-          </Navbar.Brand>
+          {/* User Info */}
+          {!currentUser ? (
+            <Button
+              variant="primary"
+              onClick={handleLoginClick}
+              className="me-3"
+            >
+              Sign In
+            </Button>
+          ) : (
+            <div className="d-flex align-items-center me-3">
+              <Image
+                src={currentUser.avatar || avatars[0]?.src || '/path/to/default-avatar.png'}
+                alt="User Avatar"
+                roundedCircle
+                height="40"
+                className="me-2"
+                onClick={handleProfileClick}
+                style={{ cursor: 'pointer' }}
+              />
+              <span
+                className="fw-bold d-none text-primary"
+                style={{ cursor: 'pointer' }}
+                onClick={handleProfileClick}
+              >
+                {currentUser.username || 'Profile'}
+              </span>
+            </div>
+          )}
+          {/* Sidebar Toggle Button */}
           <Button
             variant="outline-primary"
-            className="d-flex align-items-center ms-2 d-lg-none"
             onClick={onOpenSidebar}
             aria-label="Open Sidebar"
+            className="d-flex align-items-center"
           >
             <i className="fas fa-bars"></i>
           </Button>
         </div>
-
-        {/* Sidebar Toggle Button for larger screens */}
-        <Button
-          variant="outline-primary"
-          className="d-none d-lg-flex align-items-center sidebar-toggle-btn"
-          onClick={onOpenSidebar}
-          aria-label="Open Sidebar"
-        >
-          <i className="fas fa-bars"></i>
-        </Button>
       </Container>
     </Navbar>
   );

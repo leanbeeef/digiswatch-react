@@ -1,11 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Modal, Form, Image, Toast } from 'react-bootstrap';
 import { useAuth } from '../AuthContext';
-import { FaShare, FaTrashAlt } from 'react-icons/fa';
+import { FaDownload, FaShare, FaTrashAlt } from 'react-icons/fa';
 import { db } from '../firebase';
 import { doc, collection, getDocs, getDoc, updateDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import SharePalette from '../components/SharePalette';
 import avatars from '../utils/avatarImages';
+import {
+  exportPaletteAsCSS,
+  exportPaletteAsJSON,
+  exportPaletteAsText,
+  exportPaletteAsSVG,
+  exportPaletteAsImage,
+} from '../utils/exportPalette';
+import namer from 'color-namer';
+import tinycolor from 'tinycolor2';
+
+
+const getTextColor = (backgroundColor) => {
+  const whiteContrast = tinycolor.readability(backgroundColor, "#FFFFFF");
+  return whiteContrast >= 4.5 ? "#FFFFFF" : "#000000";
+};
 
 const Profile = () => {
   const { currentUser } = useAuth();
@@ -20,6 +35,8 @@ const Profile = () => {
   const [selectedPalette, setSelectedPalette] = useState(null);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [currentPalette, setCurrentPalette] = useState([]);
 
   useEffect(() => {
     if (currentUser) {
@@ -28,6 +45,30 @@ const Profile = () => {
       fetchCreatedPalettes();
     }
   }, [currentUser]);
+
+  const handleExport = (format) => {
+    switch (format) {
+      case 'png':
+      case 'jpeg':
+        exportPaletteAsImage(format);
+        break;
+      case 'css':
+        exportPaletteAsCSS(currentPalette);
+        break;
+      case 'json':
+        exportPaletteAsJSON(currentPalette);
+        break;
+      case 'txt':
+        exportPaletteAsText(currentPalette);
+        break;
+      case 'svg':
+        exportPaletteAsSVG(currentPalette);
+        break;
+      default:
+        alert('Invalid export format.');
+        break;
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -121,7 +162,7 @@ const Profile = () => {
 
   return (
     <section style={{ backgroundColor: '#eee' }}>
-      <Container className="py-5 full-height-minus-header">
+      <Container className="py-5">
         {/* Toast Notification */}
         <Toast
           onClose={() => setShowToast(false)}
@@ -150,7 +191,7 @@ const Profile = () => {
         <Row>
           {/* Profile Info Section */}
           <Col xs={12} md={4}>
-            <Card className="mb-4 text-center">
+            <div className="mb-4 text-center rounded bg-white p-5 sticky-top">
               <Card.Body>
                 <Image
                   src={avatar || 'https://via.placeholder.com/150'}
@@ -165,7 +206,7 @@ const Profile = () => {
                   Edit Profile
                 </Button>
               </Card.Body>
-            </Card>
+            </div>
           </Col>
 
           {/* Profile Editing Modal */}
@@ -229,17 +270,17 @@ const Profile = () => {
               <Col xs={12} md={6} className="mb-4">
                 <h5 className="mb-4">Saved Palettes</h5>
                 {savedPalettes.map((palette) => (
-                  <Card key={palette.id} className="mb-3">
+                  <div key={palette.id} className="mb-3 p-3 rounded bg-white">
                     <Card.Body>
                       <h6>{palette.name}</h6>
-                      <div className="palette-display d-flex flex-wrap">
+                      <div id="palette-display" className="palette-display">
                         {palette.colors.map((color, idx) => (
                           <div
                             key={idx}
                             style={{
                               backgroundColor: color,
                               flex: 1,
-                              height: '30px',
+                              height: '60px',
                             }}
                           />
                         ))}
@@ -259,25 +300,35 @@ const Profile = () => {
                         >
                           <FaTrashAlt />
                         </Button>
+                        <Button
+                          variant='link'
+                          onClick={() => {
+                            setCurrentPalette(palette.colors); // Set the current palette
+                            setShowExportModal(true); // Show the export modal
+                          }}
+                          style={{ color: 'blue' }}
+                        >
+                          <FaDownload />
+                        </Button>
                       </div>
                     </Card.Body>
-                  </Card>
+                  </div>
                 ))}
               </Col>
               <Col xs={12} md={6}>
                 <h5 className="mb-4">Created Palettes</h5>
                 {createdPalettes.map((palette) => (
-                  <Card key={palette.id} className="mb-3">
-                    <Card.Body>
+                  <div key={palette.id} className="mb-3 p-3 bg-white">
+                    <div>
                       <h6>{palette.name}</h6>
-                      <div className="palette-display d-flex flex-wrap">
+                      <div id="palette-display" className="palette-display">
                         {palette.colors.map((color, idx) => (
                           <div
                             key={idx}
                             style={{
                               backgroundColor: color,
                               flex: 1,
-                              height: '30px',
+                              height: '60px',
                             }}
                           />
                         ))}
@@ -297,9 +348,32 @@ const Profile = () => {
                         >
                           <FaTrashAlt />
                         </Button>
+
+                        <Button
+                          variant="link"
+                          onClick={() => {
+                            if (palette.colors && Array.isArray(palette.colors)) {
+                              // Ensure the colors are correctly structured
+                              setCurrentPalette(
+                                palette.colors.map((color) => ({
+                                  hex: color, // Assuming palette.colors contains hex values
+                                  name: namer(color).ntc[0].name, // Get color name using `namer`
+                                  textColor: getTextColor(color), // Get text color for readability
+                                }))
+                              );
+                              setShowExportModal(true); // Show the export modal
+                            } else {
+                              console.error("Palette colors are undefined or invalid:", palette.colors);
+                              alert("Unable to export: Invalid palette data.");
+                            }
+                          }}
+                          style={{ color: 'blue' }}
+                        >
+                          <FaDownload />
+                        </Button>
                       </div>
-                    </Card.Body>
-                  </Card>
+                    </div>
+                  </div>
                 ))}
               </Col>
             </Row>
@@ -314,6 +388,83 @@ const Profile = () => {
           />
         )}
       </Container>
+
+      {/* Export Modal */}
+      <Modal show={showExportModal} onHide={() => setShowExportModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Export Palette</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Select a format to export your palette:</p>
+          <div className="d-flex flex-wrap">
+            <Button
+              variant="outline-primary"
+              className="m-2"
+              onClick={() => {
+                handleExport('png');
+                setShowExportModal(false);
+              }}
+            >
+              PNG
+            </Button>
+            <Button
+              variant="outline-primary"
+              className="m-2"
+              onClick={() => {
+                handleExport('jpeg');
+                setShowExportModal(false);
+              }}
+            >
+              JPEG
+            </Button>
+            <Button
+              variant="outline-primary"
+              className="m-2"
+              onClick={() => {
+                handleExport('css');
+                setShowExportModal(false);
+              }}
+            >
+              CSS
+            </Button>
+            <Button
+              variant="outline-primary"
+              className="m-2"
+              onClick={() => {
+                handleExport('json');
+                setShowExportModal(false);
+              }}
+            >
+              JSON
+            </Button>
+            <Button
+              variant="outline-primary"
+              className="m-2"
+              onClick={() => {
+                handleExport('txt');
+                setShowExportModal(false);
+              }}
+            >
+              Text
+            </Button>
+            <Button
+              variant="outline-primary"
+              className="m-2"
+              onClick={() => {
+                handleExport('svg');
+                setShowExportModal(false);
+              }}
+            >
+              SVG
+            </Button>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowExportModal(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </section>
   );
 };

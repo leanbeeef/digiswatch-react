@@ -223,3 +223,42 @@ body,
   font-size: 1.15rem;
   padding: 0.75rem;
 }
+
+/* Sidebar */
+
+.sidebar {
+  transform: translateX(100%); /* Start off-screen to the right */
+  overflow-y: auto;
+  background: #d6d6d6;
+}
+
+.sidebar-show {
+  transform: translateX(0); /* Fully visible when active */
+}
+
+.sidebar-hidden {
+  transform: translateX(100%); /* Hidden off-screen */
+}
+
+.sidebar ul.nav {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar ul.nav li a {
+  padding: 10px 15px;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: #000;
+  transition: background-color 0.3s ease;
+}
+
+.sidebar ul.nav li a:hover {
+  background-color: #f0f0f0;
+  border-radius: 5px;
+}
+
+.btn-close-outline {
+  /* filter: invert(100%); Makes the close button more visible */
+}

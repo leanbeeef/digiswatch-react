@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Modal, Form, Image, Toast } from 'react-bootstrap';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import { useAuth } from '../AuthContext';
 import { FaDownload, FaShare, FaTrashAlt } from 'react-icons/fa';
 import { db } from '../firebase';
@@ -161,7 +162,7 @@ const Profile = () => {
   };
 
   return (
-    <section style={{ backgroundColor: '#eee' }}>
+    <section className='full-height-minus-header' style={{ backgroundColor: '#eee' }}>
       <Container className="py-5">
         {/* Toast Notification */}
         <Toast
@@ -273,7 +274,7 @@ const Profile = () => {
                   <div key={palette.id} className="mb-3 p-3 rounded bg-white">
                     <Card.Body>
                       <h6>{palette.name}</h6>
-                      <div id="palette-display" className="palette-display">
+                      <div id="palette-display" className="palette-display d-flex">
                         {palette.colors.map((color, idx) => (
                           <div
                             key={idx}
@@ -291,14 +292,14 @@ const Profile = () => {
                           onClick={() => handleShareClick(palette)}
                           style={{ color: '#007bff' }}
                         >
-                          <FaShare />
+                          <i className="bi bi-share-fill me-2"></i>
                         </Button>
                         <Button
                           variant="link"
                           onClick={() => handleDeletePalette(palette.id, 'palettes')}
                           style={{ color: 'red' }}
                         >
-                          <FaTrashAlt />
+                          <i class="bi bi-trash-fill"></i>
                         </Button>
                         <Button
                           variant='link'
@@ -308,7 +309,7 @@ const Profile = () => {
                           }}
                           style={{ color: 'blue' }}
                         >
-                          <FaDownload />
+                          <i class="bi bi-cloud-arrow-down-fill"></i>
                         </Button>
                       </div>
                     </Card.Body>
@@ -318,10 +319,10 @@ const Profile = () => {
               <Col xs={12} md={6}>
                 <h5 className="mb-4">Created Palettes</h5>
                 {createdPalettes.map((palette) => (
-                  <div key={palette.id} className="mb-3 p-3 bg-white">
+                  <div key={palette.id} className="mb-3 p-3 rounded bg-white">
                     <div>
                       <h6>{palette.name}</h6>
-                      <div id="palette-display" className="palette-display">
+                      <div id="palette-display" className="palette-display d-flex">
                         {palette.colors.map((color, idx) => (
                           <div
                             key={idx}
@@ -339,14 +340,14 @@ const Profile = () => {
                           onClick={() => handleShareClick(palette)}
                           style={{ color: '#007bff' }}
                         >
-                          <FaShare />
+                          <i className="bi bi-share-fill me-2"></i>
                         </Button>
                         <Button
                           variant="link"
                           onClick={() => handleDeletePalette(palette.id, 'createdPalettes')}
                           style={{ color: 'red' }}
                         >
-                          <FaTrashAlt />
+                          <i class="bi bi-trash-fill"></i>
                         </Button>
 
                         <Button
@@ -369,7 +370,7 @@ const Profile = () => {
                           }}
                           style={{ color: 'blue' }}
                         >
-                          <FaDownload />
+                          <i class="bi bi-cloud-arrow-down-fill"></i>
                         </Button>
                       </div>
                     </div>

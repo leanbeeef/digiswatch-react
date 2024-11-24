@@ -39,7 +39,7 @@ const Sidebar = ({ show, onClose }) => {
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
       }}
     >
-      <div className='d-flex flex-row justify-content-between align-items-center'>
+      <div className='d-flex align-items-center justify-content-between container-fluid'>
         {/* Close Button */}
         <a
           href="/"
@@ -49,7 +49,7 @@ const Sidebar = ({ show, onClose }) => {
         </a>
 
         <button
-          className="btn-close btn-close-outline align-self-end"
+          className="btn-close btn-close-outline"
           aria-label="Close"
           onClick={onClose}
         ></button>

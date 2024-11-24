@@ -20,7 +20,6 @@ import { getColorInfo } from '../utils/ColorConversions';
 import namer from 'color-namer';
 import tinycolor from 'tinycolor2';
 import { TinyColor } from '@ctrl/tinycolor';
-import { FaLock, FaLockOpen, FaPaintBrush } from 'react-icons/fa';
 import {
     exportPaletteAsCSS,
     exportPaletteAsJSON,
@@ -30,7 +29,7 @@ import {
 } from '../utils/exportPalette';
 import { HexColorPicker } from "react-colorful";
 
-
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import { doc, setDoc, collection } from 'firebase/firestore'; // Firestore imports
 import { db } from '../firebase'; // Import Firestore configuration
 import { useAuth } from '../AuthContext'; // Import authentication context
@@ -42,7 +41,7 @@ const getTextColor = (backgroundColor) => {
     return whiteContrast >= 4.5 ? "#FFFFFF" : "#000000";
 };
 
-const DraggableCard = ({ color, colorName, textColor, index, moveCard, onClick, onCopy, isLocked, onEditColor, toggleLock, updateColor }) => {
+const DraggableCard = ({ color, colorName, textColor, index, moveCard, onClick, onCopy, isLocked, onEditColor, toggleLock }) => {
     const ref = React.useRef(null);
 
     const [{ isDragging }, drag, dragPreview] = useDrag({
@@ -74,51 +73,74 @@ const DraggableCard = ({ color, colorName, textColor, index, moveCard, onClick, 
             lg={2}
             className="p-0 d-flex"
             style={{
-                opacity: isDragging ? 0.5 : 1,
+                opacity: isDragging ? 1 : 1,
             }}
         >
             <Card
                 style={{ backgroundColor: color, color: textColor }}
                 className="w-100 text-center d-flex flex-column justify-content-center full-height-minus-header"
             >
-                <Card.Body className="d-flex flex-column justify-content-center">
-                    <Button
-                        variant="link"
-                        className="drag-handle mb-5"
+                <Card.Body
+                    className="d-flex flex-column mt-5 pt-5 position-relative"
+                    style={{ height: '100%' }}
+                >
+                    {/* Color Name and Hex */}
+                    <Card.Text
+                        className="fw-medium text-center text-uppercase"
                         style={{ color: textColor, fontSize: '1.8em' }}
-                        ref={drag}
                     >
-                        <i className="fas fa-grip-vertical"></i>
-                    </Button>
-                    <Card.Text className="fw-bold" style={{ color: textColor, fontSize: '1.5em' }}>{colorName}</Card.Text>
-                    <Card.Text className="small" style={{ color: textColor, fontSize: '1.2em' }}>{color}</Card.Text>
-                    <div className="d-flex justify-content-center">
-                        <Button variant="link" style={{ color: textColor, fontSize: '1.2em' }} onClick={toggleLock}>
-                            {isLocked ? <FaLock /> : <FaLockOpen />}
-                        </Button>
+                        {color}
+                    </Card.Text>
+                    <Card.Text
+                        className="text-center"
+                        style={{ color: textColor, fontSize: '1.2em' }}
+                    >
+                        {colorName}
+                    </Card.Text>
+                    
+                        
+
+                    {/* Buttons (Visible on Hover) */}
+                    <div
+                        className="position-absolute top-50 start-50 translate-middle d-none flex-column gap-2"
+                        style={{ zIndex: 10 }}
+                    >
                         <Button
                             variant="link"
-                            style={{ color: textColor, fontSize: '1.2em' }}
-                            onClick={() => onClick(color)} // Trigger the info modal
+                            className="bi-grip-horizontal"
+                            style={{ color: textColor, fontSize: '1.3em' }}
+                            ref={drag}
+                        ></Button>
+                        <Button
+                            variant="link"
+                            style={{ color: textColor, fontSize: '1.3em' }}
+                            onClick={toggleLock}
                         >
-                            <i className="fas fa-info-circle"></i>
+                            {isLocked ? <i className="bi bi-lock-fill"></i> : <i className="bi bi-unlock"></i>}
                         </Button>
                         <Button
                             variant="link"
-                            style={{ color: textColor, fontSize: '1.2em' }}
+                            style={{ color: textColor, fontSize: '1.3em' }}
+                            onClick={() => onClick(color)}
+                        >
+                            <i className="bi bi-info-circle"></i>
+                        </Button>
+                        <Button
+                            variant="link"
+                            style={{ color: textColor, fontSize: '1.3em' }}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onCopy();
                             }}
                         >
-                            <i className="fas fa-copy"></i>
+                            <i className="bi bi-copy"></i>
                         </Button>
                         <Button
                             variant="link"
-                            style={{ color: textColor, fontSize: '1.2em' }}
-                            onClick={() => onEditColor(index)} // Open the color picker for this swatch
+                            style={{ color: textColor, fontSize: '1.5em' }}
+                            onClick={() => onEditColor(index)}
                         >
-                            <FaPaintBrush />
+                            <i className="bi bi-palette"></i>
                         </Button>
                     </div>
                 </Card.Body>
@@ -144,7 +166,7 @@ const PaletteGenerator = () => {
     const [toastMessage, setToastMessage] = useState('');
     const [paletteName, setPaletteName] = useState('');
     const [showExportModal, setShowExportModal] = useState(false);
-    const [showButtonContainer, setShowButtonContainer] = useState(true);
+    const [isMenuOpen, setIsMenuOpen] = useState(false); // For FAB menu
 
 
     useEffect(() => {
@@ -438,90 +460,94 @@ const PaletteGenerator = () => {
                     handleHarmonyClick={handleHarmonyClick}
                 />
 
+                {/* Floating Action Button (FAB) Menu */}
                 <div
                     style={{
                         position: 'fixed',
-                        bottom: '300px',
-                        right: '0',
-                        zIndex: 900,
-                        background: '#007bff', // Blue background for the tab
-                        borderRadius: '5px 0 0 5px',
-                        padding: '10px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                        height: 150,
-                        width: 25,
+                        bottom: '20px',
+                        right: '20px',
+                        zIndex: 1050,
                     }}
-                    onClick={() => setShowButtonContainer((prev) => !prev)}
                 >
-                    {showButtonContainer ? (
-                        <i className="fas fa-minus" style={{ color: 'white', fontSize: '1rem' }}></i>
-                    ) : (
-                        <i className="fas fa-plus" style={{ color: 'white', fontSize: '1rem' }}></i>
-                    )}
+                    {/* Main FAB */}
+                    <Button
+                        variant="primary"
+                        onClick={() => setIsMenuOpen((prev) => !prev)}
+                        style={{
+                            borderRadius: '50%',
+                            width: '60px',
+                            height: '60px',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                            backgroundColor: '#007bff',
+                        }}
+                    >
+                        <i
+                            className={`bi ${isMenuOpen ? 'bi-x' : 'bi-plus'}`}
+                            style={{ fontSize: '1.5rem', color: 'white' }}
+                        ></i>
+                    </Button>
 
-                    {showButtonContainer && (
+                    {/* FAB Menu Items */}
+                    {isMenuOpen && (
                         <div
                             style={{
-                                position: 'fixed',
-                                bottom: '20px',
-                                right: '20px',
+                                position: 'absolute',
+                                bottom: '80px',
+                                right: '0',
                                 display: 'flex',
                                 flexDirection: 'column',
-                                gap: '20px', // Space between buttons
-                                zIndex: 1050,
+                                gap: '15px',
                             }}
                         >
-                            <Button
-                                variant="primary"
-                                onClick={() => setShowExportModal(true)}
-                                style={{
-                                    borderRadius: '50%',
-                                    width: '60px',
-                                    height: '60px',
-                                    display: 'flex',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                                }}
-                            >
-                                <i className="fas fa-download" style={{ fontSize: '1.5rem', color: 'white' }}></i>
-                            </Button>
-
                             <Button
                                 variant="primary"
                                 onClick={handleGenerate}
                                 style={{
                                     borderRadius: '50%',
-                                    width: '60px',
-                                    height: '60px',
+                                    width: '50px',
+                                    height: '50px',
                                     display: 'flex',
                                     justifyContent: 'center',
                                     alignItems: 'center',
                                     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
                                 }}
                             >
-                                <i className="fas fa-redo" style={{ fontSize: '1.5rem', color: 'white' }}></i>
+                                <i className="bi bi-arrow-clockwise" style={{ fontSize: '1.2rem', color: 'white' }}></i>
                             </Button>
 
                             <Button
                                 variant="primary"
-                                className="save-palette-btn"
-                                onClick={handleSavePalette}
+                                onClick={() => setShowExportModal(true)}
                                 style={{
                                     borderRadius: '50%',
-                                    width: '60px',
-                                    height: '60px',
+                                    width: '50px',
+                                    height: '50px',
                                     display: 'flex',
                                     justifyContent: 'center',
                                     alignItems: 'center',
                                     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
                                 }}
                             >
-                                <i className="fas fa-save" style={{ fontSize: '1.5rem', color: 'white' }}></i>
+                                <i className="bi bi-download" style={{ fontSize: '1.2rem', color: 'white' }}></i>
+                            </Button>
+
+                            <Button
+                                variant="primary"
+                                onClick={handleSavePalette}
+                                style={{
+                                    borderRadius: '50%',
+                                    width: '50px',
+                                    height: '50px',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                                }}
+                            >
+                                <i className="bi bi-floppy" style={{ fontSize: '1.2rem', color: 'white' }}></i>
                             </Button>
                         </div>
                     )}

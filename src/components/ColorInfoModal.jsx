@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Modal, Button, Row, Col, Accordion } from 'react-bootstrap';
-import { copyColorToClipboard } from '../utils/clipboard';
+import { copyColorToClipboard, showPopupMessage } from '../utils/clipboard';
 
 const ColorInfoModal = ({ isModalOpen, closeModal, selectedColor, colorInfo, colorHarmonies, handleHarmonyClick }) => {
     // Function to generate CSS gradient code from colors array
@@ -23,31 +23,54 @@ const ColorInfoModal = ({ isModalOpen, closeModal, selectedColor, colorInfo, col
                                 <Row className="text-center mb-4">
                                     <Col xs={6} className="d-flex justify-content-between align-items-center">
                                         <p className="mb-0"><strong>HEX:</strong> {colorInfo.hex}</p>
-                                        <Button variant="link" onClick={() => copyColorToClipboard(colorInfo.hex)} className="p-0">
+                                        <Button
+                                            variant="link"
+                                            onClick={() => {
+                                                copyColorToClipboard(colorInfo.hex); // Triggers the copy function
+                                                showPopupMessage(`Copied ${colorInfo.hex} to clipboard!`); // Show the copy message
+                                            }}
+                                            className="p-0"
+                                        >
                                             <i className="fas fa-copy"></i>
                                         </Button>
                                     </Col>
                                     <Col xs={6} className="d-flex justify-content-between align-items-center">
                                         <p className="mb-0"><strong>RGB:</strong> {colorInfo.rgb}</p>
-                                        <Button variant="link" onClick={() => copyColorToClipboard(colorInfo.rgb)} className="p-0">
+                                        <Button variant="link"
+                                            onClick={() => {
+                                                copyColorToClipboard(colorInfo.hex); // Triggers the copy function
+                                                showPopupMessage(`Copied ${colorInfo.hex} to clipboard!`); // Show the copy message
+                                            }} className="p-0">
                                             <i className="fas fa-copy"></i>
                                         </Button>
                                     </Col>
                                     <Col xs={6} className="d-flex justify-content-between align-items-center mt-2">
                                         <p className="mb-0"><strong>HSL:</strong> {colorInfo.hsl}</p>
-                                        <Button variant="link" onClick={() => copyColorToClipboard(colorInfo.hsl)} className="p-0">
+                                        <Button variant="link"
+                                            onClick={() => {
+                                                copyColorToClipboard(colorInfo.hex); // Triggers the copy function
+                                                showPopupMessage(`Copied ${colorInfo.hex} to clipboard!`); // Show the copy message
+                                            }} className="p-0">
                                             <i className="fas fa-copy"></i>
                                         </Button>
                                     </Col>
                                     <Col xs={6} className="d-flex justify-content-between align-items-center mt-2">
                                         <p className="mb-0"><strong>LAB:</strong> {colorInfo.lab}</p>
-                                        <Button variant="link" onClick={() => copyColorToClipboard(colorInfo.lab)} className="p-0">
+                                        <Button variant="link"
+                                            onClick={() => {
+                                                copyColorToClipboard(colorInfo.hex); // Triggers the copy function
+                                                showPopupMessage(`Copied ${colorInfo.hex} to clipboard!`); // Show the copy message
+                                            }} className="p-0">
                                             <i className="fas fa-copy"></i>
                                         </Button>
                                     </Col>
                                     <Col xs={6} className="d-flex justify-content-between align-items-center mt-2">
                                         <p className="mb-0"><strong>CMYK:</strong> {colorInfo.cmyk}</p>
-                                        <Button variant="link" onClick={() => copyColorToClipboard(colorInfo.cmyk)} className="p-0">
+                                        <Button variant="link"
+                                            onClick={() => {
+                                                copyColorToClipboard(colorInfo.hex); // Triggers the copy function
+                                                showPopupMessage(`Copied ${colorInfo.hex} to clipboard!`); // Show the copy message
+                                            }} className="p-0">
                                             <i className="fas fa-copy"></i>
                                         </Button>
                                     </Col>
@@ -59,13 +82,21 @@ const ColorInfoModal = ({ isModalOpen, closeModal, selectedColor, colorInfo, col
                                     </Col>
                                     <Col xs={6} className="d-flex justify-content-between align-items-center mt-2">
                                         <p className="mb-0"><strong>xvYCC:</strong> {colorInfo.xvycc}</p>
-                                        <Button variant="link" onClick={() => copyColorToClipboard(colorInfo.xvycc)} className="p-0">
+                                        <Button variant="link"
+                                            onClick={() => {
+                                                copyColorToClipboard(colorInfo.hex); // Triggers the copy function
+                                                showPopupMessage(`Copied ${colorInfo.hex} to clipboard!`); // Show the copy message
+                                            }} className="p-0">
                                             <i className="fas fa-copy"></i>
                                         </Button>
                                     </Col>
                                     <Col xs={6} className="d-flex justify-content-between align-items-center mt-2">
                                         <p className="mb-0"><strong>HSV:</strong> {colorInfo.hsv}</p>
-                                        <Button variant="link" onClick={() => copyColorToClipboard(colorInfo.hsv)} className="p-0">
+                                        <Button variant="link"
+                                            onClick={() => {
+                                                copyColorToClipboard(colorInfo.hex); // Triggers the copy function
+                                                showPopupMessage(`Copied ${colorInfo.hex} to clipboard!`); // Show the copy message
+                                            }} className="p-0">
                                             <i className="fas fa-copy"></i>
                                         </Button>
                                     </Col>

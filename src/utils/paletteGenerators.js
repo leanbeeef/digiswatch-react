@@ -79,14 +79,28 @@ export const generateTetradic = (hex) => {
 
 
 export const generateRandomPalette = () => {
+  const generateRandomColor = () => 
+    `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`;
+  
+  const getComplementaryColor = (color) => {
+    const r = 255 - parseInt(color.slice(1, 3), 16);
+    const g = 255 - parseInt(color.slice(3, 5), 16);
+    const b = 255 - parseInt(color.slice(5, 7), 16);
+    return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1).toUpperCase()}`;
+  };
+
   const palette = [];
   while (palette.length < 6) {
-    const randomColor = `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`;
-    if (!palette.includes(randomColor)) {
-      palette.push(randomColor);
+    const randomColor = generateRandomColor();
+    const complementaryColor = getComplementaryColor(randomColor);
+
+    if (!palette.includes(randomColor) && !palette.includes(complementaryColor)) {
+      palette.push(randomColor, complementaryColor);
     }
   }
-  return palette;
+  
+  // Ensure palette has exactly 6 colors
+  return palette.slice(0, 6);
 };
 
 // Exporting all palette types for easy access

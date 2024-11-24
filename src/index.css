@@ -83,29 +83,6 @@ button:focus-visible {
 }
 
 
-/* PaletteGenerator.jsx CSS */
-.harmony-grid {
-  display: flex;
-  flex-direction: column;
-}
-
-.harmony-type {
-  margin-bottom: 10px;
-}
-
-.harmony-colors {
-  display: flex;
-}
-
-.harmony-swatch {
-  width: 30px;
-  height: 30px;
-  margin: 2px;
-  cursor: pointer;
-  border-radius: 4px;
-}
-
-
 /* Ensure html, body, and #root take up the full width and height */
 html,
 body,
@@ -140,44 +117,11 @@ body,
   /* Add overflow auto in case content grows beyond available space */
 }
 
-.card {
-  border-radius: 0 !important;
-}
 
-.drag-handle {
-  cursor: grab;
-}
-
-.drag-handle:active {
-  cursor: grabbing;
-}
-
-/* Sidebar specific styles */
-.sidebar-body {
-  padding: 1rem;
-}
-
-/* Larger text for navigation links */
-.sidebar-nav .sidebar-link {
-  font-size: 1.25rem; /* Increase font size */
-  font-weight: 500; /* Slightly bold */
-  margin-bottom: 1rem;
-  text-decoration: none;
-  color: #007bff; /* Bootstrap primary color */
-  transition: color 0.3s ease-in-out;
-}
-
-.sidebar-nav .sidebar-link:hover {
-  color: #0056b3; /* Darker blue on hover */
-}
 
 /* Adjust height for mobile devices */
 @media (max-width: 576px) {
-  .drag-handle {
-    display: none;
-  }
-
-  .full-height-minus-header {
+    .full-height-minus-header {
     height: auto;
     /* Allow cards to size naturally on mobile */
     min-height: 150px;
@@ -218,13 +162,9 @@ body,
   }
 }
 
-/* Buttons styling */
-.sidebar-button {
-  font-size: 1.15rem;
-  padding: 0.75rem;
-}
 
-/* Sidebar */
+
+/* SIDEBAR */
 
 .sidebar {
   transform: translateX(100%); /* Start off-screen to the right */
@@ -259,6 +199,23 @@ body,
   border-radius: 5px;
 }
 
-.btn-close-outline {
-  /* filter: invert(100%); Makes the close button more visible */
+/* CARD BODY */
+
+.card {
+  border-radius: 0 !important;
+  border: none;
+}
+
+.card-body {
+  transition: all 0.3s ease-in-out;
+  position: relative;
+}
+
+.card:hover .card-body > .position-absolute {
+  display: flex !important; /* Show buttons on hover */
+}
+
+.card-body > .position-absolute {
+  display: none; /* Hide buttons by default */
+  align-items: center;
 }

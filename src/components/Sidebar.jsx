@@ -88,6 +88,26 @@ const Sidebar = ({ show, onClose }) => {
             Popular Palettes
           </a>
         </li>
+        <li>
+          <a
+            href="#"
+            className="nav-link link-dark"
+            onClick={() => handleNavigate('/contrastchecker')}
+          >
+            <i className="bi bi-spellcheck me-2"></i>
+            Contrast Checker
+          </a>
+        </li>
+        <li>
+          <a
+            href="#"
+            className="nav-link link-dark"
+            onClick={() => handleNavigate('/imagecolorextractor')}
+          >
+            <i className="bi bi-eyedropper me-2"></i>
+            Image Color Extractor
+          </a>
+        </li>
       </ul>
       <hr />
       <div className="dropdown">
@@ -120,7 +140,7 @@ const Sidebar = ({ show, onClose }) => {
                   href="#"
                   onClick={() => handleNavigate('/profile')}
                 >
-                  <i class="bi bi-person-circle me-2"></i>
+                  <i className="bi bi-person-circle me-2"></i>
                   Profile
                 </a>
               </div>
@@ -130,7 +150,7 @@ const Sidebar = ({ show, onClose }) => {
                   href="#"
                   onClick={() => handleNavigate('/settings')}
                 >
-                  <i class="bi bi-gear-wide me-2"></i>
+                  <i className="bi bi-gear-wide me-2"></i>
                   Settings
                 </a>
               </div>
@@ -139,7 +159,7 @@ const Sidebar = ({ show, onClose }) => {
               </div>
               <div className='d-inline-flex'>
                 <a className="dropdown-item" href="#" onClick={handleLogout}>
-                <i class="bi bi-box-arrow-left me-2"></i>
+                <i className="bi bi-box-arrow-left me-2"></i>
                   Sign out
                 </a>
               </div>

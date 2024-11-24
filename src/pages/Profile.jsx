@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Modal, Form, Image, Toast } from 'react-bootstrap';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { useAuth } from '../AuthContext';
-import { FaDownload, FaShare, FaTrashAlt } from 'react-icons/fa';
 import { db } from '../firebase';
 import { doc, collection, getDocs, getDoc, updateDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import SharePalette from '../components/SharePalette';
@@ -113,6 +112,32 @@ const Profile = () => {
       setCreatedPalettes(fetchedPalettes);
     } catch (error) {
       console.error('Error fetching created palettes: ', error);
+    }
+  };
+
+  const togglePaletteVisibility = async (paletteId, currentVisibility) => {
+    try {
+      const paletteRef = doc(db, 'users', currentUser.uid, 'createdPalettes', paletteId);
+      const newVisibility = currentVisibility === 'public' ? 'private' : 'public';
+  
+      await updateDoc(paletteRef, { visibility: newVisibility });
+  
+      console.log(`Updated palette visibility to: ${newVisibility}`);
+  
+      setCreatedPalettes((prevPalettes) =>
+        prevPalettes.map((palette) =>
+          palette.id === paletteId
+            ? { ...palette, visibility: newVisibility }
+            : palette
+        )
+      );
+  
+      setToastMessage(`Palette is now ${newVisibility}.`);
+      setShowToast(true);
+    } catch (error) {
+      console.error('Error updating palette visibility:', error);
+      setToastMessage('Failed to update palette visibility.');
+      setShowToast(true);
     }
   };
 
@@ -287,6 +312,7 @@ const Profile = () => {
                         ))}
                       </div>
                       <div className="d-flex justify-content-between mt-2">
+
                         <Button
                           variant="link"
                           onClick={() => handleShareClick(palette)}
@@ -299,7 +325,7 @@ const Profile = () => {
                           onClick={() => handleDeletePalette(palette.id, 'palettes')}
                           style={{ color: 'red' }}
                         >
-                          <i class="bi bi-trash-fill"></i>
+                          <i className="bi bi-trash-fill"></i>
                         </Button>
                         <Button
                           variant='link'
@@ -309,7 +335,7 @@ const Profile = () => {
                           }}
                           style={{ color: 'blue' }}
                         >
-                          <i class="bi bi-cloud-arrow-down-fill"></i>
+                          <i className="bi bi-cloud-arrow-down-fill"></i>
                         </Button>
                       </div>
                     </Card.Body>
@@ -337,6 +363,14 @@ const Profile = () => {
                       <div className="d-flex justify-content-between mt-2">
                         <Button
                           variant="link"
+                          onClick={() => togglePaletteVisibility(palette.id, palette.visibility || 'private')}
+                          style={{ color: palette.visibility === 'public' ? 'green' : 'gray' }}
+                        >
+                          <i className={`bi bi-eye${palette.visibility === 'public' ? '-slash' : ''}-fill`}></i>
+                          {palette.visibility === 'public' ? '' : ''}
+                        </Button>
+                        <Button
+                          variant="link"
                           onClick={() => handleShareClick(palette)}
                           style={{ color: '#007bff' }}
                         >
@@ -347,7 +381,7 @@ const Profile = () => {
                           onClick={() => handleDeletePalette(palette.id, 'createdPalettes')}
                           style={{ color: 'red' }}
                         >
-                          <i class="bi bi-trash-fill"></i>
+                          <i className="bi bi-trash-fill"></i>
                         </Button>
 
                         <Button
@@ -370,7 +404,7 @@ const Profile = () => {
                           }}
                           style={{ color: 'blue' }}
                         >
-                          <i class="bi bi-cloud-arrow-down-fill"></i>
+                          <i className="bi bi-cloud-arrow-down-fill"></i>
                         </Button>
                       </div>
                     </div>

@@ -219,3 +219,9 @@ body,
   display: none; /* Hide buttons by default */
   align-items: center;
 }
+
+
+/* Contrast Checker */
+.checker-bg-color {
+  background-color: #f0f0f0;
+}

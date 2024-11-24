@@ -13,6 +13,8 @@ import SignUp from "./pages/SignUp";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile"
 import Home from "./pages/Home"
+import ContrastChecker from "./pages/ContrastChecker"
+import ImageColorExtractor from './pages/ImageExtractor';
 import './index.css';
 
 function App() {
@@ -37,6 +39,8 @@ function App() {
               <Route path="/signup" element={<SignUp />} />
               <Route path="/login" element={<Login />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/contrastchecker" element={<ContrastChecker />} />
+              <Route path="/imagecolorextractor" element={<ImageColorExtractor />} />
               {/* Add other routes as needed */}
             </Routes>
           </main>

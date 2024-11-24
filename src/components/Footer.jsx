@@ -10,8 +10,8 @@ const Footer = () => {
     <footer className="bg-light py-4">
       <Container>
         <Row>
-          <Col md={4} className="text-center text-md-start mb-3 mb-md-0">
-            <img src={logoFooterLight} alt="DigiSwatch Footer Logo" height="40" />
+          <Col md={4} className="d-flex flex-column text-center text-md-start mb-3 mb-md-0">
+            <img className='p-2 mb-2' src={logoFooterLight} alt="DigiSwatch Footer Logo" width="150" />
             <p className="mt-2">Your Digital Palette Playground. Explore and create color palettes effortlessly.</p>
           </Col>
           <Col md={4} className="text-center mb-3 mb-md-0">

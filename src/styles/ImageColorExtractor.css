@@ -1,0 +1,48 @@
+.image-color-extractor {
+  padding: 20px;
+}
+
+.canvas-container {
+  border: 1px solid #ccc;
+  height: 400px;
+}
+
+.visible-canvas {
+  max-height: 400px;
+  max-width: 100%;
+  align-self: center;
+  height: auto;
+  display: block;
+}
+
+.extracted-colors {
+  display: flex;
+  flex-wrap: wrap;
+  height: 100%;
+}
+
+.color-swatch {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.8em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.color-swatch:first-child{
+  border-radius: 5px 5px 0px 0px;
+}
+
+.color-swatch:last-child{
+  border-radius: 0px 0px 5px 5px;
+}
+
+
+@media (max-width: 576px) {
+.extracted-colors {
+  padding-bottom: 80px;
+}
+}

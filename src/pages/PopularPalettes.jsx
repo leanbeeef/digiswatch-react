@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card } from 'react-bootstrap';
-import { FaShareAlt, FaBookmark, FaRegBookmark, FaFire } from 'react-icons/fa';
+import { Container, Row, Col, Card, Button, Nav } from 'react-bootstrap';
+import { fetchPublicPalettes } from "../utils/fetchPalettes"; // Adjust path accordingly
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import SharePalette from '../components/SharePalette';
 import { useAuth } from '../AuthContext'; // Import useAuth hook
 import { db } from "../firebase"; // Firestore integration
@@ -16,13 +17,30 @@ import {
 import paletteData from '../utils/paletteData'; // Import palette data from utils
 
 const PopularPalettes = () => {
-  const [palettes, setPalettes] = useState(paletteData); // Load palettes from external data
+  const [palettes, setPalettes] = useState(paletteData); // Predefined palettes
+  const [userPalettes, setUserPalettes] = useState([]); // Public user palettes
+  const [activeTab, setActiveTab] = useState('userCreated'); // Tab state
   const [likes, setLikes] = useState({});
   const [savedPalettes, setSavedPalettes] = useState({});
   const [selectedPalette, setSelectedPalette] = useState(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [animateLike, setAnimateLike] = useState({});
   const { currentUser } = useAuth(); // Access currentUser from AuthContext
+
+  // Fetch user-created public palettes on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const publicPalettes = await fetchPublicPalettes();
+        setUserPalettes(publicPalettes);
+      } catch (error) {
+        console.error(error.message);
+        alert("We encountered an error fetching public palettes.");
+      }
+    };
+  
+    fetchData();
+  }, []);
 
   // Fetch likes and saved palettes on component mount
   useEffect(() => {
@@ -36,8 +54,8 @@ const PopularPalettes = () => {
     sortPalettesByLikes();
   }, [likes]);
 
-  // Fetch likes from Firestore
   const fetchLikes = async () => {
+    // Fetch likes from Firestore
     try {
       const likesCollection = collection(db, "likes");
       const querySnapshot = await getDocs(likesCollection);
@@ -51,8 +69,8 @@ const PopularPalettes = () => {
     }
   };
 
-  // Fetch saved palettes for the logged-in user
   const fetchSavedPalettes = async () => {
+    // Fetch saved palettes for the logged-in user
     try {
       const palettesCollectionRef = collection(db, "users", currentUser.uid, "palettes");
       const querySnapshot = await getDocs(palettesCollectionRef);
@@ -63,6 +81,18 @@ const PopularPalettes = () => {
       setSavedPalettes(saved);
     } catch (error) {
       console.error("Error fetching saved palettes: ", error);
+    }
+  };
+
+  const fetchUserPalettes = async () => {
+    // Fetch public palettes created by users
+    try {
+      const userPalettesCollection = collection(db, "publicPalettes");
+      const querySnapshot = await getDocs(userPalettesCollection);
+      const fetchedPalettes = querySnapshot.docs.map((doc) => doc.data());
+      setUserPalettes(fetchedPalettes);
+    } catch (error) {
+      console.error("Error fetching user palettes: ", error);
     }
   };
 
@@ -146,77 +176,101 @@ const PopularPalettes = () => {
     setShowShareModal(true);
   };
 
+  const renderPalettes = (palettesToRender) => (
+    <Row>
+      {palettesToRender.map((palette) => (
+        <Col xs={12} md={6} lg={4} key={palette.name} className="mb-4">
+          <Card className="h-100 shadow-sm border-0">
+            <Card.Body className="d-flex flex-column align-items-center">
+              <h5 className="mb-3 text-center">{palette.name}</h5>
+              <div className="palette-display d-flex w-100">
+                {palette.colors.map((color, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      backgroundColor: color,
+                      flex: 1,
+                      height: "60px",
+                      borderRadius:
+                        idx === 0
+                          ? "8px 0 0 8px"
+                          : idx === palette.colors.length - 1
+                            ? "0 8px 8px 0"
+                            : "0",
+                      marginRight: idx !== palette.colors.length - 1 ? "2px" : "0",
+                    }}
+                    title={color}
+                  ></div>
+                ))}
+              </div>
+              <div className="d-flex justify-content-between align-items-center w-100 mt-3">
+                <div
+                  className={`like-icon ${animateLike[palette.name] ? "animate" : ""}`}
+                  onClick={() => handleLike(palette.name)}
+                  style={{
+                    cursor: "pointer",
+                    color: "tomato",
+                    fontSize: "1.5rem",
+                  }}
+                >
+                  <i className="bi bi-fire"></i> <span>{likes[palette.name] || 0}</span>
+                </div>
+
+                <div
+                  onClick={() => handleSave(palette)}
+                  style={{
+                    cursor: "pointer",
+                    fontSize: "1.5rem",
+                    color: savedPalettes[palette.name] ? "gold" : "gray",
+                  }}
+                >
+                  {savedPalettes[palette.name] ? <i className="bi bi-bookmark-check-fill"></i> : <i className ="bi bi-bookmark"></i>}
+                </div>
+
+                <div
+                  onClick={() => handleShareClick(palette)}
+                  style={{
+                    cursor: "pointer",
+                    fontSize: "1.5rem",
+                    color: "dodgerblue",
+                  }}
+                >
+                  <i className="bi bi-share-fill"></i>
+                </div>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+      ))}
+    </Row>
+  );
+
   return (
     <Container className="mt-4">
-      <Row>
-        {palettes.map((palette) => (
-          <Col xs={12} md={6} lg={4} key={palette.name} className="mb-4">
-            <Card className="h-100 shadow-sm border-0">
-              <Card.Body className="d-flex flex-column align-items-center">
-                <h5 className="mb-3 text-center">{palette.name}</h5>
-                <div className="palette-display d-flex w-100">
-                  {palette.colors.map((color, idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        backgroundColor: color,
-                        flex: 1,
-                        height: "60px",
-                        borderRadius:
-                          idx === 0
-                            ? "8px 0 0 8px"
-                            : idx === palette.colors.length - 1
-                              ? "0 8px 8px 0"
-                              : "0",
-                        marginRight: idx !== palette.colors.length - 1 ? "2px" : "0",
-                      }}
-                      title={color}
-                    ></div>
-                  ))}
-                </div>
-                <div className="d-flex justify-content-between align-items-center w-100 mt-3">
-                  {/* Like Icon */}
-                  <div
-                    className={`like-icon ${animateLike[palette.name] ? "animate" : ""}`}
-                    onClick={() => handleLike(palette.name)}
-                    style={{
-                      cursor: "pointer",
-                      color: "tomato",
-                      fontSize: "1.5rem",
-                    }}
-                  >
-                    <FaFire /> <span>{likes[palette.name] || 0}</span>
-                  </div>
+      {/* Tabs */}
+      <Nav variant="tabs" className="mb-4">
+      <Nav.Item>
+          <Nav.Link
+            active={activeTab === 'userCreated'}
+            onClick={() => setActiveTab('userCreated')}
+          >
+            <div className='bi bi-people'> Community Made Palettes</div>
+          </Nav.Link>
+        </Nav.Item>
+        <Nav.Item>
+          <Nav.Link
+            active={activeTab === 'predefined'}
+            onClick={() => setActiveTab('predefined')}
+          >
+           <div className='bi bi-fire'> Popular Palettes</div> 
+          </Nav.Link>
+        </Nav.Item>
+      </Nav>
 
-                  {/* Bookmark Icon */}
-                  <div
-                    onClick={() => handleSave(palette)}
-                    style={{
-                      cursor: "pointer",
-                      fontSize: "1.5rem",
-                      color: savedPalettes[palette.name] ? "gold" : "gray",
-                    }}
-                  >
-                    {savedPalettes[palette.name] ? <FaBookmark /> : <FaRegBookmark />}
-                  </div>
-
-                  {/* Share Icon */}
-                  <div
-                    onClick={() => handleShareClick(palette)}
-                    style={{
-                      cursor: "pointer",
-                      fontSize: "1.5rem",
-                      color: "dodgerblue",
-                    }}
-                  >
-                    <FaShareAlt />
-                  </div>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+      {/* Render palettes based on active tab */}
+      {activeTab === 'userCreated' && renderPalettes(userPalettes)}
+      {activeTab === 'predefined' && renderPalettes(palettes)}
+      
 
       {/* Share Modal */}
       {selectedPalette && (

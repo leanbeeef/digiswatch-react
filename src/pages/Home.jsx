@@ -1,6 +1,5 @@
 // src/pages/Home.jsx
 
-import React from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import popularPalettes from '../utils/paletteData'; // Assume this is an array of popular palette data

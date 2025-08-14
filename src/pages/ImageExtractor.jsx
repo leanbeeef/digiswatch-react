@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import  { useRef, useState, useEffect } from "react";
 import "../styles/ImageColorExtractor.css";
 import defaultImage from "../assets/example.jpeg"; // Import the default image
 import namer from 'color-namer';

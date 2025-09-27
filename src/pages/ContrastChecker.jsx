@@ -11,24 +11,23 @@ const ContrastChecker = () => {
     const [contrastDescription, setContrastDescription] = useState('');
 
     useEffect(() => {
+        // Function to check contrast
+        const checkContrast = () => {
+            const bgColorRGB = hexToRgb(bgColor);
+            const textColorRGB = hexToRgb(textColor);
+            const bgLuminance = calculateLuminance(bgColorRGB);
+            const textLuminance = calculateLuminance(textColorRGB);
+
+            const largeTextContrast = calculateContrastRatio(textLuminance, bgLuminance);
+            const smallTextContrast = largeTextContrast * 0.8;
+
+            setContrastScore(largeTextContrast.toFixed(2));
+            setLargeTextRating(getTextRating(largeTextContrast));
+            setSmallTextRating(getTextRating(smallTextContrast));
+            setContrastDescription(generateContrastDescription(largeTextContrast));
+        };
         checkContrast();
     }, [bgColor, textColor]);
-
-    // Function to check contrast
-    const checkContrast = () => {
-        const bgColorRGB = hexToRgb(bgColor);
-        const textColorRGB = hexToRgb(textColor);
-        const bgLuminance = calculateLuminance(bgColorRGB);
-        const textLuminance = calculateLuminance(textColorRGB);
-
-        const largeTextContrast = calculateContrastRatio(textLuminance, bgLuminance);
-        const smallTextContrast = largeTextContrast * 0.8;
-
-        setContrastScore(largeTextContrast.toFixed(2));
-        setLargeTextRating(getTextRating(largeTextContrast));
-        setSmallTextRating(getTextRating(smallTextContrast));
-        setContrastDescription(generateContrastDescription(largeTextContrast));
-    };
 
     // Function to determine background color based on contrast score
     const getBackgroundColor = (contrastScore) => {

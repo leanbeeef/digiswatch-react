@@ -65,15 +65,14 @@ const DraggableCard = ({ color, colorName, textColor, index, moveCard, onClick, 
     dragPreview(drop(ref));
 
     return (
-        <Col
+        <div
             ref={ref}
-            xs={12}
-            sm={6}
-            md={4}
-            lg={2}
             className="p-0 d-flex"
             style={{
-                opacity: isDragging ? 1 : 1,
+                flex: 1,
+                opacity: isDragging ? 0.5 : 1,
+                minHeight: 0, // Allow shrinking
+                minWidth: 0,
             }}
         >
             <Card
@@ -97,13 +96,11 @@ const DraggableCard = ({ color, colorName, textColor, index, moveCard, onClick, 
                     >
                         {colorName}
                     </Card.Text>
-                    
-                        
 
                     {/* Buttons (Visible on Hover) */}
                     <div
-                        className="position-absolute top-50 start-50 translate-middle d-none flex-column gap-2"
-                        style={{ zIndex: 10 }}
+                        className="position-absolute top-0 start-50 translate-middle-x mt-3 d-none flex-row gap-2 align-items-center justify-content-center"
+                        style={{ zIndex: 10, width: '100%' }}
                     >
                         <Button
                             variant="link"
@@ -145,7 +142,7 @@ const DraggableCard = ({ color, colorName, textColor, index, moveCard, onClick, 
                     </div>
                 </Card.Body>
             </Card>
-        </Col>
+        </div>
     );
 };
 
@@ -355,7 +352,7 @@ const PaletteGenerator = () => {
                     onClose={() => setShowSidebar(false)}
                     onGenerate={handleGenerate}
                 />
-                <Row id="palette-display" className="flex-grow-1 justify-content-center m-0" style={{ display: 'flex' }}>
+                <div id="palette-display" className="flex-grow-1 m-0 d-flex flex-column flex-lg-row" style={{ overflow: 'hidden' }}>
                     {currentPalette.map((colorObj, index) => (
                         <DraggableCard
                             key={`${colorObj.hex}-${index}`}
@@ -371,7 +368,7 @@ const PaletteGenerator = () => {
                             onEditColor={handleOpenColorPicker}
                         />
                     ))}
-                </Row>
+                </div>
 
                 {selectedColorInfo && (
                     <CopyOptions

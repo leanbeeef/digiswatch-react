@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useMemo } from "react";
+import { useRef, useState, useEffect, useMemo, useLayoutEffect } from "react";
 import namer from "color-namer";
 import tinycolor from "tinycolor2";
 import defaultImage from "../assets/example.jpeg"; // keep your existing asset
@@ -78,15 +78,27 @@ export default function ImageColorExtractor() {
     }
 
     // Align overlay to the canvas box so dropper coords match
+    alignOverlay();
+  };
+
+  // Force overlay alignment after DOM updates (e.g. when availH changes container size)
+  useLayoutEffect(() => {
+    alignOverlay();
+  }, [availH]);
+
+  const alignOverlay = () => {
+    const vis = visibleCanvasRef.current;
     const overlay = overlayRef.current;
-    if (overlay) {
-      const parentRect = container.getBoundingClientRect();
-      const visRect = vis.getBoundingClientRect();
-      overlay.style.left = `${visRect.left - parentRect.left}px`;
-      overlay.style.top = `${visRect.top - parentRect.top}px`;
-      overlay.style.width = `${vis.width}px`;
-      overlay.style.height = `${vis.height}px`;
-    }
+    const container = vis?.parentElement;
+    if (!vis || !overlay || !container) return;
+
+    const parentRect = container.getBoundingClientRect();
+    const visRect = vis.getBoundingClientRect();
+
+    overlay.style.left = `${visRect.left - parentRect.left}px`;
+    overlay.style.top = `${visRect.top - parentRect.top}px`;
+    overlay.style.width = `${vis.width}px`;
+    overlay.style.height = `${vis.height}px`;
   };
 
   // Load image into canvases

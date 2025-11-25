@@ -1,12 +1,13 @@
 // src/pages/PaletteGenerator.jsx
-
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Toast, Modal } from 'react-bootstrap';
-import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { Container, Button, Toast, Modal } from 'react-bootstrap';
+import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import Sidebar from '../components/Sidebar';
-import ColorInfoModal from '../components/ColorInfoModal';
-import CopyOptions from '../components/CopyOptions';
+import ColorDataCard from '../components/ColorDataCard';
+import ColorHarmonyCard from '../components/ColorHarmonyCard';
+import ColorContextCard from '../components/ColorContextCard';
+import { getColorContext } from '../utils/getColorContext';
+import '../styles/dashboard.css';
 import {
     generateRandomPalette,
     generateMonochromatic,
@@ -20,186 +21,140 @@ import { getColorInfo } from '../utils/ColorConversions';
 import namer from 'color-namer';
 import tinycolor from 'tinycolor2';
 import { TinyColor } from '@ctrl/tinycolor';
-import {
-    exportPaletteAsCSS,
-    exportPaletteAsJSON,
-    exportPaletteAsText,
-    exportPaletteAsSVG,
-    exportPaletteAsImage,
-} from '../utils/exportPalette';
-import { HexColorPicker } from "react-colorful";
-
+import { exportPaletteAsCSS, exportPaletteAsJSON, exportPaletteAsText, exportPaletteAsSVG, exportPaletteAsImage } from '../utils/exportPalette';
+import { doc, setDoc, collection } from 'firebase/firestore';
+import { db } from '../firebase';
+import { useAuth } from '../AuthContext';
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import { doc, setDoc, collection } from 'firebase/firestore'; // Firestore imports
-import { db } from '../firebase'; // Import Firestore configuration
-import { useAuth } from '../AuthContext'; // Import authentication context
 
-const ItemType = 'CARD';
-
-const getTextColor = (backgroundColor) => {
-    const whiteContrast = tinycolor.readability(backgroundColor, "#FFFFFF");
-    return whiteContrast >= 4.5 ? "#FFFFFF" : "#000000";
-};
-
-const DraggableCard = ({ color, colorName, textColor, index, moveCard, onClick, onCopy, isLocked, onEditColor, toggleLock }) => {
-    const ref = React.useRef(null);
-
-    const [{ isDragging }, drag, dragPreview] = useDrag({
-        type: ItemType,
-        item: { index },
-        collect: (monitor) => ({
-            isDragging: monitor.isDragging(),
-        }),
-    });
-
-    const [, drop] = useDrop({
-        accept: ItemType,
-        hover: (item) => {
-            if (item.index !== index) {
-                moveCard(item.index, index);
-                item.index = index;
-            }
-        },
-    });
-
-    dragPreview(drop(ref));
-
-    return (
-        <div
-            ref={ref}
-            className="p-0 d-flex"
-            style={{
-                flex: 1,
-                opacity: isDragging ? 0.5 : 1,
-                minHeight: 0, // Allow shrinking
-                minWidth: 0,
-            }}
-        >
-            <Card
-                style={{ backgroundColor: color, color: textColor }}
-                className="w-100 text-center d-flex flex-column justify-content-center full-height-minus-header"
-            >
-                <Card.Body
-                    className="d-flex flex-column mt-5 pt-5 position-relative"
-                    style={{ height: '100%' }}
-                >
-                    {/* Color Name and Hex */}
-                    <Card.Text
-                        className="fw-medium text-center text-uppercase"
-                        style={{ color: textColor, fontSize: '1.8em' }}
-                    >
-                        {color}
-                    </Card.Text>
-                    <Card.Text
-                        className="text-center"
-                        style={{ color: textColor, fontSize: '1.2em' }}
-                    >
-                        {colorName}
-                    </Card.Text>
-
-                    {/* Buttons (Visible on Hover) */}
-                    <div
-                        className="position-absolute top-0 start-50 translate-middle-x mt-3 d-none flex-row gap-2 align-items-center justify-content-center"
-                        style={{ zIndex: 10, width: '100%' }}
-                    >
-                        <Button
-                            variant="link"
-                            className="bi-grip-horizontal"
-                            style={{ color: textColor, fontSize: '1.3em' }}
-                            ref={drag}
-                        ></Button>
-                        <Button
-                            variant="link"
-                            style={{ color: textColor, fontSize: '1.3em' }}
-                            onClick={toggleLock}
-                        >
-                            {isLocked ? <i className="bi bi-lock-fill"></i> : <i className="bi bi-unlock"></i>}
-                        </Button>
-                        <Button
-                            variant="link"
-                            style={{ color: textColor, fontSize: '1.3em' }}
-                            onClick={() => onClick(color)}
-                        >
-                            <i className="bi bi-info-circle"></i>
-                        </Button>
-                        <Button
-                            variant="link"
-                            style={{ color: textColor, fontSize: '1.3em' }}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onCopy();
-                            }}
-                        >
-                            <i className="bi bi-copy"></i>
-                        </Button>
-                        <Button
-                            variant="link"
-                            style={{ color: textColor, fontSize: '1.5em' }}
-                            onClick={() => onEditColor(index)}
-                        >
-                            <i className="bi bi-palette"></i>
-                        </Button>
-                    </div>
-                </Card.Body>
-            </Card>
-        </div>
-    );
+const getTextColor = (bg) => {
+    return tinycolor.readability(bg, "#FFFFFF") >= 4.5 ? "#FFFFFF" : "#000000";
 };
 
 const PaletteGenerator = () => {
-    const [currentPalette, setCurrentPalette] = useState([]);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const { currentUser } = useAuth();
+    const [palette, setPalette] = useState([]);
+    // dashboardActive is no longer needed as it's always visible, but we'll keep the logic simple
     const [selectedColor, setSelectedColor] = useState(null);
-    const [colorInfo, setColorInfo] = useState({});
-    const [colorHarmonies, setColorHarmonies] = useState({});
-    const [showCopyOptions, setShowCopyOptions] = useState(false);
-    const [selectedColorInfo, setSelectedColorInfo] = useState(null);
-    const [selectedSwatchIndex, setSelectedSwatchIndex] = useState(null);
-    const [newColor, setNewColor] = useState(null);
-    const [showSidebar, setShowSidebar] = useState(false);
-    const { currentUser } = useAuth(); // Get the current logged-in user
-    const [showModal, setShowModal] = useState(false);
-    const [showToast, setShowToast] = useState(false);
-    const [toastMessage, setToastMessage] = useState('');
-    const [paletteName, setPaletteName] = useState('');
+    const [colorInfo, setColorInfo] = useState(null);
+    const [harmonies, setHarmonies] = useState(null);
+    const [context, setContext] = useState(null);
+    const [cardOrder, setCardOrder] = useState([0, 1, 2]);
+    const [showSaveModal, setShowSaveModal] = useState(false);
     const [showExportModal, setShowExportModal] = useState(false);
-    const [isMenuOpen, setIsMenuOpen] = useState(false); // For FAB menu
-
+    const [paletteName, setPaletteName] = useState('');
+    const [toast, setToast] = useState({ show: false, message: '' });
+    const [expandedCards, setExpandedCards] = useState({ data: true, harmony: true, context: true });
 
     useEffect(() => {
-        handleGenerate(); // Generate the initial palette
+        generatePalette();
     }, []);
 
-    const handleOpenColorPicker = (index) => {
-        setSelectedSwatchIndex(index);
-        setNewColor(currentPalette[index].hex);
+    const generatePalette = () => {
+        setPalette((prevPalette) => {
+            let newPaletteData;
+            // If no previous palette, generate fresh
+            if (prevPalette.length === 0) {
+                const newPalette = generateRandomPalette();
+                newPaletteData = newPalette.map((hex) => ({
+                    hex,
+                    name: namer(hex).ntc[0].name,
+                    textColor: getTextColor(hex),
+                    locked: false,
+                }));
+            } else {
+                // Keep locked colors, regenerate unlocked ones
+                const newPalette = generateRandomPalette();
+                newPaletteData = prevPalette.map((color, index) =>
+                    color.locked
+                        ? color
+                        : {
+                            hex: newPalette[index],
+                            name: namer(newPalette[index]).ntc[0].name,
+                            textColor: getTextColor(newPalette[index]),
+                            locked: false,
+                        }
+                );
+            }
+
+            // If no color is selected (or the selected color is gone/changed), select the first one
+            // We'll just select the first color of the new palette to be safe and ensure dashboard is populated
+            if (newPaletteData.length > 0) {
+                // We need to defer this slightly or just call the handler directly
+                // But we can't call the handler inside the state updater.
+                // So we'll use a timeout or effect. 
+                // Actually, simpler: just set the state here if we can, but we can't set other state here.
+                // We'll use a separate effect or just call it after setting palette.
+            }
+            return newPaletteData;
+        });
     };
 
-    const handleSaveColorChange = () => {
-        setCurrentPalette((prevPalette) =>
-            prevPalette.map((color, i) =>
-                i === selectedSwatchIndex
-                    ? {
-                        ...color,
-                        hex: newColor,
-                        name: namer(newColor).ntc[0].name,
-                        textColor: getTextColor(newColor),
-                    }
-                    : color
-            )
-        );
-        setSelectedSwatchIndex(null);
-        setNewColor(null);
+    // Effect to select the first color when palette changes if no selection or invalid
+    useEffect(() => {
+        if (palette.length > 0) {
+            // If currently selected color is not in the new palette (by hex), or nothing selected
+            // For simplicity in this "always on" dashboard, let's just select the first color if nothing is selected
+            // or if we just generated a fresh palette.
+            // Actually, let's just always select the first color on generation if we want to be simple, 
+            // but users might want to keep their selection if locked.
+            // For now, let's just ensure *something* is selected.
+            if (!selectedColor || !palette.find(c => c.hex === selectedColor)) {
+                handleColorClick(palette[0].hex);
+            }
+        }
+    }, [palette]);
+
+
+    const handleColorClick = (color) => {
+        setSelectedColor(color);
+        setColorInfo(getColorInfo(color));
+        setHarmonies({
+            analogous: generateAnalogous(color),
+            monochromatic: generateMonochromatic(color),
+            complementary: generateComplementary(color),
+            splitComplementary: generateSplitComplementary(color),
+            triadic: generateTriadic(color),
+            tetradic: generateTetradic(color),
+        });
+        setContext(getColorContext(color));
     };
 
-    const handleSavePalette = async () => {
+    const handleHarmonySelect = (harmonyColors) => {
+        setPalette(harmonyColors.map(hex => ({
+            hex: new TinyColor(hex).toHexString(),
+            name: namer(hex).ntc[0].name,
+            textColor: getTextColor(hex),
+            locked: false
+        })));
+        // We don't close dashboard anymore
+    };
+
+    const toggleLock = (index) => {
+        setPalette(prev => prev.map((c, i) => i === index ? { ...c, locked: !c.locked } : c));
+    };
+
+    const handleSave = async () => {
         if (!currentUser) {
-            setToastMessage('You must be logged in to save palettes.');
-            setShowToast(true);
+            setToast({ show: true, message: 'Please log in to save palettes' });
             return;
         }
-
-        setShowModal(true); // Open the modal for input
+        if (!paletteName) {
+            setToast({ show: true, message: 'Please enter a palette name' });
+            return;
+        }
+        try {
+            await setDoc(doc(collection(db, 'users', currentUser.uid, 'createdPalettes')), {
+                name: paletteName,
+                colors: palette.map(c => c.hex),
+                createdAt: new Date().toISOString(),
+            });
+            setToast({ show: true, message: 'Palette saved successfully!' });
+            setPaletteName('');
+            setShowSaveModal(false);
+        } catch (error) {
+            setToast({ show: true, message: 'Failed to save palette' });
+        }
     };
 
     const handleExport = (format) => {
@@ -209,371 +164,186 @@ const PaletteGenerator = () => {
                 exportPaletteAsImage(format);
                 break;
             case 'css':
-                exportPaletteAsCSS(currentPalette);
+                exportPaletteAsCSS(palette);
                 break;
             case 'json':
-                exportPaletteAsJSON(currentPalette);
+                exportPaletteAsJSON(palette);
                 break;
             case 'txt':
-                exportPaletteAsText(currentPalette);
+                exportPaletteAsText(palette);
                 break;
             case 'svg':
-                exportPaletteAsSVG(currentPalette);
-                break;
-            default:
-                alert('Invalid export format.');
+                exportPaletteAsSVG(palette);
                 break;
         }
+        setShowExportModal(false);
     };
 
-    const handleModalSave = async () => {
-        if (!paletteName) {
-            setToastMessage('Palette name cannot be empty.');
-            setShowToast(true);
-            return;
-        }
-
-        try {
-            const paletteRef = doc(collection(db, 'users', currentUser.uid, 'createdPalettes'));
-            await setDoc(paletteRef, {
-                name: paletteName,
-                colors: currentPalette.map((color) => color.hex),
-                createdAt: new Date().toISOString(),
-            });
-
-            setToastMessage('Palette saved successfully!');
-            setShowToast(true);
-            setPaletteName(''); // Clear input
-            setShowModal(false); // Close modal
-        } catch (error) {
-            console.error('Error saving palette:', error);
-            setToastMessage('Failed to save the palette. Please try again.');
-            setShowToast(true);
-        }
+    const moveCardOrder = (from, to) => {
+        const newOrder = [...cardOrder];
+        const [moved] = newOrder.splice(from, 1);
+        newOrder.splice(to, 0, moved);
+        setCardOrder(newOrder);
     };
 
-    // Generate a random palette
-    const handleGenerate = () => {
-        setCurrentPalette((prevPalette) => {
-            // If no previous palette exists, generate a fresh one
-            if (prevPalette.length === 0) {
-                const newPalette = generateRandomPalette();
-                return newPalette.map((color) => ({
-                    hex: color,
-                    name: namer(color).ntc[0].name,
-                    textColor: getTextColor(color),
-                    locked: false, // Default to unlocked
-                }));
-            }
-
-            // Otherwise, generate new colors only for unlocked slots
-            const newPalette = generateRandomPalette();
-            return prevPalette.map((color, index) =>
-                color.locked
-                    ? color // Keep locked colors
-                    : {
-                        hex: newPalette[index],
-                        name: namer(newPalette[index]).ntc[0].name,
-                        textColor: getTextColor(newPalette[index]),
-                        locked: false,
-                    }
-            );
-        });
-    };
-
-
-    const toggleLock = (index) => {
-        setCurrentPalette((prevPalette) =>
-            prevPalette.map((color, i) =>
-                i === index ? { ...color, locked: !color.locked } : color
-            )
-        );
-    };
-
-    const moveCard = (fromIndex, toIndex) => {
-        setCurrentPalette((prevPalette) => {
-            const updatedPalette = [...prevPalette];
-            const [movedColor] = updatedPalette.splice(fromIndex, 1);
-            updatedPalette.splice(toIndex, 0, movedColor);
-            return updatedPalette;
-        });
-    };
-
-    const handleColorClick = (color) => {
-        setSelectedColor(color);
-        setIsModalOpen(true);
-
-        setColorInfo(getColorInfo(color));
-
-        setColorHarmonies({
-            analogous: generateAnalogous(color),
-            monochromatic: generateMonochromatic(color),
-            complementary: generateComplementary(color),
-            splitComplementary: generateSplitComplementary(color),
-            triadic: generateTriadic(color),
-            tetradic: generateTetradic(color),
-        });
-    };
-
-    const closeModal = () => {
-        setIsModalOpen(false);
-        setSelectedColor(null);
-        setColorInfo({});
-        setColorHarmonies({});
-    };
-
-    const handleHarmonyClick = (harmonyColors) => {
-        const updatedPalette = harmonyColors.map(color => {
-            const hex = new TinyColor(color).toHexString();
-            const nameResult = namer(hex).ntc[0];
-            const textColor = getTextColor(hex);
-
-            return { hex, name: nameResult.name, textColor };
-        });
-
-        setCurrentPalette(updatedPalette);
-    };
-
-    const handleOpenCopyOptions = (colorObj) => {
-        const colorInfo = getColorInfo(colorObj.hex);
-        setSelectedColorInfo(colorInfo);
-        setShowCopyOptions(true);
-    };
-
-    const handleCloseCopyOptions = () => {
-        setShowCopyOptions(false);
+    const toggleCardExpand = (cardId) => {
+        setExpandedCards(prev => ({
+            ...prev,
+            [cardId]: !prev[cardId]
+        }));
     };
 
     return (
         <DndProvider backend={HTML5Backend}>
-            <Container fluid className="p-0 d-flex flex-column" style={{ height: '100%' }}>
-                <Sidebar
-                    show={showSidebar}
-                    onClose={() => setShowSidebar(false)}
-                    onGenerate={handleGenerate}
-                />
-                <div id="palette-display" className="flex-grow-1 m-0 d-flex flex-column flex-lg-row" style={{ overflow: 'hidden' }}>
-                    {currentPalette.map((colorObj, index) => (
-                        <DraggableCard
-                            key={`${colorObj.hex}-${index}`}
-                            index={index}
-                            color={colorObj.hex}
-                            colorName={colorObj.name}
-                            textColor={colorObj.textColor}
-                            isLocked={colorObj.locked}
-                            moveCard={moveCard}
-                            onClick={handleColorClick}
-                            onCopy={() => handleOpenCopyOptions(colorObj)}
-                            toggleLock={() => toggleLock(index)}
-                            onEditColor={handleOpenColorPicker}
-                        />
+            <Container fluid className="p-0 d-flex flex-row" style={{ height: 'calc(100vh - 82px)', overflow: 'hidden' }}>
+                {/* Palette Display - Vertical Stack on Left */}
+                <div
+                    id="palette-display"
+                    className="d-flex flex-column"
+                    style={{
+                        width: '280px',
+                        height: '100%',
+                        overflowY: 'auto',
+                        borderRight: '1px solid #dee2e6',
+                        flexShrink: 0,
+                        backgroundColor: '#fff'
+                    }}
+                >
+                    {palette.map((color, index) => (
+                        <div
+                            key={`${color.hex}-${index}`}
+                            className="palette-card"
+                            style={{
+                                height: '120px', // Fixed height per card
+                                backgroundColor: color.hex,
+                                color: color.textColor,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                padding: '1rem',
+                                cursor: 'pointer',
+                                position: 'relative',
+                                gap: '0.5rem',
+                                borderBottom: '1px solid rgba(0,0,0,0.1)'
+                            }}
+                            onClick={() => handleColorClick(color.hex)}
+                        >
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+                                <h5 style={{ margin: 0, fontWeight: 'bold', fontSize: '1.1rem' }}>{color.hex}</h5>
+                                <p style={{ margin: 0, fontSize: '0.85rem' }}>{color.name}</p>
+                            </div>
+                            <Button
+                                variant={color.locked ? 'warning' : 'light'}
+                                size="sm"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleLock(index);
+                                }}
+                            >
+                                <i className={color.locked ? 'bi bi-lock-fill' : 'bi bi-unlock'}></i>
+                            </Button>
+                        </div>
                     ))}
                 </div>
 
-                {selectedColorInfo && (
-                    <CopyOptions
-                        show={showCopyOptions}
-                        onClose={handleCloseCopyOptions}
-                        colorInfo={selectedColorInfo}
-                    />
-                )}
-
-                {selectedSwatchIndex !== null && (
-                    <div
-                        style={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            zIndex: 1100,
-                            background: '#fff',
-                            padding: '1rem',
-                            borderRadius: '8px',
-                            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                            width: '300px',
-                        }}
-                    >
-                        <HexColorPicker className='w-100' color={newColor} onChange={setNewColor} />
-
-                        {/* Color Input Fields */}
-                        <div className="mt-3">
-                            <div className="mb-2">
-                                <label className="form-label">HEX</label>
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    value={newColor}
-                                    onChange={(e) => setNewColor(e.target.value)}
-                                    placeholder="#000000"
-                                />
+                {/* Dashboard - Always Visible on Right */}
+                <div style={{ flex: 1, padding: '0 1rem', backgroundColor: '#f8f9fa', overflowY: 'auto', height: '100%' }}>
+                    {colorInfo ? (
+                        <>
+                            <div style={{ /*marginBottom: '1rem'*/ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                {/* <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>Color Dashboard</h2> */}
                             </div>
-                            <div className="mb-2">
-                                <label className="form-label">RGB</label>
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    value={tinycolor(newColor).toRgbString()}
-                                    onChange={(e) => {
-                                        const rgb = e.target.value;
-                                        if (tinycolor(rgb).isValid()) setNewColor(tinycolor(rgb).toHexString());
-                                    }}
-                                    placeholder="rgb(0, 0, 0)"
-                                />
+                            <div className="dashboard-grid">
+                                {cardOrder.map((idx) => {
+                                    if (idx === 0) return (
+                                        <ColorDataCard
+                                            key="data"
+                                            color={selectedColor}
+                                            colorInfo={colorInfo}
+                                            index={0}
+                                            moveCard={moveCardOrder}
+                                            
+                                        />
+                                    );
+                                    if (idx === 1) return (
+                                        <ColorHarmonyCard
+                                            key="harmony"
+                                            baseColor={selectedColor}
+                                            colorHarmonies={harmonies}
+                                            onHarmonySelect={handleHarmonySelect}
+                                            index={1}
+                                            moveCard={moveCardOrder}
+                                            
+                                        />
+                                    );
+                                    if (idx === 2) return (
+                                        <ColorContextCard
+                                            key="context"
+                                            color={selectedColor}
+                                            contextData={context}
+                                            index={2}
+                                            moveCard={moveCardOrder}
+                                            
+                                        />
+                                    );
+                                    return null;
+                                })}
                             </div>
-                            <div className="mb-3">
-                                <label className="form-label">HSL</label>
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    value={tinycolor(newColor).toHslString()}
-                                    onChange={(e) => {
-                                        const hsl = e.target.value;
-                                        if (tinycolor(hsl).isValid()) setNewColor(tinycolor(hsl).toHexString());
-                                    }}
-                                    placeholder="hsl(0, 0%, 0%)"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Save/Cancel Buttons */}
-                        <div className="d-flex justify-content-between">
-                            <Button variant="secondary" onClick={() => setSelectedSwatchIndex(null)}>
-                                Cancel
-                            </Button>
-                            <Button variant="primary" className="ms-2" onClick={handleSaveColorChange}>
-                                Save
-                            </Button>
-                        </div>
-                    </div>
-                )}
-
-
-                <ColorInfoModal
-                    isModalOpen={isModalOpen}
-                    closeModal={closeModal}
-                    selectedColor={selectedColor}
-                    colorInfo={colorInfo}
-                    colorHarmonies={colorHarmonies}
-                    handleHarmonyClick={handleHarmonyClick}
-                />
-
-                {/* Floating Action Button (FAB) Menu */}
-                <div
-                    style={{
-                        position: 'fixed',
-                        bottom: '20px',
-                        right: '20px',
-                        zIndex: 1050,
-                    }}
-                >
-                    {/* Main FAB */}
-                    <Button
-                        variant="primary"
-                        onClick={() => setIsMenuOpen((prev) => !prev)}
-                        style={{
-                            borderRadius: '50%',
-                            width: '60px',
-                            height: '60px',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                            backgroundColor: '#007bff',
-                        }}
-                    >
-                        <i
-                            className={`bi ${isMenuOpen ? 'bi-x' : 'bi-plus'}`}
-                            style={{ fontSize: '1.5rem', color: 'white' }}
-                        ></i>
-                    </Button>
-
-                    {/* FAB Menu Items */}
-                    {isMenuOpen && (
-                        <div
-                            style={{
-                                position: 'absolute',
-                                bottom: '80px',
-                                right: '0',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: '15px',
-                            }}
-                        >
-                            <Button
-                                variant="primary"
-                                onClick={handleGenerate}
-                                style={{
-                                    borderRadius: '50%',
-                                    width: '50px',
-                                    height: '50px',
-                                    display: 'flex',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                                }}
-                            >
-                                <i className="bi bi-arrow-clockwise" style={{ fontSize: '1.2rem', color: 'white' }}></i>
-                            </Button>
-
-                            <Button
-                                variant="primary"
-                                onClick={() => setShowExportModal(true)}
-                                style={{
-                                    borderRadius: '50%',
-                                    width: '50px',
-                                    height: '50px',
-                                    display: 'flex',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                                }}
-                            >
-                                <i className="bi bi-download" style={{ fontSize: '1.2rem', color: 'white' }}></i>
-                            </Button>
-
-                            <Button
-                                variant="primary"
-                                onClick={handleSavePalette}
-                                style={{
-                                    borderRadius: '50%',
-                                    width: '50px',
-                                    height: '50px',
-                                    display: 'flex',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                                }}
-                            >
-                                <i className="bi bi-floppy" style={{ fontSize: '1.2rem', color: 'white' }}></i>
-                            </Button>
+                        </>
+                    ) : (
+                        <div className="d-flex flex-column justify-content-center align-items-center h-100 text-muted">
+                            <i className="bi bi-palette" style={{ fontSize: '3rem', marginBottom: '1rem' }}></i>
+                            <h4>Select a color to view details</h4>
                         </div>
                     )}
                 </div>
 
+                {/* Floating Action Buttons */}
+                <div style={{ position: 'fixed', bottom: '20px', right: '20px', display: 'flex', flexDirection: 'column', gap: '10px', zIndex: 1050 }}>
+                    <Button
+                        variant="primary"
+                        onClick={generatePalette}
+                        style={{ borderRadius: '50%', width: '60px', height: '60px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+                        title="Generate New Palette"
+                    >
+                        <i className="bi bi-arrow-clockwise" style={{ fontSize: '1.5rem' }}></i>
+                    </Button>
+                    <Button
+                        variant="primary"
+                        onClick={() => setShowSaveModal(true)}
+                        style={{ borderRadius: '50%', width: '60px', height: '60px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+                        title="Save Palette"
+                    >
+                        <i className="bi bi-floppy" style={{ fontSize: '1.5rem' }}></i>
+                    </Button>
+                    <Button
+                        variant="primary"
+                        onClick={() => setShowExportModal(true)}
+                        style={{ borderRadius: '50%', width: '60px', height: '60px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+                        title="Export Palette"
+                    >
+                        <i className="bi bi-download" style={{ fontSize: '1.5rem' }}></i>
+                    </Button>
+                </div>
 
-
-                {/* Save Palette Modal */}
-                <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+                {/* Save Modal */}
+                <Modal show={showSaveModal} onHide={() => setShowSaveModal(false)} centered>
                     <Modal.Header closeButton>
                         <Modal.Title>Save Palette</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                        <p>Enter a name for your palette:</p>
                         <input
                             type="text"
                             className="form-control"
                             value={paletteName}
                             onChange={(e) => setPaletteName(e.target.value)}
-                            placeholder="Palette Name"
+                            placeholder="Enter palette name"
                         />
                     </Modal.Body>
                     <Modal.Footer>
-                        <Button variant="secondary" onClick={() => setShowModal(false)}>
-                            Cancel
-                        </Button>
-                        <Button variant="primary" onClick={handleModalSave}>
-                            Save
-                        </Button>
+                        <Button variant="secondary" onClick={() => setShowSaveModal(false)}>Cancel</Button>
+                        <Button variant="primary" onClick={handleSave}>Save</Button>
                     </Modal.Footer>
                 </Modal>
 
@@ -583,101 +353,28 @@ const PaletteGenerator = () => {
                         <Modal.Title>Export Palette</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                        <p>Select a format to export your palette:</p>
-                        <div className="d-flex flex-wrap">
-                            <Button
-                                variant="outline-primary"
-                                className="m-2"
-                                onClick={() => {
-                                    handleExport('png');
-                                    setShowExportModal(false);
-                                }}
-                            >
-                                PNG
-                            </Button>
-                            <Button
-                                variant="outline-primary"
-                                className="m-2"
-                                onClick={() => {
-                                    handleExport('jpeg');
-                                    setShowExportModal(false);
-                                }}
-                            >
-                                JPEG
-                            </Button>
-                            <Button
-                                variant="outline-primary"
-                                className="m-2"
-                                onClick={() => {
-                                    handleExport('css');
-                                    setShowExportModal(false);
-                                }}
-                            >
-                                CSS
-                            </Button>
-                            <Button
-                                variant="outline-primary"
-                                className="m-2"
-                                onClick={() => {
-                                    handleExport('json');
-                                    setShowExportModal(false);
-                                }}
-                            >
-                                JSON
-                            </Button>
-                            <Button
-                                variant="outline-primary"
-                                className="m-2"
-                                onClick={() => {
-                                    handleExport('txt');
-                                    setShowExportModal(false);
-                                }}
-                            >
-                                Text
-                            </Button>
-                            <Button
-                                variant="outline-primary"
-                                className="m-2"
-                                onClick={() => {
-                                    handleExport('svg');
-                                    setShowExportModal(false);
-                                }}
-                            >
-                                SVG
-                            </Button>
+                        <div className="d-flex flex-column gap-2">
+                            {['PNG', 'JPEG', 'SVG', 'CSS', 'JSON', 'Text'].map(format => (
+                                <Button key={format} variant="outline-primary" onClick={() => handleExport(format.toLowerCase())}>
+                                    Export as {format}
+                                </Button>
+                            ))}
                         </div>
                     </Modal.Body>
-                    <Modal.Footer>
-                        <Button variant="secondary" onClick={() => setShowExportModal(false)}>
-                            Close
-                        </Button>
-                    </Modal.Footer>
                 </Modal>
 
-                {/* Toast Notification */}
+                {/* Toast */}
                 <Toast
-                    onClose={() => setShowToast(false)}
-                    show={showToast}
+                    show={toast.show}
+                    onClose={() => setToast({ show: false, message: '' })}
                     delay={3000}
                     autohide
-                    style={{
-                        position: 'fixed',
-                        bottom: '20px',
-                        right: '20px',
-                        zIndex: 1050,
-                    }}
+                    style={{ position: 'fixed', bottom: '20px', left: '20px', zIndex: 1100 }}
                 >
-                    <Toast.Header className="text-bg-primary" closeButton={false}>
+                    <Toast.Header>
                         <strong className="me-auto">Notification</strong>
-                        <button
-                            type="button"
-                            className="btn-close bold"
-                            style={{ filter: 'invert(1)' }} // Makes it white
-                            aria-label="Close"
-                            onClick={() => setShowToast(false)}
-                        ></button>
                     </Toast.Header>
-                    <Toast.Body>{toastMessage}</Toast.Body>
+                    <Toast.Body>{toast.message}</Toast.Body>
                 </Toast>
             </Container>
         </DndProvider>

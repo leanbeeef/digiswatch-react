@@ -149,7 +149,6 @@ const ContrastChecker = () => {
                 </Col>
             </Row>
         </Container>
-        <Footer></Footer>
         </section>
     );
 };

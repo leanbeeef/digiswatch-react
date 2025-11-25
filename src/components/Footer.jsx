@@ -21,7 +21,6 @@ const Footer = () => {
               <Nav.Link href="/popular-palettes">Popular Colors</Nav.Link>
               <Nav.Link href="/contrast-checker">Contrast Checker</Nav.Link>
               <Nav.Link href="/image-extractor">Image Extractor</Nav.Link>
-              <Nav.Link href="/text-extractor">Text Extractor</Nav.Link>
             </Nav>
           </Col>
           <Col md={4} className="text-center text-md-end">
@@ -34,7 +33,7 @@ const Footer = () => {
           </Col>
         </Row>
         <div className="text-center mt-3">
-          <p>&copy; 2024 DigiSwatch. All rights reserved.</p>
+          <p>&copy; 2025 DigiSwatch. All rights reserved.</p>
         </div>
       </Container>
     </footer>

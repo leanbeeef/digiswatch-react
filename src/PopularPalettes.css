@@ -1,0 +1,212 @@
+/* Popular Palettes Page Specific Styles */
+
+/* Hero Section */
+.pp-hero {
+    position: relative;
+    padding: 4rem 0;
+    text-align: center;
+    overflow: hidden;
+    margin-bottom: 3rem;
+}
+
+.pp-hero-title {
+    font-size: 3.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1rem;
+    letter-spacing: -0.02em;
+}
+
+.pp-hero-subtitle {
+    font-size: 1.25rem;
+    color: var(--ds-ink-50);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Custom Pill Navigation */
+.pp-nav-pills {
+    display: inline-flex;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 0.5rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    margin-bottom: 3rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.pp-nav-link {
+    padding: 0.75rem 1.5rem;
+    border-radius: 999px;
+    color: var(--ds-ink-50);
+    font-weight: 600;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pp-nav-link:hover {
+    color: var(--ds-ink);
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.pp-nav-link.active {
+    background: white;
+    color: #4f46e5;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Glass Card Enhancements */
+.pp-card {
+    height: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    border-radius: 24px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    position: relative;
+}
+
+.pp-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    border-color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.85);
+}
+
+.pp-card-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.pp-palette-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--ds-ink);
+    margin-bottom: 1rem;
+    letter-spacing: -0.01em;
+}
+
+/* Color Strip Animation */
+.pp-color-strip {
+    display: flex;
+    width: 100%;
+    height: 80px;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.pp-color-swatch {
+    flex: 1;
+    height: 100%;
+    transition: all 0.3s ease;
+    position: relative;
+    cursor: pointer;
+}
+
+.pp-color-swatch:hover {
+    flex: 2;
+}
+
+.pp-color-swatch::after {
+    content: attr(data-color);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 4px;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    font-size: 0.7rem;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    backdrop-filter: blur(4px);
+}
+
+.pp-color-swatch:hover::after {
+    opacity: 1;
+}
+
+/* Action Buttons */
+.pp-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.pp-action-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--ds-ink-50);
+}
+
+.pp-action-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    transform: scale(1.1);
+}
+
+.pp-action-btn.liked {
+    color: #ef4444;
+}
+
+.pp-action-btn.saved {
+    color: #eab308;
+}
+
+.pp-action-btn.share {
+    color: #3b82f6;
+}
+
+.pp-like-count {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* Animations */
+@keyframes like-burst {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.3);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.animate-like {
+    animation: like-burst 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Masonry Grid Layout (CSS Grid fallback) */
+.pp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+    padding-bottom: 4rem;
+}

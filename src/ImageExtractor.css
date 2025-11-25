@@ -1,0 +1,263 @@
+/* Image Extractor Page Styles */
+
+/* Hero Section */
+.ie-hero {
+    text-align: center;
+    padding: 2rem 0 1.5rem;
+    position: relative;
+}
+
+.ie-hero-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+}
+
+.ie-hero-subtitle {
+    font-size: 1rem;
+    color: var(--ds-ink-50);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Glass Panels */
+.ie-glass-panel {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 24px;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+    height: calc(100% - 100px);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.ie-glass-panel:hover {
+    background: rgba(255, 255, 255, 0.75);
+    border-color: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.08);
+}
+
+/* Canvas Container */
+.ie-canvas-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    position: relative;
+    /* Subtle grid pattern for transparency indication */
+    background-image:
+        linear-gradient(45deg, #e5e7eb 25%, transparent 25%),
+        linear-gradient(-45deg, #e5e7eb 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #e5e7eb 75%),
+        linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    background-color: #f9fafb;
+}
+
+/* Swatch List */
+.ie-swatch-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 1.5rem;
+    align-content: flex-start;
+    overflow-y: auto;
+    height: 100%;
+}
+
+.ie-swatch-card {
+    position: relative;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.ie-swatch-card:hover {
+    transform: scale(1.05) rotate(1deg);
+    z-index: 10;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.ie-swatch-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    color: white;
+    font-size: 0.75rem;
+    transform: translateY(100%);
+    transition: transform 0.2s ease;
+}
+
+.ie-swatch-card:hover .ie-swatch-info {
+    transform: translateY(0);
+}
+
+.ie-swatch-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #1f2937;
+    font-weight: 700;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Floating Controls Bar */
+.ie-controls-bar {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(16px);
+    padding: 0.75rem 1.5rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    z-index: 1000;
+    width: auto;
+    min-width: 600px;
+    justify-content: space-between;
+}
+
+.ie-control-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.ie-btn {
+    background: white;
+    border: 1px solid #e5e7eb;
+    color: #374151;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ie-btn:hover:not(:disabled) {
+    background: #f9fafb;
+    border-color: #d1d5db;
+    transform: translateY(-1px);
+}
+
+.ie-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.ie-btn-primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: none;
+}
+
+.ie-btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+}
+
+.ie-file-input {
+    max-width: 200px;
+}
+
+/* Dropper Styles */
+.ie-dropper {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border: 3px solid white;
+    cursor: grab;
+    position: absolute;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+    z-index: 50;
+    pointer-events: auto;
+    /* Crucial for dragging */
+}
+
+.ie-dropper.active {
+    cursor: grabbing;
+    transform: translate(-50%, -50%) scale(1.1);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    z-index: 60;
+}
+
+.ie-dropper-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 2px dashed rgba(255, 255, 255, 0.8);
+    animation: spin 10s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.ie-dropper-nub {
+    position: absolute;
+    bottom: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 10px solid white;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.2));
+}
+
+.ie-dropper-lock {
+    position: absolute;
+    top: -32px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1f2937;
+    color: white;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+}
+
+.ie-dropper:hover .ie-dropper-lock,
+.ie-dropper.active .ie-dropper-lock {
+    opacity: 1;
+    pointer-events: auto;
+}

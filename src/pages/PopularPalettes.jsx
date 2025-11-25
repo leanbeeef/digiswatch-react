@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Nav } from 'react-bootstrap';
-import { fetchPublicPalettes } from "../utils/fetchPalettes"; // Adjust path accordingly
+import { Container, Row, Col } from 'react-bootstrap';
+import { fetchPublicPalettes } from "../utils/fetchPalettes";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import SharePalette from '../components/SharePalette';
-import { useAuth } from '../AuthContext'; // Import useAuth hook
-import { db } from "../firebase"; // Firestore integration
+import { useAuth } from '../AuthContext';
+import { db } from "../firebase";
 import {
   collection,
   doc,
@@ -13,21 +13,22 @@ import {
   setDoc,
   updateDoc,
   increment,
+  deleteDoc,
 } from "firebase/firestore";
-import paletteData from '../utils/paletteData'; // Import palette data from utils
+import paletteData from '../utils/paletteData';
+import '../PopularPalettes.css'; // Import custom styles
 
 const PopularPalettes = () => {
-  const [palettes, setPalettes] = useState(paletteData); // Predefined palettes
-  const [userPalettes, setUserPalettes] = useState([]); // Public user palettes
-  const [activeTab, setActiveTab] = useState('userCreated'); // Tab state
+  const [palettes, setPalettes] = useState(paletteData);
+  const [userPalettes, setUserPalettes] = useState([]);
+  const [activeTab, setActiveTab] = useState('predefined');
   const [likes, setLikes] = useState({});
   const [savedPalettes, setSavedPalettes] = useState({});
   const [selectedPalette, setSelectedPalette] = useState(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [animateLike, setAnimateLike] = useState({});
-  const { currentUser } = useAuth(); // Access currentUser from AuthContext
+  const { currentUser } = useAuth();
 
-  // Fetch user-created public palettes on component mount
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -35,14 +36,13 @@ const PopularPalettes = () => {
         setUserPalettes(publicPalettes);
       } catch (error) {
         console.error(error.message);
-        alert("We encountered an error fetching public palettes.");
+        // alert("We encountered an error fetching public palettes."); // Suppress alert for smoother UX
       }
     };
-  
+
     fetchData();
   }, []);
 
-  // Fetch likes and saved palettes on component mount
   useEffect(() => {
     fetchLikes();
     if (currentUser) {
@@ -55,7 +55,6 @@ const PopularPalettes = () => {
   }, [likes]);
 
   const fetchLikes = async () => {
-    // Fetch likes from Firestore
     try {
       const likesCollection = collection(db, "likes");
       const querySnapshot = await getDocs(likesCollection);
@@ -70,7 +69,6 @@ const PopularPalettes = () => {
   };
 
   const fetchSavedPalettes = async () => {
-    // Fetch saved palettes for the logged-in user
     try {
       const palettesCollectionRef = collection(db, "users", currentUser.uid, "palettes");
       const querySnapshot = await getDocs(palettesCollectionRef);
@@ -84,19 +82,6 @@ const PopularPalettes = () => {
     }
   };
 
-  const fetchUserPalettes = async () => {
-    // Fetch public palettes created by users
-    try {
-      const userPalettesCollection = collection(db, "publicPalettes");
-      const querySnapshot = await getDocs(userPalettesCollection);
-      const fetchedPalettes = querySnapshot.docs.map((doc) => doc.data());
-      setUserPalettes(fetchedPalettes);
-    } catch (error) {
-      console.error("Error fetching user palettes: ", error);
-    }
-  };
-
-  // Handle like button click
   const handleLike = async (paletteName) => {
     try {
       const paletteRef = doc(db, "likes", paletteName);
@@ -110,13 +95,11 @@ const PopularPalettes = () => {
         await setDoc(paletteRef, { count: 1 });
       }
 
-      // Animate the like icon
       setAnimateLike((prev) => ({ ...prev, [paletteName]: true }));
       setTimeout(() => {
         setAnimateLike((prev) => ({ ...prev, [paletteName]: false }));
       }, 500);
 
-      // Update likes locally
       setLikes((prevLikes) => ({
         ...prevLikes,
         [paletteName]: (prevLikes[paletteName] || 0) + 1,
@@ -126,7 +109,6 @@ const PopularPalettes = () => {
     }
   };
 
-  // Handle save button click
   const handleSave = async (palette) => {
     if (!currentUser) {
       alert("You must be logged in to save palettes.");
@@ -138,7 +120,6 @@ const PopularPalettes = () => {
       const paletteDocRef = doc(palettesCollectionRef, palette.name);
 
       if (savedPalettes[palette.name]) {
-        // If already saved, remove from Firestore and local state
         await deleteDoc(paletteDocRef);
         setSavedPalettes((prev) => {
           const updated = { ...prev };
@@ -146,7 +127,6 @@ const PopularPalettes = () => {
           return updated;
         });
       } else {
-        // Save palette to Firestore
         await setDoc(paletteDocRef, {
           name: palette.name,
           colors: palette.colors,
@@ -160,119 +140,104 @@ const PopularPalettes = () => {
     }
   };
 
-  // Sort palettes by likes
   const sortPalettesByLikes = () => {
     const sortedPalettes = [...palettes].sort((a, b) => {
       const likesA = likes[a.name] || 0;
       const likesB = likes[b.name] || 0;
-      return likesB - likesA; // Descending order
+      return likesB - likesA;
     });
     setPalettes(sortedPalettes);
   };
 
-  // Handle share button click
   const handleShareClick = (palette) => {
     setSelectedPalette(palette);
     setShowShareModal(true);
   };
 
   const renderPalettes = (palettesToRender) => (
-    <Row>
+    <div className="pp-grid">
       {palettesToRender.map((palette) => (
-        <Col xs={12} md={6} lg={4} key={palette.name} className="mb-4">
-          <Card className="h-100 shadow-sm border-0">
-            <Card.Body className="d-flex flex-column align-items-center">
-              <h5 className="mb-3 text-center">{palette.name}</h5>
-              <div className="palette-display d-flex w-100">
-                {palette.colors.map((color, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      backgroundColor: color,
-                      flex: 1,
-                      height: "60px",
-                      borderRadius:
-                        idx === 0
-                          ? "8px 0 0 8px"
-                          : idx === palette.colors.length - 1
-                            ? "0 8px 8px 0"
-                            : "0",
-                      marginRight: idx !== palette.colors.length - 1 ? "2px" : "0",
-                    }}
-                    title={color}
-                  ></div>
-                ))}
-              </div>
-              <div className="d-flex justify-content-between align-items-center w-100 mt-3">
-                <div
-                  className={`like-icon ${animateLike[palette.name] ? "animate" : ""}`}
-                  onClick={() => handleLike(palette.name)}
-                  style={{
-                    cursor: "pointer",
-                    color: "tomato",
-                    fontSize: "1.5rem",
-                  }}
-                >
-                  <i className="bi bi-fire"></i> <span>{likes[palette.name] || 0}</span>
-                </div>
+        <div key={palette.name} className="pp-card">
+          <div className="pp-card-body">
+            <div className="pp-palette-name">{palette.name}</div>
 
+            <div className="pp-color-strip">
+              {palette.colors.map((color, idx) => (
                 <div
-                  onClick={() => handleSave(palette)}
-                  style={{
-                    cursor: "pointer",
-                    fontSize: "1.5rem",
-                    color: savedPalettes[palette.name] ? "gold" : "gray",
+                  key={idx}
+                  className="pp-color-swatch"
+                  style={{ backgroundColor: color }}
+                  data-color={color}
+                  onClick={() => {
+                    navigator.clipboard.writeText(color);
+                    // Optional: Add toast notification here
                   }}
-                >
-                  {savedPalettes[palette.name] ? <i className="bi bi-bookmark-check-fill"></i> : <i className ="bi bi-bookmark"></i>}
-                </div>
+                  title="Click to copy hex"
+                ></div>
+              ))}
+            </div>
 
-                <div
-                  onClick={() => handleShareClick(palette)}
-                  style={{
-                    cursor: "pointer",
-                    fontSize: "1.5rem",
-                    color: "dodgerblue",
-                  }}
-                >
-                  <i className="bi bi-share-fill"></i>
-                </div>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
+            <div className="pp-actions">
+              <button
+                className={`pp-action-btn ${animateLike[palette.name] ? 'animate-like' : ''} ${likes[palette.name] ? 'liked' : ''}`}
+                onClick={() => handleLike(palette.name)}
+              >
+                <i className={`bi ${likes[palette.name] ? 'bi-heart-fill' : 'bi-heart'}`}></i>
+                <span className="pp-like-count">{likes[palette.name] || 0}</span>
+              </button>
+
+              <button
+                className={`pp-action-btn ${savedPalettes[palette.name] ? 'saved' : ''}`}
+                onClick={() => handleSave(palette)}
+              >
+                <i className={`bi ${savedPalettes[palette.name] ? 'bi-bookmark-fill' : 'bi-bookmark'}`}></i>
+              </button>
+
+              <button
+                className="pp-action-btn share"
+                onClick={() => handleShareClick(palette)}
+              >
+                <i className="bi bi-share-fill"></i>
+              </button>
+            </div>
+          </div>
+        </div>
       ))}
-    </Row>
+    </div>
   );
 
   return (
-    <Container className="mt-4">
-      {/* Tabs */}
-      <Nav variant="tabs" className="mb-4">
-      <Nav.Item>
-          <Nav.Link
-            active={activeTab === 'userCreated'}
-            onClick={() => setActiveTab('userCreated')}
-          >
-            <div className='bi bi-people'> Community Made Palettes</div>
-          </Nav.Link>
-        </Nav.Item>
-        <Nav.Item>
-          <Nav.Link
-            active={activeTab === 'predefined'}
-            onClick={() => setActiveTab('predefined')}
-          >
-           <div className='bi bi-fire'> Popular Palettes</div> 
-          </Nav.Link>
-        </Nav.Item>
-      </Nav>
+    <div className="full-page">
+      <div className="pp-hero">
+        <div className="pp-hero-title">Discover Color Magic</div>
+        <div className="pp-hero-subtitle">
+          Explore trending palettes curated by our community and top designers.
+          Find the perfect combination for your next masterpiece.
+        </div>
+      </div>
 
-      {/* Render palettes based on active tab */}
-      {activeTab === 'userCreated' && renderPalettes(userPalettes)}
-      {activeTab === 'predefined' && renderPalettes(palettes)}
-      
+      <Container>
+        <div className="d-flex justify-content-center">
+          <div className="pp-nav-pills">
+            <div
+              className={`pp-nav-link ${activeTab === 'predefined' ? 'active' : ''}`}
+              onClick={() => setActiveTab('predefined')}
+            >
+              <i className="bi bi-fire"></i> Popular
+            </div>
+            <div
+              className={`pp-nav-link ${activeTab === 'userCreated' ? 'active' : ''}`}
+              onClick={() => setActiveTab('userCreated')}
+            >
+              <i className="bi bi-people-fill"></i> Community
+            </div>
+          </div>
+        </div>
 
-      {/* Share Modal */}
+        {activeTab === 'userCreated' && renderPalettes(userPalettes)}
+        {activeTab === 'predefined' && renderPalettes(palettes)}
+      </Container>
+
       {selectedPalette && (
         <SharePalette
           show={showShareModal}
@@ -280,7 +245,7 @@ const PopularPalettes = () => {
           palette={selectedPalette}
         />
       )}
-    </Container>
+    </div>
   );
 };
 

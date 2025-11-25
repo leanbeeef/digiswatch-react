@@ -1,7 +1,8 @@
 import { useRef, useState, useEffect, useMemo, useLayoutEffect } from "react";
 import namer from "color-namer";
 import tinycolor from "tinycolor2";
-import defaultImage from "../assets/example.jpeg"; // keep your existing asset
+import defaultImage from "../assets/example.jpeg";
+import "../ImageExtractor.css";
 
 /**
  * ImageColorExtractor — draggable eyedroppers + zoom lens
@@ -20,20 +21,20 @@ export default function ImageColorExtractor() {
   const [count, setCount] = useState(5);
   const [lens, setLens] = useState({ visible: false, vx: 0, vy: 0 });
   const [availH, setAvailH] = useState(0); // available content height (px)
-  const maxDroppers = 10;
+  const maxDroppers = 12
 
   // Computed square size for right-column swatches so the page never scrolls
   const tileSize = useMemo(() => {
     const gaps = Math.max(0, count - 1) * 3; // 8px gap between squares
     const s = Math.floor((availH - gaps) / Math.max(1, count));
-    return Math.max(120, s || 120);
+    return Math.max(100, s || 100);
   }, [availH, count]);
 
   // Keep a Set of hex colors to bias initial placement toward unique swatches
   const sampledInitColors = useMemo(() => new Set(), [imageURL]);
 
-  // Helper: bottom navbar height
-  const getBottomH = () => document.querySelector("nav.fixed-bottom")?.offsetHeight || 0;
+  // Helper: bottom navbar height (now floating, so we use a fixed offset)
+  const getBottomOffset = () => 100;
 
   // Fit canvases to viewport without page scroll
   const layoutAndDraw = () => {
@@ -46,15 +47,14 @@ export default function ImageColorExtractor() {
     const vctx = vis.getContext("2d");
     const hctx = hid.getContext("2d");
 
-    // Available height = viewport - container top - bottom nav - small padding
-    const container = vis.parentElement; // .canvas-shell
-    const rectTop = container.getBoundingClientRect().top;
-    const bottomH = getBottomH();
-    const availableHeight = Math.min(500, Math.max(120, window.innerHeight - rectTop - bottomH - 16));
+    // Available height = container height (flex item) - padding
+    const container = vis.parentElement; // .ie-canvas-container
+    // We can just use the container's height since it's now controlled by flexbox
+    const availableHeight = container.clientHeight - 20; // 20px padding
     setAvailH(availableHeight);
 
     // Width constraint from container
-    const maxW = container.clientWidth;
+    const maxW = container.clientWidth - 40; // padding
 
     // Scale by both constraints, never upscale above 1
     const scale = Math.min(maxW / img.width, availableHeight / img.height, 1);
@@ -221,14 +221,21 @@ export default function ImageColorExtractor() {
     lctx.strokeRect(0.5, 0.5, lensCanvas.width - 1, lensCanvas.height - 1);
 
     // Position near the pointer, but clamp to viewport so it never forces page scroll
-    const offset = 16;
-    let lx = vx + offset;
-    let ly = vy - (lensCanvas.height + offset);
+    const offset = 20; // Distance from cursor
+    // Center horizontally under the cursor, position below vertically
+    let lx = vx - (lensCanvas.width / 2);
+    let ly = vy + offset;
+
     const minX = 8;
     const minY = 8;
     const maxX = window.innerWidth - lensCanvas.width - 8;
-    const maxY = window.innerHeight - getBottomH() - lensCanvas.height - 8;
-    if (ly < minY) ly = vy + offset; // flip below if there's no room above
+    const maxY = window.innerHeight - 100 - lensCanvas.height - 8;
+
+    // If no room below, flip to above
+    if (ly > maxY) {
+      ly = vy - (lensCanvas.height + offset);
+    }
+
     lx = Math.max(minX, Math.min(maxX, lx));
     ly = Math.max(minY, Math.min(maxY, ly));
 
@@ -300,103 +307,128 @@ export default function ImageColorExtractor() {
   const extracted = droppers.map(({ color, name, id }) => ({ color, name, id }));
 
   return (
-    <div className="w-100" style={{ height: "100vh", overflow: "hidden" }}>
-      {/* Main */}
-      <div className="container px-4 py-3" style={{ height: `calc(100vh - ${getBottomH()}px)` }}>
-        <div className="row g-3" style={{ height: "100%" }}>
-          {/* Left: Canvas with overlay */}
-          <div className="col-md-7 d-flex" style={{ minHeight: 0 }}>
-            <div className="canvas-shell position-relative rounded-3 shadow-sm flex-grow-1 d-flex justify-content-center align-items-center" style={{ background: "#f6f7fb", height: availH, overflow: "hidden" }}>
-              <canvas ref={visibleCanvasRef} className="d-block rounded-3" style={{ display: "block" }} />
+    <div className="w-100 d-flex flex-column" style={{ height: "100vh", overflow: "hidden", background: "#f3f4f6" }}>
 
-              {/* Hidden canvas for accurate sampling (must be in the DOM) */}
-              <canvas ref={hiddenCanvasRef} className="d-none" aria-hidden="true" />
+      {/* Hero Section */}
+      <div className="ie-hero flex-shrink-0">
+        <div className="ie-hero-title">Image Color Extractor</div>
+        <div className="ie-hero-subtitle">
+          Drag the droppers to extract precise colors from your image.
+        </div>
+      </div>
 
-              {/* Eyedropper overlay */}
-              <div ref={overlayRef} className="position-absolute" style={{ pointerEvents: "none" }}>
-                {droppers.map((d, idx) => (
-                  <Dropper
-                    key={d.id}
-                    idx={idx}
-                    d={d}
-                    active={activeId === d.id}
-                    onPointerDown={() => setActiveId(d.id)}
-                    onToggleLock={() => toggleLock(d.id)}
-                  />
-                ))}
+      {/* Main Content */}
+      <div className="container px-4 flex-grow-1" style={{ minHeight: 0, paddingBottom: '100px' }}>
+        <div className="row g-4 h-100">
 
-                {/* Zoom lens canvas */}
-                <canvas
-                  ref={lensCanvasRef}
-                  className={`position-absolute ${lens.visible ? "" : "d-none"}`}
-                  style={{
-                    left: lens.vx,
-                    top: lens.vy,
-                    width: 140,
-                    height: 140,
-                    pointerEvents: "none",
-                    background: "#fff",
-                    borderRadius: 12,
-                    boxShadow: "0 6px 18px rgba(0,0,0,.25)",
-                  }}
-                />
+          {/* Left: Canvas Panel */}
+          <div className="col-md-7 h-100">
+            <div className="ie-glass-panel">
+              <div className="ie-canvas-container">
+                <canvas ref={visibleCanvasRef} className="d-block rounded-3 shadow-sm" style={{ display: "block" }} />
+
+                {/* Hidden canvas for accurate sampling */}
+                <canvas ref={hiddenCanvasRef} className="d-none" aria-hidden="true" />
+
+                {/* Eyedropper overlay */}
+                <div ref={overlayRef} className="position-absolute" style={{ pointerEvents: "none" }}>
+                  {droppers.map((d, idx) => (
+                    <Dropper
+                      key={d.id}
+                      idx={idx}
+                      d={d}
+                      active={activeId === d.id}
+                      onPointerDown={() => setActiveId(d.id)}
+                      onToggleLock={() => toggleLock(d.id)}
+                    />
+                  ))}
+
+                  {/* Zoom lens canvas moved to root */}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Right: Color list */}
-          <div className="col-md-5 d-flex py-5" style={{ minHeight: 0 }}>
-            <div className="d-flex flex-wrap w-100  align-items-start" style={{ maxHeight: availH, overflow: "hidden", gap: 8, flex: 1, alignContent: 'start' }}>
-              {extracted.map(({ color, name, id }, i) => (
-                <div key={id} className="position-relative d-flex align-items-center justify-content-center" style={{ width: tileSize, height: tileSize, background: color, color: tinycolor(color).isDark() ? "#fff" : "#111", boxShadow: "0 2px 8px rgba(0,0,0,.2)", borderRadius: 6 }}>
-                  <div className="position-absolute top-0 start-0 m-1 badge bg-light text-dark">{i + 1}</div>
-                  <div className="position-absolute bottom-0 start-0 end-0 px-2 py-1" style={{ fontSize: 11, background: "rgba(0,0,0,0.25)", color: "#fff" }}>
-                    <span className="text-truncate d-block" title={name}>{name}</span>
-                    <span className="opacity-75">{color}</span>
+          {/* Right: Color List Panel */}
+          <div className="col-md-5 h-100">
+            <div className="ie-glass-panel">
+              <div className="ie-swatch-grid">
+                {extracted.map(({ color, name, id }, i) => (
+                  <div
+                    key={id}
+                    className="ie-swatch-card"
+                    style={{
+                      width: tileSize,
+                      height: tileSize,
+                      background: color,
+                      flexGrow: 1,
+                      minWidth: '100px'
+                    }}
+                    onClick={() => navigator.clipboard.writeText(color)}
+                    title="Click to copy hex"
+                  >
+                    <div className="ie-swatch-badge">#{i + 1}</div>
+                    <div className="ie-swatch-info">
+                      <div className="fw-bold text-truncate">{name}</div>
+                      <div className="opacity-75 font-monospace small">{color}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom controls */}
-      <nav className="navbar navbar-light bg-primary fixed-bottom py-2">
-        <div className="container-fluid d-flex justify-content-between align-items-center">
-          <input type="file" className="form-control form-control-sm w-50" onChange={handleUpload} />
-
-          <div className="d-flex align-items-center bg-white rounded-pill px-2 py-1 gap-2 shadow-sm">
-            <button className="btn btn-sm btn-outline-secondary" onClick={removeDropper} disabled={count <= 2}>
-              −
-            </button>
-            <span className="navbar-text small">Current Droppers: <strong>{count}</strong></span>
-            <button className="btn btn-sm btn-outline-secondary" onClick={addDropper} disabled={count >= maxDroppers}>
-              +
-            </button>
-            <button className="btn btn-sm btn-outline-primary ms-2" onClick={randomizeDroppers}>
-              Randomize
-            </button>
-          </div>
+      {/* Floating Controls Bar */}
+      <div className="ie-controls-bar">
+        <div className="ie-control-group">
+          <input
+            type="file"
+            id="file-upload"
+            className="d-none"
+            onChange={handleUpload}
+            accept="image/*"
+          />
+          <label htmlFor="file-upload" className="ie-btn ie-btn-primary" style={{ cursor: 'pointer' }}>
+            <i className="bi bi-upload"></i> Upload Image
+          </label>
         </div>
-      </nav>
 
-      <style>{`
-        html, body, #root { height: 100%; }
-        body { overflow: hidden; }
-        .dropper {
-          width: 26px; height: 26px; border-radius: 50%;
-          box-shadow: 0 2px 6px rgba(0,0,0,.25);
-          border: 2px solid #fff; cursor: grab; position: absolute;
-          transform: translate(-50%, -50%);
-        }
-        .dropper.active { cursor: grabbing; }
-        .dropper .ring { position:absolute; inset:-6px; border-radius:50%; border:2px dashed rgba(0,0,0,.25); }
-        .dropper .nub { position:absolute; bottom:-10px; left:50%; transform:translateX(-50%);
-          width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 8px solid #fff; filter: drop-shadow(0 1px 2px rgba(0,0,0,.2)); }
-        .dropper .lock { position:absolute; top:-28px; left:50%; transform:translateX(-50%);
-          background:#111; color:#fff; border-radius:10px; font-size:10px; line-height:1; padding:4px 6px; white-space:nowrap; }
-      `}</style>
+        <div className="ie-control-group">
+          <button className="ie-btn" onClick={removeDropper} disabled={count <= 2}>
+            <i className="bi bi-dash-lg"></i>
+          </button>
+          <span className="fw-bold text-dark" style={{ minWidth: '30px', textAlign: 'center' }}>{count}</span>
+          <button className="ie-btn" onClick={addDropper} disabled={count >= maxDroppers}>
+            <i className="bi bi-plus-lg"></i>
+          </button>
+        </div>
+
+        <div className="ie-control-group">
+          <button className="ie-btn" onClick={randomizeDroppers}>
+            <i className="bi bi-shuffle"></i> Randomize
+          </button>
+        </div>
+      </div>
+
+      {/* Zoom lens canvas - Fixed position to avoid clipping */}
+      <canvas
+        ref={lensCanvasRef}
+        className={`position-fixed ${lens.visible ? "" : "d-none"}`}
+        style={{
+          left: lens.vx,
+          top: lens.vy,
+          width: 140,
+          height: 140,
+          pointerEvents: "none",
+          background: "#fff",
+          borderRadius: 12,
+          boxShadow: "0 6px 18px rgba(0,0,0,.25)",
+          zIndex: 9999,
+          border: "2px solid rgba(255,255,255,0.8)"
+        }}
+      />
     </div>
   );
 }
@@ -405,8 +437,8 @@ function Dropper({ d, idx, active, onPointerDown, onToggleLock }) {
   const { x, y, color, locked } = d;
   return (
     <div
-      className={`dropper ${active ? "active" : ""}`}
-      style={{ left: x, top: y, background: color, pointerEvents: locked ? "auto" : "auto" }}
+      className={`ie-dropper ${active ? "active" : ""}`}
+      style={{ left: x, top: y, background: color }}
       onMouseDown={(e) => {
         e.preventDefault();
         if (!locked) onPointerDown();
@@ -417,10 +449,10 @@ function Dropper({ d, idx, active, onPointerDown, onToggleLock }) {
       }}
       title={locked ? "Locked — click lock to unlock" : "Drag to sample"}
     >
-      <div className="ring" />
-      <div className="nub" />
-      <div className="lock" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <span style={{ opacity: 0.8 }}>#{idx + 1}</span>
+      <div className="ie-dropper-ring" />
+      <div className="ie-dropper-nub" />
+      <div className="ie-dropper-lock">
+        <span className="me-2">#{idx + 1}</span>
         <button
           onClick={(e) => {
             e.stopPropagation();

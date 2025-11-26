@@ -15,6 +15,7 @@ import {
 } from '../utils/exportPalette';
 import namer from 'color-namer';
 import tinycolor from 'tinycolor2';
+import SEO from '../components/SEO';
 
 
 const getTextColor = (backgroundColor) => {
@@ -119,11 +120,11 @@ const Profile = () => {
     try {
       const paletteRef = doc(db, 'users', currentUser.uid, 'createdPalettes', paletteId);
       const newVisibility = currentVisibility === 'public' ? 'private' : 'public';
-  
+
       await updateDoc(paletteRef, { visibility: newVisibility });
-  
+
       console.log(`Updated palette visibility to: ${newVisibility}`);
-  
+
       setCreatedPalettes((prevPalettes) =>
         prevPalettes.map((palette) =>
           palette.id === paletteId
@@ -131,7 +132,7 @@ const Profile = () => {
             : palette
         )
       );
-  
+
       setToastMessage(`Palette is now ${newVisibility}.`);
       setShowToast(true);
     } catch (error) {
@@ -187,7 +188,12 @@ const Profile = () => {
   };
 
   return (
-    <section className='full-height-minus-header' style={{ backgroundColor: '#eee' }}>
+    <section className='full-height-minus-header ds-hero'>
+      <SEO
+        title="My Profile & Saved Palettes"
+        description="Manage your saved color palettes and account settings on DigiSwatch."
+        url="/profile"
+      />
       <Container className="py-5">
         {/* Toast Notification */}
         <Toast
@@ -217,7 +223,7 @@ const Profile = () => {
         <Row>
           {/* Profile Info Section */}
           <Col xs={12} md={4}>
-            <div className="mb-4 text-center rounded bg-white p-5 sticky-top">
+            <div className="mb-4 text-center glass-card rounded-4 border border-1 border-white p-5 sticky-md-top">
               <Card.Body>
                 <Image
                   src={avatar || 'https://via.placeholder.com/150'}
@@ -296,7 +302,7 @@ const Profile = () => {
               <Col xs={12} md={6} className="mb-4">
                 <h5 className="mb-4">Saved Palettes</h5>
                 {savedPalettes.map((palette) => (
-                  <div key={palette.id} className="mb-3 p-3 rounded bg-white">
+                  <div key={palette.id} className="mb-3 p-3 glass-card rounded-4 border border-1 border-white">
                     <Card.Body>
                       <h6>{palette.name}</h6>
                       <div id="palette-display" className="palette-display d-flex">
@@ -345,7 +351,7 @@ const Profile = () => {
               <Col xs={12} md={6}>
                 <h5 className="mb-4">Created Palettes</h5>
                 {createdPalettes.map((palette) => (
-                  <div key={palette.id} className="mb-3 p-3 rounded bg-white">
+                  <div key={palette.id} className="mb-3 p-3 glass-card rounded-4 border border-1 border-white">
                     <div>
                       <h6>{palette.name}</h6>
                       <div id="palette-display" className="palette-display d-flex">

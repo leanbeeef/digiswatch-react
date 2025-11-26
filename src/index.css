@@ -119,18 +119,128 @@ body,
 
 
 
-/* Adjust height for mobile devices */
-@media (max-width: 576px) {
-    .full-height-minus-header {
+/* ============================================
+   RESPONSIVE BREAKPOINTS
+   ============================================ */
+
+/* Tablet breakpoint (768px and below) */
+@media (max-width: 768px) {
+  .full-height-minus-header {
     height: auto;
-    /* Allow cards to size naturally on mobile */
-    min-height: 150px;
-    /*Optional: Ensure cards have a minimum height */
+    min-height: 100px;
   }
 
+  /* Reduce heading sizes for tablets */
+  h1 {
+    font-size: 2.5em;
+  }
+
+  h2 {
+    font-size: 2em;
+  }
+
+  h3 {
+    font-size: 1.5em;
+  }
+
+  /* Optimize container padding */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Glass card adjustments */
+  .glass-card {
+    padding: 1.5rem !important;
+  }
+
+  /* Stack Bootstrap columns */
+  .row > .col,
+  .row > [class*="col-"] {
+    margin-bottom: 1rem;
+  }
+}
+
+/* Mobile breakpoint (576px and below) */
+@media (max-width: 576px) {
+  .full-height-minus-header {
+    height: auto;
+    min-height: 150px;
+  }
+  .fab-container {
+    display: none !important;
+  }
+
+
+  /* Mobile typography */
+  h1 {
+    font-size: 2em;
+    line-height: 1.2;
+  }
+
+  h2 {
+    font-size: 1.75em;
+  }
+
+  h3 {
+    font-size: 1.4em;
+  }
+
+  h4 {
+    font-size: 1.2em;
+  }
+
+  h5 {
+    font-size: 1.1em;
+  }
+
+  /* Mobile container padding */
+  .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .py-5 {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+  }
+
+  .mb-5 {
+    margin-bottom: 2rem !important;
+  }
+
+  /* Glass card mobile optimization */
+  .glass-card {
+    padding: 1rem !important;
+    margin-bottom: 1rem;
+  }
+
+  /* Touch-friendly buttons */
+  button,
+  .btn {
+    min-height: 44px;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+  }
+
+  .btn-sm {
+    min-height: 38px;
+    padding: 0.5rem 1rem;
+  }
+
+  /* Form inputs - touch friendly */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  textarea,
+  select {
+    font-size: 16px; /* Prevents zoom on iOS */
+    min-height: 44px;
+  }
+
+  /* Navbar adjustments */
   .navbar-brand span {
     display: none;
-    /* Hide text on small screens */
   }
 
   .navbar {
@@ -145,20 +255,45 @@ body,
   }
 
   .sidebar-toggle-btn {
-    right: 15px; /* Adjust for smaller screens */
+    right: 15px;
   }
 
-  /* Adjust brand spacing for mobile */
   .navbar-brand img {
     max-width: 100%;
   }
 
   .sidebar-nav .sidebar-link {
-    font-size: 1.5rem; /* Larger font size for small screens */
+    font-size: 1.5rem;
   }
 
   .sidebar-button {
-    font-size: 1.25rem; /* Larger button text */
+    font-size: 1.25rem;
+  }
+
+  /* Row spacing */
+  .row > .col,
+  .row > [class*="col-"] {
+    margin-bottom: 1rem;
+  }
+
+  /* Remove column gaps on mobile */
+  .column-gap-3 {
+    column-gap: 0 !important;
+    row-gap: 1rem;
+  }
+
+  /* Card spacing */
+  .card {
+    margin-bottom: 1rem;
+  }
+
+  /* Modal adjustments */
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+
+  .modal-content {
+    border-radius: 0.5rem;
   }
 }
 

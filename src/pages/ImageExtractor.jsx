@@ -3,6 +3,7 @@ import namer from "color-namer";
 import tinycolor from "tinycolor2";
 import defaultImage from "../assets/example.jpeg";
 import "../ImageExtractor.css";
+import SEO from '../components/SEO';
 
 /**
  * ImageColorExtractor — draggable eyedroppers + zoom lens
@@ -307,7 +308,13 @@ export default function ImageColorExtractor() {
   const extracted = droppers.map(({ color, name, id }) => ({ color, name, id }));
 
   return (
-    <div className="w-100 d-flex flex-column" style={{ height: "100vh", overflow: "hidden", background: "#f3f4f6" }}>
+    <div className="w-100 d-flex flex-column" style={{ height: "calc(100vh - 300px)", overflow: "auto", background: "#f3f4f6" }}>
+      <SEO
+        title="Image to Color Palette Extractor"
+        description="Extract beautiful color palettes from any image. Upload your photo and automatically generate a color scheme based on its dominant colors."
+        keywords="image color picker, extract colors from image, photo palette generator, color finder, hex code extractor"
+        url="/image-extractor"
+      />
 
       {/* Hero Section */}
       <div className="ie-hero flex-shrink-0">
@@ -318,11 +325,11 @@ export default function ImageColorExtractor() {
       </div>
 
       {/* Main Content */}
-      <div className="container px-4 flex-grow-1" style={{ minHeight: 0, paddingBottom: '100px' }}>
-        <div className="row g-4 h-100">
+      <div className="container px-4 flex-grow-1" style={{ minHeight: 0 }}>
+        <div className="row g-4" style={{ height: "calc(100vh - 300px)" }}>
 
           {/* Left: Canvas Panel */}
-          <div className="col-md-7 h-100">
+          <div className="col-12 col-md-7">
             <div className="ie-glass-panel">
               <div className="ie-canvas-container">
                 <canvas ref={visibleCanvasRef} className="d-block rounded-3 shadow-sm" style={{ display: "block" }} />
@@ -350,7 +357,7 @@ export default function ImageColorExtractor() {
           </div>
 
           {/* Right: Color List Panel */}
-          <div className="col-md-5 h-100">
+          <div className="col-12 col-md-5">
             <div className="ie-glass-panel">
               <div className="ie-swatch-grid">
                 {extracted.map(({ color, name, id }, i) => (

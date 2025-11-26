@@ -410,3 +410,94 @@
 .dashboard-scroll-container::-webkit-scrollbar-thumb:hover {
     background: var(--dashboard-text-muted);
 }
+
+/* Palette Generator Layout */
+.palette-generator-container {
+    display: flex;
+    flex-direction: row;
+    height: calc(100vh - 82px);
+    overflow: hidden;
+}
+
+.palette-sidebar {
+    width: 280px;
+    height: 100%;
+    overflow-y: auto;
+    border-right: 1px solid #dee2e6;
+    flex-shrink: 0;
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+}
+
+.palette-card-item {
+    height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    cursor: pointer;
+    position: relative;
+    gap: 0.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    transition: background-color 0.2s;
+}
+
+.palette-card-item:hover {
+    filter: brightness(0.95);
+}
+
+.palette-dashboard-area {
+    flex: 1;
+    padding: 0 1rem;
+    background-color: #f8f9fa;
+    overflow-y: auto;
+    height: 100%;
+}
+
+/* Mobile Layout for Palette Generator */
+@media (max-width: 768px) {
+    .palette-generator-container {
+        flex-direction: column;
+    }
+
+    .palette-sidebar {
+        width: 100%;
+        height: 110px;
+        /* Fixed height for horizontal strip */
+        min-height: 110px;
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        border-right: none;
+        border-bottom: 1px solid #dee2e6;
+        /* Ensure it stays at top if we were using body scroll, but here we use flex layout so it is naturally at top */
+        z-index: 100;
+    }
+
+    .palette-card-item {
+        height: 100%;
+        width: 20%;
+        /* 5 cards = 100% */
+        min-width: 80px;
+        /* Minimum width to prevent squishing */
+        border-bottom: none;
+        border-right: 1px solid rgba(0, 0, 0, 0.1);
+        padding: 0.5rem;
+    }
+
+    .palette-card-item h5 {
+        font-size: 0.9rem !important;
+    }
+
+    .palette-card-item p {
+        font-size: 0.7rem !important;
+        display: none;
+        /* Hide name on mobile to save space if needed, or keep it small */
+    }
+
+    .palette-dashboard-area {
+        padding: 1rem 0.5rem;
+    }
+}

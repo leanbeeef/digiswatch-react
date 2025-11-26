@@ -68,6 +68,8 @@
     flex-wrap: wrap;
     gap: 12px;
     padding: 1.5rem;
+    padding-bottom: 120px;
+    /* Extra space for floating controls */
     align-content: flex-start;
     overflow-y: auto;
     height: 100%;
@@ -199,7 +201,6 @@
     transition: transform 0.1s ease, box-shadow 0.1s ease;
     z-index: 50;
     pointer-events: auto;
-    /* Crucial for dragging */
 }
 
 .ie-dropper.active {
@@ -260,4 +261,164 @@
 .ie-dropper.active .ie-dropper-lock {
     opacity: 1;
     pointer-events: auto;
+}
+
+/* ============================================
+   RESPONSIVE BREAKPOINTS - IMAGE EXTRACTOR
+   ============================================ */
+
+/* Tablet (768px and below) */
+@media (max-width: 768px) {
+    .ie-hero-title {
+        font-size: 2rem;
+    }
+
+    .ie-hero-subtitle {
+        font-size: 0.9rem;
+    }
+
+    .ie-controls-bar {
+        min-width: 90%;
+        padding: 0.65rem 1rem;
+        gap: 0.75rem;
+    }
+
+    .ie-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+
+    .ie-swatch-grid {
+        gap: 10px;
+        padding: 1rem;
+        padding-bottom: 120px;
+    }
+
+    .col-12.col-md-7 .ie-glass-panel,
+    .col-12.col-md-5 .ie-glass-panel {
+        height: 450px !important;
+    }
+}
+
+/* Mobile (576px and below) */
+@media (max-width: 576px) {
+    .ie-hero {
+        padding: 1.5rem 0 1rem;
+    }
+
+    .ie-hero-title {
+        font-size: 1.75rem;
+        line-height: 1.2;
+    }
+
+    .ie-hero-subtitle {
+        font-size: 0.85rem;
+        padding: 0 1rem;
+    }
+
+    .ie-glass-panel {
+        border-radius: 16px;
+        height: auto !important;
+        min-height: 300px;
+    }
+
+    /* Canvas panel on mobile */
+    .col-12.col-md-7 .ie-glass-panel {
+        height: 400px !important;
+    }
+
+    /* Swatch panel on mobile */
+    .col-12.col-md-5 .ie-glass-panel {
+        height: auto !important;
+        max-height: 500px;
+    }
+
+    .ie-canvas-container {
+        height: 100%;
+    }
+
+    /* Stack controls vertically on mobile */
+    .ie-controls-bar {
+        position: fixed;
+        bottom: 1rem;
+        left: 1rem;
+        right: 1rem;
+        transform: none;
+        min-width: auto;
+        max-width: none;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        border-radius: 16px;
+    }
+
+    .ie-control-group {
+        width: 100%;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .ie-btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+        flex: 1;
+        min-width: auto;
+        justify-content: center;
+    }
+
+    .ie-file-input {
+        max-width: 100%;
+        font-size: 0.75rem;
+    }
+
+    /* Touch-friendly droppers */
+    .ie-dropper {
+        width: 40px;
+        height: 40px;
+        border-width: 2px;
+    }
+
+    .ie-dropper-lock {
+        top: -36px;
+        font-size: 0.65rem;
+        padding: 3px 6px;
+    }
+
+    /* Swatches */
+    .ie-swatch-grid {
+        gap: 8px;
+        padding: 0.75rem;
+        padding-bottom: 500px;
+        /* Extra space for larger mobile controls */
+    }
+
+    .ie-swatch-card {
+        border-radius: 12px;
+    }
+
+    .ie-swatch-info {
+        font-size: 0.7rem;
+        padding: 6px 10px;
+        /* Always show on mobile (no hover) */
+        transform: translateY(0);
+        background: rgba(0, 0, 0, 0.7);
+    }
+
+    .ie-swatch-badge {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+        top: 6px;
+        left: 6px;
+    }
+
+    /* Canvas adjustments */
+    .ie-canvas-container {
+        background-size: 15px 15px;
+        background-position: 0 0, 0 7.5px, 7.5px -7.5px, -7.5px 0px;
+    }
+
+    .mobile-bottom-padding {
+        padding-bottom: 500px;
+    }
 }

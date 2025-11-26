@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Container, Row, Col, Form, Card } from 'react-bootstrap';
 import Footer from '../components/Footer';
+import SEO from '../components/SEO';
 
 const ContrastChecker = () => {
     const [bgColor, setBgColor] = useState('#000000');
@@ -77,78 +78,94 @@ const ContrastChecker = () => {
     };
 
     return (
-        <section>
-        <Container className="py-5 mb-5">
-            <Row className='column-gap-3'>
-                <Col className='p-5 rounded shadow-sm'>
-                    <h3>Choose Colors</h3>
-                    <Form>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Text color</Form.Label>
-                            <div className="d-flex align-items-center">
-                                <Form.Control
-                                    type="color"
-                                    value={textColor}
-                                    onChange={(e) => setTextColor(e.target.value)}
-                                    className="me-2"
-                                />
-                                <Form.Control
-                                    type="text"
-                                    value={textColor.toUpperCase()}
-                                    onChange={(e) => setTextColor(e.target.value)}
-                                />
-                            </div>
-                        </Form.Group>
-                        <Form.Group>
-                            <Form.Label>Background color</Form.Label>
-                            <div className="d-flex align-items-center">
-                                <Form.Control
-                                    type="color"
-                                    value={bgColor}
-                                    onChange={(e) => setBgColor(e.target.value)}
-                                    className="me-2"
-                                />
-                                <Form.Control
-                                    type="text"
-                                    value={bgColor.toUpperCase()}
-                                    onChange={(e) => setBgColor(e.target.value)}
-                                />
-                            </div>
-                        </Form.Group>
-                    </Form>
-                    <div
-                        className="d-flex flex-column p-4 mt-5 rounded justify-content-center align-items-center shadow-sm"
-                        style={{
-                            backgroundColor: bgColor,
-                            color: textColor,
-                            minHeight: '200px',
-                        }}
-                    >
-                        <h4 style={{ color: textColor }}>This is a preview of large text.</h4>
-                        <p style={{ color: textColor }}>This is a preview of smaller text.</p>
-                    </div>
-                </Col>
-                <Col className='d-flex justify-content-center align-items-center rounded shadow-sm'
-                    style={{
-                        backgroundColor: getBackgroundColor(contrastScore),
-                        color: '#000000', // Adjust text color for readability
-                    }}
-                >
-                    <Card
-                        className="p-4 w-100"
+        <section className="ds-hero" style={{ minHeight: 'calc(100vh - 82px)' }}>
+            <SEO
+                title="Color Contrast Checker & Accessibility Tool"
+                description="Check color contrast ratios between foreground and background colors to ensure your design meets WCAG accessibility standards."
+                keywords="contrast checker, accessibility, wcag, color contrast, readability, web accessibility"
+                url="/contrast-checker"
+            />
+            <Container className="py-5 mb-5">
+                <Row>
+                    <Col xs={12} lg={6} className='p-5 rounded-4 glass-card border border-1 border-white'>
+                        <h3 className="mb-4">Choose Colors</h3>
+                        <Form>
+                            <Form.Group className="mb-3">
+                                <Form.Label className="fw-semibold">Text color</Form.Label>
+                                <div className="d-flex align-items-center">
+                                    <Form.Control
+                                        type="color"
+                                        value={textColor}
+                                        onChange={(e) => setTextColor(e.target.value)}
+                                        className="me-2"
+                                        style={{ width: '60px', height: '40px' }}
+                                    />
+                                    <Form.Control
+                                        type="text"
+                                        value={textColor.toUpperCase()}
+                                        onChange={(e) => setTextColor(e.target.value)}
+                                        className="rounded-3"
+                                    />
+                                </div>
+                            </Form.Group>
+                            <Form.Group>
+                                <Form.Label className="fw-semibold">Background color</Form.Label>
+                                <div className="d-flex align-items-center">
+                                    <Form.Control
+                                        type="color"
+                                        value={bgColor}
+                                        onChange={(e) => setBgColor(e.target.value)}
+                                        className="me-2"
+                                        style={{ width: '60px', height: '40px' }}
+                                    />
+                                    <Form.Control
+                                        type="text"
+                                        value={bgColor.toUpperCase()}
+                                        onChange={(e) => setBgColor(e.target.value)}
+                                        className="rounded-3"
+                                    />
+                                </div>
+                            </Form.Group>
+                        </Form>
+                        <div
+                            className="d-flex flex-column p-4 mt-4 rounded-3 justify-content-center align-items-center"
+                            style={{
+                                backgroundColor: bgColor,
+                                color: textColor,
+                                minHeight: '200px',
+                                border: '1px solid rgba(255,255,255,0.2)',
+                            }}
+                        >
+                            <h4 style={{ color: textColor }}>This is a preview of large text.</h4>
+                            <p style={{ color: textColor }}>This is a preview of smaller text.</p>
+                        </div>
+                    </Col>
+                    <Col xs={12} lg={6} className='d-flex justify-content-center align-items-center rounded-4 glass-card border border-1 border-white'
                         style={{
                             backgroundColor: getBackgroundColor(contrastScore),
-                            color: '#000000', // Adjust text color for readability
+                            color: '#000000',
                         }}
                     >
-                        <h1 className="text-center">Score: {contrastScore}</h1>
-                        <h5 className="text-center">Large text: {largeTextRating}</h5>
-                        <p className="text-center">Small text: {smallTextRating}</p>
-                        <p className="text-center">{contrastDescription}</p>
-                    </Card>
-                </Col>
-            </Row>
-        </Container>
+                        <div className="p-4 w-100">
+                            <h1 className="text-center fw-bold mb-3">Score: {contrastScore}</h1>
+                            <div className="text-center mb-3" style={{ fontSize: '2rem' }}>
+                                {largeTextRating}
+                            </div>
+                            <div className="mb-3">
+                                <div className="d-flex justify-content-between align-items-center mb-2">
+                                    <span className="fw-semibold">Large text:</span>
+                                    <span>{largeTextRating}</span>
+                                </div>
+                                <div className="d-flex justify-content-between align-items-center">
+                                    <span className="fw-semibold">Small text:</span>
+                                    <span>{smallTextRating}</span>
+                                </div>
+                            </div>
+                            <p className="text-center mt-4 text-dark-50">{contrastDescription}</p>
+                        </div>
+                    </Col>
+                </Row>
+            </Container>
         </section>
     );
 };

@@ -3,7 +3,7 @@
 
 import { Container, Row, Col, Card, Button, Badge } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import SEO from '../components/SEO';
 import popularPalettes from '../utils/paletteData';
 import Footer from '../components/Footer';
 
@@ -12,14 +12,12 @@ const Home = () => {
 
   return (
     <>
-      <Helmet>
-        <title>DigiSwatch | Free Color Palette Generator & Popular Color Schemes</title>
-        <meta
-          name="description"
-          content="DigiSwatch is your digital color palette playground. Generate custom color schemes, explore trending palettes, check contrast ratios, and create accessible designs." />
-        <meta name="keywords" content="color palette generator, popular color palettes, design colors, contrast checker, accessible color schemes, DigiSwatch" />
-        <meta name="author" content="DigiSwatch" />
-      </Helmet>
+      <SEO
+        title="Free Color Palette Generator & Popular Color Schemes"
+        description="DigiSwatch is your digital color palette playground. Generate custom color schemes, explore trending palettes, check contrast ratios, and create accessible designs."
+        keywords="color palette generator, popular color palettes, design colors, contrast checker, accessible color schemes, DigiSwatch"
+        url="/"
+      />
 
       <section className="home-page bg-light" style={{ minHeight: '100vh' }}>
         {/* HERO */}

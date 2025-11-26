@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../AuthContext';
 import { useNavigate } from 'react-router-dom';
+import SEO from '../components/SEO';
 
 const SignUp = () => {
     const { signUp, loginWithGoogle } = useAuth();
@@ -57,6 +58,7 @@ const SignUp = () => {
 
     return (
         <div className="container mt-5">
+            <SEO title="Sign Up" description="Create a free DigiSwatch account to save unlimited color palettes and share your creations." url="/signup" />
             <h1>Sign Up</h1>
             {error && <p style={{ color: 'red' }}>{error}</p>}
             <form onSubmit={handleEmailSignUp}>

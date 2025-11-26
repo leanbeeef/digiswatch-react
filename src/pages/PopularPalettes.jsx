@@ -17,6 +17,7 @@ import {
 } from "firebase/firestore";
 import paletteData from '../utils/paletteData';
 import '../PopularPalettes.css'; // Import custom styles
+import SEO from '../components/SEO';
 
 const PopularPalettes = () => {
   const [palettes, setPalettes] = useState(paletteData);
@@ -208,6 +209,12 @@ const PopularPalettes = () => {
 
   return (
     <div className="full-page">
+      <SEO
+        title="Trending Color Palettes & Schemes"
+        description="Browse thousands of popular color palettes created by the DigiSwatch community. Find inspiration for your next web design or branding project."
+        keywords="popular color palettes, trending colors, color schemes, web design inspiration, color combinations"
+        url="/popular-palettes"
+      />
       <div className="pp-hero">
         <div className="pp-hero-title">Discover Color Magic</div>
         <div className="pp-hero-subtitle">

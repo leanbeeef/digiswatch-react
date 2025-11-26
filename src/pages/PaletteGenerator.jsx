@@ -26,6 +26,7 @@ import { doc, setDoc, collection } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../AuthContext';
 import 'bootstrap-icons/font/bootstrap-icons.css';
+import SEO from '../components/SEO';
 
 const getTextColor = (bg) => {
     return tinycolor.readability(bg, "#FFFFFF") >= 4.5 ? "#FFFFFF" : "#000000";
@@ -195,37 +196,22 @@ const PaletteGenerator = () => {
 
     return (
         <DndProvider backend={HTML5Backend}>
-            <Container fluid className="p-0 d-flex flex-row" style={{ height: 'calc(100vh - 82px)', overflow: 'hidden' }}>
-                {/* Palette Display - Vertical Stack on Left */}
-                <div
-                    id="palette-display"
-                    className="d-flex flex-column"
-                    style={{
-                        width: '280px',
-                        height: '100%',
-                        overflowY: 'auto',
-                        borderRight: '1px solid #dee2e6',
-                        flexShrink: 0,
-                        backgroundColor: '#fff'
-                    }}
-                >
+            <SEO
+                title="Color Palette Generator"
+                description="Create custom color palettes with our advanced generator. Lock colors, explore harmonies like monochromatic and complementary, and export to CSS, JSON, or Image."
+                keywords="color palette generator, color schemes, monochromatic, complementary, triadic, tetradic, export palette, css colors"
+                url="/palette-generator"
+            />
+            <Container fluid className="p-0 palette-generator-container">
+                {/* Palette Display - Vertical Stack on Left (Desktop) / Horizontal Top (Mobile) */}
+                <div id="palette-display" className="palette-sidebar">
                     {palette.map((color, index) => (
                         <div
                             key={`${color.hex}-${index}`}
-                            className="palette-card"
+                            className="palette-card-item"
                             style={{
-                                height: '120px', // Fixed height per card
                                 backgroundColor: color.hex,
-                                color: color.textColor,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                padding: '1rem',
-                                cursor: 'pointer',
-                                position: 'relative',
-                                gap: '0.5rem',
-                                borderBottom: '1px solid rgba(0,0,0,0.1)'
+                                color: color.textColor
                             }}
                             onClick={() => handleColorClick(color.hex)}
                         >
@@ -247,8 +233,8 @@ const PaletteGenerator = () => {
                     ))}
                 </div>
 
-                {/* Dashboard - Always Visible on Right */}
-                <div style={{ flex: 1, padding: '0 1rem', backgroundColor: '#f8f9fa', overflowY: 'auto', height: '100%' }}>
+                {/* Dashboard - Always Visible on Right (Desktop) / Bottom (Mobile) */}
+                <div className="palette-dashboard-area">
                     {colorInfo ? (
                         <>
                             <div style={{ /*marginBottom: '1rem'*/ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -263,7 +249,7 @@ const PaletteGenerator = () => {
                                             colorInfo={colorInfo}
                                             index={0}
                                             moveCard={moveCardOrder}
-                                            
+
                                         />
                                     );
                                     if (idx === 1) return (
@@ -274,7 +260,7 @@ const PaletteGenerator = () => {
                                             onHarmonySelect={handleHarmonySelect}
                                             index={1}
                                             moveCard={moveCardOrder}
-                                            
+
                                         />
                                     );
                                     if (idx === 2) return (
@@ -284,7 +270,7 @@ const PaletteGenerator = () => {
                                             contextData={context}
                                             index={2}
                                             moveCard={moveCardOrder}
-                                            
+
                                         />
                                     );
                                     return null;
@@ -300,7 +286,7 @@ const PaletteGenerator = () => {
                 </div>
 
                 {/* Floating Action Buttons */}
-                <div style={{ position: 'fixed', bottom: '20px', right: '20px', display: 'flex', flexDirection: 'column', gap: '10px', zIndex: 1050 }}>
+                <div className="fab-container" style={{ position: 'fixed', bottom: '20px', right: '20px', display: 'flex', flexDirection: 'column', gap: '10px', zIndex: 1050 }}>
                     <Button
                         variant="primary"
                         onClick={generatePalette}

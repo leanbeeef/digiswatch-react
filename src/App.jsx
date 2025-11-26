@@ -15,6 +15,7 @@ import Profile from "./pages/Profile"
 import Home from "./pages/Home"
 import ContrastChecker from "./pages/ContrastChecker"
 import ImageColorExtractor from './pages/ImageExtractor';
+import ColorSeason from './pages/ColorSeason';
 import './index.css';
 
 function App() {
@@ -25,28 +26,29 @@ function App() {
 
   return (
     <ColorProvider> {/* Wrap the entire app in ColorProvider */}
-    <AuthProvider>
-      <Router>
-        <div className="full-page">
-          <Header onOpenSidebar={openSidebar} />
-          <Sidebar show={sidebarOpen} onClose={closeSidebar} />
-          <main className="main-content full-height-minus-header overflow-hidden">
-            <Routes>
-              <Route path="/" element={<Navigate to="/home" replace />} />
-              <Route path="/home" element={<Home />} />
-              <Route path="/palette-generator" element={<PaletteGenerator />} />
-              <Route path="/popular-palettes" element={<PopularPalettes />} />
-              <Route path="/signup" element={<SignUp />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/contrastchecker" element={<ContrastChecker />} />
-              <Route path="/imagecolorextractor" element={<ImageColorExtractor />} />
-              {/* Add other routes as needed */}
-            </Routes>
-          </main>
-          <ConditionalFooter />
-        </div>
-      </Router>
+      <AuthProvider>
+        <Router>
+          <div className="full-page">
+            <Header onOpenSidebar={openSidebar} />
+            <Sidebar show={sidebarOpen} onClose={closeSidebar} />
+            <main className="main-content full-height-minus-header overflow-hidden">
+              <Routes>
+                <Route path="/" element={<Navigate to="/home" replace />} />
+                <Route path="/home" element={<Home />} />
+                <Route path="/palette-generator" element={<PaletteGenerator />} />
+                <Route path="/popular-palettes" element={<PopularPalettes />} />
+                <Route path="/signup" element={<SignUp />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/contrastchecker" element={<ContrastChecker />} />
+                <Route path="/imagecolorextractor" element={<ImageColorExtractor />} />
+                <Route path="/color-season" element={<ColorSeason />} />
+                {/* Add other routes as needed */}
+              </Routes>
+            </main>
+            <ConditionalFooter />
+          </div>
+        </Router>
       </AuthProvider>
     </ColorProvider>
   );

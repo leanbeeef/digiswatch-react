@@ -108,6 +108,16 @@ const Sidebar = ({ show, onClose }) => {
             Image Color Extractor
           </a>
         </li>
+        <li>
+          <a
+            href="#"
+            className="nav-link link-dark"
+            onClick={() => handleNavigate('/color-season')}
+          >
+            <i className="bi bi-palette2 me-2"></i>
+            Color Season
+          </a>
+        </li>
       </ul>
       <hr />
       <div className="dropdown">
@@ -159,7 +169,7 @@ const Sidebar = ({ show, onClose }) => {
               </div>
               <div className='d-inline-flex'>
                 <a className="dropdown-item" href="#" onClick={handleLogout}>
-                <i className="bi bi-box-arrow-left me-2"></i>
+                  <i className="bi bi-box-arrow-left me-2"></i>
                   Sign out
                 </a>
               </div>

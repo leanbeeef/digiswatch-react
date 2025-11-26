@@ -308,7 +308,7 @@ export default function ImageColorExtractor() {
   const extracted = droppers.map(({ color, name, id }) => ({ color, name, id }));
 
   return (
-    <div className="w-100 d-flex flex-column" style={{ height: "calc(100vh - 300px)", overflow: "auto", background: "#f3f4f6" }}>
+    <div className="w-100 d-flex flex-column" style={{ height: "calc(100vh - 82px)", overflow: "auto", background: "#f3f4f6" }}>
       <SEO
         title="Image to Color Palette Extractor"
         description="Extract beautiful color palettes from any image. Upload your photo and automatically generate a color scheme based on its dominant colors."
@@ -326,7 +326,7 @@ export default function ImageColorExtractor() {
 
       {/* Main Content */}
       <div className="container px-4 flex-grow-1" style={{ minHeight: 0 }}>
-        <div className="row g-4" style={{ height: "calc(100vh - 300px)" }}>
+        <div className="row g-4 h-100">
 
           {/* Left: Canvas Panel */}
           <div className="col-12 col-md-7">

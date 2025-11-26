@@ -431,7 +431,7 @@
 }
 
 .palette-card-item {
-    height: 120px;
+    height: 16.66%;
     display: flex;
     flex-direction: column;
     justify-content: center;

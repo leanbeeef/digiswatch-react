@@ -226,6 +226,7 @@ const PaletteGenerator = () => {
                                     e.stopPropagation();
                                     toggleLock(index);
                                 }}
+                                id="lock-button"
                             >
                                 <i className={color.locked ? 'bi bi-lock-fill' : 'bi bi-unlock'}></i>
                             </Button>
@@ -300,6 +301,7 @@ const PaletteGenerator = () => {
                         onClick={() => setShowSaveModal(true)}
                         style={{ borderRadius: '50%', width: '60px', height: '60px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
                         title="Save Palette"
+                        className="mobile-hidden"
                     >
                         <i className="bi bi-floppy" style={{ fontSize: '1.5rem' }}></i>
                     </Button>
@@ -308,6 +310,7 @@ const PaletteGenerator = () => {
                         onClick={() => setShowExportModal(true)}
                         style={{ borderRadius: '50%', width: '60px', height: '60px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
                         title="Export Palette"
+                        className="mobile-hidden"
                     >
                         <i className="bi bi-download" style={{ fontSize: '1.5rem' }}></i>
                     </Button>

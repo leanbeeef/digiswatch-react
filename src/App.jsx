@@ -16,6 +16,7 @@ import Home from "./pages/Home"
 import ContrastChecker from "./pages/ContrastChecker"
 import ImageColorExtractor from './pages/ImageExtractor';
 import ColorSeason from './pages/ColorSeason';
+import AIPaletteGenerator from './pages/AIPaletteGenerator';
 import './index.css';
 
 function App() {
@@ -42,7 +43,8 @@ function App() {
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/contrastchecker" element={<ContrastChecker />} />
                 <Route path="/imagecolorextractor" element={<ImageColorExtractor />} />
-                <Route path="/color-season" element={<ColorSeason />} />
+                {/* <Route path="/color-season" element={<ColorSeason />} /> */}
+                <Route path="/ai-palette-generator" element={<AIPaletteGenerator />} />
                 {/* Add other routes as needed */}
               </Routes>
             </main>

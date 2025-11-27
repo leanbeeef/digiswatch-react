@@ -91,6 +91,24 @@ const ColorSeason = () => {
         const loadModels = async () => {
             const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
             try {
+                // Explicitly set backend to avoid "backend undefined" error
+                // face-api.js bundles tfjs, but sometimes auto-detection fails in Vite
+                try {
+                    if (faceapi.tf) {
+                        await faceapi.tf.setBackend('webgl');
+                        console.log(`FaceAPI Backend set to: ${faceapi.tf.getBackend()}`);
+                    }
+                } catch (backendError) {
+                    console.warn('Failed to set WebGL backend, falling back to CPU', backendError);
+                    try {
+                        if (faceapi.tf) {
+                            await faceapi.tf.setBackend('cpu');
+                        }
+                    } catch (cpuError) {
+                        console.error('Failed to set CPU backend', cpuError);
+                    }
+                }
+
                 await Promise.all([
                     faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
                     faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),

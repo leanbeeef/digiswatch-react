@@ -82,6 +82,16 @@ const Sidebar = ({ show, onClose }) => {
           <a
             href="#"
             className="nav-link link-dark"
+            onClick={() => handleNavigate('/ai-palette-generator')}
+          >
+            <i className="bi bi-stars me-2"></i>
+            AI Palette Generator
+          </a>
+        </li>
+        <li>
+          <a
+            href="#"
+            className="nav-link link-dark"
             onClick={() => handleNavigate('/popular-palettes')}
           >
             <i className="bi bi-fire me-2"></i>
@@ -108,7 +118,7 @@ const Sidebar = ({ show, onClose }) => {
             Image Color Extractor
           </a>
         </li>
-        <li>
+        {/* <li>
           <a
             href="#"
             className="nav-link link-dark"
@@ -117,7 +127,7 @@ const Sidebar = ({ show, onClose }) => {
             <i className="bi bi-palette2 me-2"></i>
             Color Season
           </a>
-        </li>
+        </li> */}
       </ul>
       <hr />
       <div className="dropdown">
@@ -154,7 +164,7 @@ const Sidebar = ({ show, onClose }) => {
                   Profile
                 </a>
               </div>
-              <div>
+              {/* <div>
                 <a
                   className="dropdown-item"
                   href="#"
@@ -163,7 +173,7 @@ const Sidebar = ({ show, onClose }) => {
                   <i className="bi bi-gear-wide me-2"></i>
                   Settings
                 </a>
-              </div>
+              </div> */}
               <div>
                 <hr className="dropdown-divider" />
               </div>

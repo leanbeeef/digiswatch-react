@@ -44,7 +44,7 @@ function App() {
                 <Route path="/contrastchecker" element={<ContrastChecker />} />
                 <Route path="/imagecolorextractor" element={<ImageColorExtractor />} />
                 {/* <Route path="/color-season" element={<ColorSeason />} /> */}
-                {/* <Route path="/ai-palette-generator" element={<AIPaletteGenerator />} /> */}
+                <Route path="/ai-palette-generator" element={<AIPaletteGenerator />} />
                 {/* Add other routes as needed */}
               </Routes>
             </main>

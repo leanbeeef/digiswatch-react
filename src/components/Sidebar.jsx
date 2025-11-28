@@ -78,7 +78,7 @@ const Sidebar = ({ show, onClose }) => {
             Palette Generator
           </a>
         </li>
-        {/* <li>
+        <li>
           <a
             href="#"
             className="nav-link link-dark"
@@ -87,7 +87,7 @@ const Sidebar = ({ show, onClose }) => {
             <i className="bi bi-stars me-2"></i>
             AI Palette Generator
           </a>
-        </li> */}
+        </li>
         <li>
           <a
             href="#"

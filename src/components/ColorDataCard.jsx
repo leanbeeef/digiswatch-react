@@ -24,6 +24,7 @@ const ColorDataCard = ({ color, colorInfo, index, moveCard, isExpanded, onToggle
         { label: 'HEX', value: colorInfo.hex },
         { label: 'RGB', value: colorInfo.rgb },
         { label: 'HSL', value: colorInfo.hsl },
+        { label: 'OKLCH', value: colorInfo.oklch },
         { label: 'LAB', value: colorInfo.lab },
         { label: 'CMYK', value: colorInfo.cmyk },
         { label: 'HSV', value: colorInfo.hsv },
@@ -38,6 +39,14 @@ const ColorDataCard = ({ color, colorInfo, index, moveCard, isExpanded, onToggle
             moveCard={moveCard}
             isExpanded={isExpanded}
             onToggle={onToggleExpand}
+            previewContent={
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{ width: '24px', height: '24px', borderRadius: '4px', background: color, border: '1px solid var(--dashboard-border)' }}></div>
+                    <div style={{ fontSize: '0.9rem', fontFamily: 'monospace', fontWeight: 600 }}>
+                        {colorInfo.hex}
+                    </div>
+                </div>
+            }
         >
             {/* Color Preview */}
             <div className="color-preview-swatch" style={{ backgroundColor: color }}>

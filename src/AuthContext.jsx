@@ -5,6 +5,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
   GoogleAuthProvider,
   signOut,
 } from 'firebase/auth';
@@ -77,10 +78,15 @@ export const AuthProvider = ({ children }) => {
   const loginWithGoogle = async () => {
     try {
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider); // Or use signInWithRedirect(auth, provider)
-      const enrichedUser = await fetchUserData(result.user);
-      setCurrentUser(enrichedUser);
-      return enrichedUser;
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const enrichedUser = await fetchUserData(result.user);
+        setCurrentUser(enrichedUser);
+        return enrichedUser;
+      } catch (popupError) {
+        // Fallback to redirect for environments blocking popups
+        await signInWithRedirect(auth, provider);
+      }
     } catch (error) {
       console.error('Google Sign In Error:', error);
       throw error;

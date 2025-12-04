@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col } from 'react-bootstrap';
+import { Container, Row, Col, Toast } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import { fetchPublicPalettes } from "../utils/fetchPalettes";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import SharePalette from '../components/SharePalette';
@@ -28,16 +29,24 @@ const PopularPalettes = () => {
   const [selectedPalette, setSelectedPalette] = useState(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [animateLike, setAnimateLike] = useState({});
+  const [toast, setToast] = useState({ show: false, message: '' });
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const publicPalettes = await fetchPublicPalettes();
-        setUserPalettes(publicPalettes);
+        // If fetching fails or returns empty (e.g., unauthenticated rules), fall back to bundled data
+        if (publicPalettes && publicPalettes.length > 0) {
+          setUserPalettes(publicPalettes);
+        } else {
+          setUserPalettes(paletteData);
+        }
       } catch (error) {
         console.error(error.message);
-        // alert("We encountered an error fetching public palettes."); // Suppress alert for smoother UX
+        // Gracefully show bundled palettes when public fetch isn't available (e.g., not logged in)
+        setUserPalettes(paletteData);
       }
     };
 
@@ -112,7 +121,7 @@ const PopularPalettes = () => {
 
   const handleSave = async (palette) => {
     if (!currentUser) {
-      alert("You must be logged in to save palettes.");
+      setToast({ show: true, message: 'Please log in to save palettes.' });
       return;
     }
 
@@ -155,12 +164,35 @@ const PopularPalettes = () => {
     setShowShareModal(true);
   };
 
+  const handleOpenInGenerator = (palette) => {
+    navigate('/palette-generator', { state: { palette } });
+  };
+
   const renderPalettes = (palettesToRender) => (
     <div className="pp-grid">
       {palettesToRender.map((palette) => (
         <div key={palette.name} className="pp-card">
           <div className="pp-card-body">
-            <div className="pp-palette-name">{palette.name}</div>
+            <div className="pp-card-head">
+              <div className="pp-palette-name">{palette.name}</div>
+              <div className="pp-card-head-actions">
+                <button
+                  className={`pp-like-inline ${likes[palette.name] ? 'is-active' : ''} ${animateLike[palette.name] ? 'animate-like' : ''}`}
+                  onClick={() => handleLike(palette.name)}
+                  title="Like palette"
+                >
+                  <i className={`bi ${likes[palette.name] ? 'bi-heart-fill' : 'bi-heart'}`}></i>
+                  <span className="pp-like-count-inline">{likes[palette.name] || 0}</span>
+                </button>
+                <button
+                  className="pp-open-generator"
+                  onClick={() => handleOpenInGenerator(palette)}
+                  title="Open in Palette Generator"
+                >
+                  <img src="/favicon.ico" alt="Open in generator" height="18" width="18" />
+                </button>
+              </div>
+            </div>
 
             <div className="pp-color-strip">
               {palette.colors.map((color, idx) => (
@@ -180,25 +212,19 @@ const PopularPalettes = () => {
 
             <div className="pp-actions">
               <button
-                className={`pp-action-btn ${animateLike[palette.name] ? 'animate-like' : ''} ${likes[palette.name] ? 'liked' : ''}`}
-                onClick={() => handleLike(palette.name)}
-              >
-                <i className={`bi ${likes[palette.name] ? 'bi-heart-fill' : 'bi-heart'}`}></i>
-                <span className="pp-like-count">{likes[palette.name] || 0}</span>
-              </button>
-
-              <button
-                className={`pp-action-btn ${savedPalettes[palette.name] ? 'saved' : ''}`}
+                className={`pp-action-ghost ${savedPalettes[palette.name] ? 'is-active' : ''}`}
                 onClick={() => handleSave(palette)}
               >
                 <i className={`bi ${savedPalettes[palette.name] ? 'bi-bookmark-fill' : 'bi-bookmark'}`}></i>
+                <span>{savedPalettes[palette.name] ? 'Saved' : 'Save'}</span>
               </button>
 
               <button
-                className="pp-action-btn share"
+                className="pp-action-ghost"
                 onClick={() => handleShareClick(palette)}
               >
                 <i className="bi bi-share-fill"></i>
+                <span>Share</span>
               </button>
             </div>
           </div>
@@ -252,6 +278,25 @@ const PopularPalettes = () => {
           palette={selectedPalette}
         />
       )}
+
+      <Toast
+        onClose={() => setToast({ show: false, message: '' })}
+        show={toast.show}
+        delay={3000}
+        autohide
+        style={{
+          position: 'fixed',
+          bottom: '16px',
+          right: '16px',
+          zIndex: 1200,
+          minWidth: '240px'
+        }}
+      >
+        <Toast.Header>
+          <strong className="me-auto">DigiSwatch</strong>
+        </Toast.Header>
+        <Toast.Body>{toast.message}</Toast.Body>
+      </Toast>
     </div>
   );
 };

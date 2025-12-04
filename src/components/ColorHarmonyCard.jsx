@@ -1,7 +1,7 @@
 // src/components/ColorHarmonyCard.jsx
 // Displays color harmony schemes with interactive swatches
 
-import React from 'react';
+import React, { useState } from 'react';
 import DashboardCard from './DashboardCard';
 import '../styles/dashboard.css';
 
@@ -30,13 +30,26 @@ const ColorHarmonyCard = ({ baseColor, colorHarmonies, onHarmonySelect, index, m
             moveCard={moveCard}
             isExpanded={isExpanded}
             onToggle={onToggleExpand}
+            previewContent={
+                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
+                    {harmonyTypes.slice(0, 3).map(type => (
+                        <div key={type.key} style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', gap: '1px' }}>
+                                {colorHarmonies?.[type.key]?.slice(0, 2).map((c, i) => (
+                                    <div key={i} style={{ width: '12px', height: '12px', background: c, borderRadius: '2px' }}></div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            }
         >
             <p style={{ fontSize: '0.85rem', color: 'var(--dashboard-text-muted)', marginBottom: '1rem' }}>
                 Click any harmony to apply it to your palette
             </p>
 
             {harmonyTypes.map((harmonyType) => {
-                const colors = colorHarmonies[harmonyType.key];
+                const colors = colorHarmonies?.[harmonyType.key];
                 if (!colors || colors.length === 0) return null;
 
                 return (

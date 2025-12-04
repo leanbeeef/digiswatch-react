@@ -1,10 +1,28 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Container, Row, Col, Spinner } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import '../styles/ColorSeason.css';
 import SEO from '../components/SEO';
 import tinycolor from 'tinycolor2';
 import namer from 'color-namer';
 import * as faceapi from 'face-api.js';
+
+const filterPalette = (colors) => colors.filter((c) => {
+    const lower = c.toLowerCase();
+    return lower !== '#000000' && lower !== '#ffffff';
+});
+
+const buildRingGradient = (colors) => {
+    const filtered = filterPalette(colors);
+    const total = filtered.length;
+    if (!total) return 'conic-gradient(#eee, #ddd)';
+    const stops = filtered.map((c, i) => {
+        const start = (i / total) * 100;
+        const end = ((i + 1) / total) * 100;
+        return `${c} ${start}% ${end}%`;
+    }).join(', ');
+    return `conic-gradient(${stops})`;
+};
 
 // Expanded Season Data
 const SEASONS = {
@@ -75,12 +93,13 @@ const SEASONS = {
 };
 
 const ColorSeason = () => {
+    const navigate = useNavigate();
     const [image, setImage] = useState(null);
     const [analyzing, setAnalyzing] = useState(false);
     const [season, setSeason] = useState(null);
     const [modelsLoaded, setModelsLoaded] = useState(false);
     const [landmarks, setLandmarks] = useState(null);
-    const [activeMakeup, setActiveMakeup] = useState({}); // { lipstick: color, blush: color, ... }
+    const [activeMakeup, setActiveMakeup] = useState({}); // kept for compatibility but unused now
 
     const canvasRef = useRef(null);
     const fileInputRef = useRef(null);
@@ -93,22 +112,6 @@ const ColorSeason = () => {
             try {
                 // Explicitly set backend to avoid "backend undefined" error
                 // face-api.js bundles tfjs, but sometimes auto-detection fails in Vite
-                try {
-                    if (faceapi.tf) {
-                        await faceapi.tf.setBackend('webgl');
-                        console.log(`FaceAPI Backend set to: ${faceapi.tf.getBackend()}`);
-                    }
-                } catch (backendError) {
-                    console.warn('Failed to set WebGL backend, falling back to CPU', backendError);
-                    try {
-                        if (faceapi.tf) {
-                            await faceapi.tf.setBackend('cpu');
-                        }
-                    } catch (cpuError) {
-                        console.error('Failed to set CPU backend', cpuError);
-                    }
-                }
-
                 await Promise.all([
                     faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
                     faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
@@ -170,7 +173,12 @@ const ColorSeason = () => {
         setAnalyzing(true);
 
         // 1. Detect Landmarks if models are loaded
-        if (modelsLoaded && canvasRef.current) {
+        const canDetect = modelsLoaded
+            && faceapi?.tf
+            && typeof faceapi.tf.engine === 'function'
+            && faceapi.tf.engine().backendName;
+
+        if (canDetect && canvasRef.current) {
             try {
                 const detections = await faceapi.detectSingleFace(canvasRef.current, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks();
                 if (detections) {
@@ -182,6 +190,8 @@ const ColorSeason = () => {
             } catch (err) {
                 console.error("Face detection error:", err);
             }
+        } else {
+            console.warn('Face detection skipped: TF backend not available.');
         }
 
         // 2. Color Analysis (Existing Logic)
@@ -225,113 +235,24 @@ const ColorSeason = () => {
         }, 1000);
     };
 
-    const applyMakeup = (category, color) => {
-        if (!landmarks || !canvasRef.current) {
-            alert("Please analyze the photo first to detect facial features!");
-            return;
-        }
-
-        const newMakeup = { ...activeMakeup, [category]: color };
-        setActiveMakeup(newMakeup);
-        renderMakeup(newMakeup);
+    // Palette helpers
+    const getSeasonPalette = (seasonKey) => {
+        if (!seasonKey) return [];
+        return filterPalette(SEASONS[seasonKey].fullPalette).slice(0, 6);
     };
 
-    const clearMakeup = () => {
-        setActiveMakeup({});
-        renderMakeup({});
-    };
+    const paletteColors = season ? getSeasonPalette(season) : [];
 
-    const renderMakeup = (makeupState) => {
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext('2d');
-
-        // Redraw original image
-        const img = originalImageRef.current;
-        const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
-        const x = (canvas.width / 2) - (img.width / 2) * scale;
-        const y = (canvas.height / 2) - (img.height / 2) * scale;
-        ctx.globalCompositeOperation = 'source-over';
-        ctx.filter = 'none';
-        ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
-
-        if (!landmarks) return;
-
-        // Apply Lipstick
-        if (makeupState.lipstick) {
-            const mouth = landmarks.getMouth();
-            ctx.fillStyle = makeupState.lipstick;
-            ctx.globalCompositeOperation = 'soft-light'; // Blend mode for realistic look
-            ctx.filter = 'blur(2px)';
-
-            ctx.beginPath();
-            ctx.moveTo(mouth[0].x, mouth[0].y);
-            for (let i = 1; i < mouth.length; i++) {
-                ctx.lineTo(mouth[i].x, mouth[i].y);
+    const handleOpenInGenerator = () => {
+        if (!season) return;
+        navigate('/palette-generator', {
+            state: {
+                palette: {
+                    name: `${season} Palette`,
+                    colors: paletteColors,
+                }
             }
-            ctx.closePath();
-            ctx.fill();
-
-            // Stronger color for inner lip
-            ctx.globalCompositeOperation = 'multiply';
-            ctx.filter = 'blur(3px)';
-            ctx.fill();
-        }
-
-        // Apply Blush
-        if (makeupState.blush) {
-            // Estimate cheek positions based on eyes and nose
-            const leftEye = landmarks.getLeftEye();
-            const rightEye = landmarks.getRightEye();
-            const nose = landmarks.getNose();
-
-            const leftCheekX = leftEye[0].x - 10;
-            const leftCheekY = nose[0].y + 10;
-            const rightCheekX = rightEye[3].x + 10;
-            const rightCheekY = nose[0].y + 10;
-
-            ctx.fillStyle = makeupState.blush;
-            ctx.globalCompositeOperation = 'multiply';
-            ctx.filter = 'blur(15px)';
-
-            ctx.beginPath();
-            ctx.arc(leftCheekX, leftCheekY, 25, 0, 2 * Math.PI);
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.arc(rightCheekX, rightCheekY, 25, 0, 2 * Math.PI);
-            ctx.fill();
-        }
-
-        // Apply Eyeshadow
-        if (makeupState.eyeshadow) {
-            const leftEye = landmarks.getLeftEye();
-            const rightEye = landmarks.getRightEye();
-
-            ctx.fillStyle = makeupState.eyeshadow;
-            ctx.globalCompositeOperation = 'overlay';
-            ctx.filter = 'blur(4px)';
-
-            // Left Eye
-            ctx.beginPath();
-            ctx.moveTo(leftEye[0].x, leftEye[0].y);
-            // Curve above the eye
-            ctx.quadraticCurveTo(leftEye[1].x, leftEye[1].y - 15, leftEye[3].x, leftEye[3].y);
-            ctx.lineTo(leftEye[3].x, leftEye[3].y);
-            ctx.closePath();
-            ctx.fill();
-
-            // Right Eye
-            ctx.beginPath();
-            ctx.moveTo(rightEye[0].x, rightEye[0].y);
-            ctx.quadraticCurveTo(rightEye[1].x, rightEye[1].y - 15, rightEye[3].x, rightEye[3].y);
-            ctx.lineTo(rightEye[3].x, rightEye[3].y);
-            ctx.closePath();
-            ctx.fill();
-        }
-
-        // Reset context
-        ctx.globalCompositeOperation = 'source-over';
-        ctx.filter = 'none';
+        });
     };
 
     return (
@@ -353,10 +274,16 @@ const ColorSeason = () => {
                     {/* Left Panel: Image Upload */}
                     <div className="cs-left-panel">
                         <div className="cs-image-preview-container">
+                            {season && (
+                                <div
+                                    className="cs-color-ring-band"
+                                    style={{ background: buildRingGradient(paletteColors) }}
+                                />
+                            )}
                             {image ? (
                                 <canvas ref={canvasRef} className="cs-canvas" />
                             ) : (
-                                <div className="d-flex align-items-center justify-content-center h-100 bg-light text-muted">
+                                <div className="rounded-circle d-flex align-items-center justify-content-center h-100 bg-light text-muted">
                                     <i className="bi bi-person-bounding-box" style={{ fontSize: '4rem' }}></i>
                                 </div>
                             )}
@@ -393,50 +320,39 @@ const ColorSeason = () => {
                             <h2 className="cs-season-title">Your Season is {season}</h2>
                             <p className="cs-season-desc">{SEASONS[season].description}</p>
 
-                            <h4 className="cs-section-header">Your Color Palette</h4>
-                            <div className="cs-full-palette-grid">
-                                {SEASONS[season].fullPalette.map((color, i) => (
+                            <div className="d-flex align-items-center gap-2">
+                                <h4 className="cs-section-header m-0">Your Color Palette</h4>
+                                <button
+                                    type="button"
+                                    className="pp-action-ghost"
+                                    onClick={handleOpenInGenerator}
+                                    title="Open in Palette Generator"
+                                >
+                                    <img src="/favicon.ico" alt="Open in generator" height="16" width="16" />
+                                    <span>Open</span>
+                                </button>
+                            </div>
+                            <div className="cs-palette-strip">
+                                {paletteColors.map((color, i) => (
                                     <div
                                         key={i}
-                                        className="cs-palette-swatch"
+                                        className="cs-palette-strip-swatch"
                                         style={{ backgroundColor: color }}
-                                        title={namer(color).ntc[0].name}
                                         onClick={() => navigator.clipboard.writeText(color)}
-                                    />
+                                    >
+                                        <div className="cs-palette-tooltip">{color}</div>
+                                    </div>
                                 ))}
                             </div>
                         </div>
                     )}
                 </div>
 
-                {/* Bottom Section: Suggestions */}
-                {season && (
-                    <div className="cs-suggestions-section">
-                        <h2 className="cs-section-title text-center mb-5">Makeup Suggestions</h2>
-                        <p className="text-center text-muted mb-4">Click on a color to try it on!</p>
-                        <div className="cs-makeup-grid">
-                            {Object.entries(SEASONS[season].makeup).map(([category, colors]) => (
-                                <div key={category} className="cs-makeup-card">
-                                    <h3 className="cs-makeup-title text-capitalize">{category.replace(/([A-Z])/g, ' $1').trim()}</h3>
-                                    <div className="cs-swatch-container">
-                                        {colors.map((color, i) => (
-                                            <div
-                                                key={i}
-                                                className={`cs-swatch ${activeMakeup[category] === color ? 'active-makeup' : ''}`}
-                                                style={{ backgroundColor: color }}
-                                                title={`Try on ${namer(color).ntc[0].name}`}
-                                                onClick={() => applyMakeup(category, color)}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
+                        {/* Bottom Section removed: Makeup suggestions */}
             </Container>
         </div>
     );
 };
 
 export default ColorSeason;
+    

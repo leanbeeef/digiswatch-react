@@ -19,6 +19,19 @@ const ColorContextCard = ({ color, contextData, index, moveCard, isExpanded, onT
             moveCard={moveCard}
             isExpanded={isExpanded}
             onToggle={onToggleExpand}
+            previewContent={
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: color }}></div>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{emotional?.description?.split('.')[0] || 'Context'}</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                        {moods?.slice(0, 3).map((mood, i) => (
+                            <span key={i} style={{ fontSize: '0.7rem', background: 'var(--bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>{mood}</span>
+                        ))}
+                    </div>
+                </div>
+            }
         >
             {/* Emotional Context */}
             {emotional && (

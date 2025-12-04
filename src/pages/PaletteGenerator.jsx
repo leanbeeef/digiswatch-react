@@ -1,12 +1,21 @@
 // src/pages/PaletteGenerator.jsx
 import React, { useState, useEffect } from 'react';
 import { Container, Button, Toast, Modal } from 'react-bootstrap';
+import { useLocation } from 'react-router-dom';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { motion, AnimatePresence } from 'framer-motion';  // ADD THIS
+import SharePalette from '../components/SharePalette';
 import ColorDataCard from '../components/ColorDataCard';
 import ColorHarmonyCard from '../components/ColorHarmonyCard';
 import ColorContextCard from '../components/ColorContextCard';
+import GradientBuilderCard from '../components/GradientBuilderCard';
+import OKLCHExplorerCard from '../components/OKLCHExplorerCard';  // ADD THIS
+import ColorScalesCard from '../components/ColorScalesCard';  // ADD THIS
+import ColorVisualizerCard from '../components/ColorVisualizerCard';  // ADD THIS
+import DashboardSettings from '../components/DashboardSettings';  // ADD THIS
 import { getColorContext } from '../utils/getColorContext';
+import { CARD_TYPES, getDefaultVisibleCards, getImplementedCards } from '../utils/cardRegistry';  // ADD THIS
 import '../styles/dashboard.css';
 import {
     generateRandomPalette,
@@ -33,6 +42,7 @@ const getTextColor = (bg) => {
 };
 
 const PaletteGenerator = () => {
+    const location = useLocation();
     const { currentUser } = useAuth();
     const [palette, setPalette] = useState([]);
     // dashboardActive is no longer needed as it's always visible, but we'll keep the logic simple
@@ -40,16 +50,118 @@ const PaletteGenerator = () => {
     const [colorInfo, setColorInfo] = useState(null);
     const [harmonies, setHarmonies] = useState(null);
     const [context, setContext] = useState(null);
-    const [cardOrder, setCardOrder] = useState([0, 1, 2]);
+    const [cardOrder, setCardOrder] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const storedOrder = localStorage.getItem('dashboardCardOrder');
+            if (storedOrder) {
+                try {
+                    return JSON.parse(storedOrder);
+                } catch (e) {
+                    console.warn('Failed to parse stored card order, resetting.', e);
+                }
+            }
+        }
+        return getImplementedCards().map(card => card.id);
+    });
     const [showSaveModal, setShowSaveModal] = useState(false);
     const [showExportModal, setShowExportModal] = useState(false);
+    const [showSettingsModal, setShowSettingsModal] = useState(false);
+    const [visibleCards, setVisibleCards] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem('dashboardVisibleCards');
+            if (stored) {
+                try {
+                    const parsed = JSON.parse(stored);
+                    // Older versions stored an array of booleans; ensure we only keep string IDs
+                    if (Array.isArray(parsed) && parsed.every(item => typeof item === 'string')) {
+                        return Array.from(new Set(parsed));
+                    }
+                } catch (e) {
+                    console.warn('Failed to parse stored visible cards, resetting.', e);
+                }
+            }
+        }
+        return getDefaultVisibleCards();
+    });
     const [paletteName, setPaletteName] = useState('');
     const [toast, setToast] = useState({ show: false, message: '' });
-    const [expandedCards, setExpandedCards] = useState({ data: true, harmony: true, context: true });
+    const [expandedCards, setExpandedCards] = useState({});
+    const [dashboardView, setDashboardView] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem('dashboardView');
+            if (stored === 'masonry' || stored === 'stacked') return stored;
+        }
+        return 'masonry';
+    });
+    const [draggingPaletteIndex, setDraggingPaletteIndex] = useState(null);
+    const [showShareModal, setShowShareModal] = useState(false);
+    
 
+    // Save visible cards to localStorage
     useEffect(() => {
-        generatePalette();
-    }, []);
+        localStorage.setItem('dashboardVisibleCards', JSON.stringify(visibleCards));
+    }, [visibleCards]);
+
+    // Save dashboard view preference
+    useEffect(() => {
+        localStorage.setItem('dashboardView', dashboardView);
+    }, [dashboardView]);
+
+    // Save card order to localStorage
+    useEffect(() => {
+        localStorage.setItem('dashboardCardOrder', JSON.stringify(cardOrder));
+    }, [cardOrder]);
+
+    // Load palette passed from navigation (e.g., Popular Palettes)
+    useEffect(() => {
+        const incoming = location.state?.palette;
+        if (incoming && incoming.colors && incoming.colors.length) {
+            const formatted = incoming.colors.map((hex) => ({
+                hex,
+                name: namer(hex).ntc[0].name,
+                textColor: getTextColor(hex),
+                locked: false,
+            }));
+            setPalette(formatted);
+            setPaletteName(incoming.name || '');
+            setTimeout(() => {
+                handleColorClick(incoming.colors[0]);
+            }, 0);
+        }
+    }, [location.state]);
+
+    // Load palette from query param (?palette=base64json) for share links
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const encoded = params.get('palette');
+        if (!encoded) return;
+        try {
+            const decoded = JSON.parse(atob(decodeURIComponent(encoded)));
+            if (decoded?.colors && Array.isArray(decoded.colors) && decoded.colors.length) {
+                const formatted = decoded.colors.map((hex) => ({
+                    hex,
+                    name: namer(hex).ntc[0].name,
+                    textColor: getTextColor(hex),
+                    locked: false,
+                }));
+                setPalette(formatted);
+                setPaletteName(decoded.name || '');
+                setTimeout(() => {
+                    handleColorClick(decoded.colors[0]);
+                }, 0);
+            }
+        } catch (err) {
+            console.warn('Failed to parse shared palette', err);
+        }
+    }, [location.search]);
+
+    // Generate an initial palette so the dashboard isn't empty (only if nothing was passed in)
+    useEffect(() => {
+        const incoming = location.state?.palette;
+        if (palette.length === 0 && !(incoming && incoming.colors && incoming.colors.length)) {
+            generatePalette();
+        }
+    }, [palette.length, location.state]);
 
     const generatePalette = () => {
         setPalette((prevPalette) => {
@@ -135,6 +247,47 @@ const PaletteGenerator = () => {
         setPalette(prev => prev.map((c, i) => i === index ? { ...c, locked: !c.locked } : c));
     };
 
+    const movePaletteColor = (from, to) => {
+        setPalette(prev => {
+            if (from === to || from < 0 || to < 0 || from >= prev.length || to >= prev.length) return prev;
+            const updated = [...prev];
+            const [moved] = updated.splice(from, 1);
+            updated.splice(to, 0, moved);
+            return updated;
+        });
+    };
+
+    const handlePaletteDragStart = (e, index) => {
+        setDraggingPaletteIndex(index);
+        if (e.dataTransfer) {
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', String(index));
+        }
+    };
+
+    const handlePaletteDragOver = (e) => {
+        e.preventDefault();
+        e.dataTransfer && (e.dataTransfer.dropEffect = 'move');
+    };
+
+    const handlePaletteDrop = (e, index) => {
+        e.preventDefault();
+        if (draggingPaletteIndex !== null) {
+            movePaletteColor(draggingPaletteIndex, index);
+        }
+        setDraggingPaletteIndex(null);
+    };
+
+    const handlePaletteDragEnd = () => setDraggingPaletteIndex(null);
+
+    const openSaveModal = () => {
+        if (!currentUser) {
+            setToast({ show: true, message: 'Please log in to save palettes.' });
+            return;
+        }
+        setShowSaveModal(true);
+    };
+
     const handleSave = async () => {
         if (!currentUser) {
             setToast({ show: true, message: 'Please log in to save palettes' });
@@ -149,6 +302,7 @@ const PaletteGenerator = () => {
                 name: paletteName,
                 colors: palette.map(c => c.hex),
                 createdAt: new Date().toISOString(),
+                visibility: 'public', // default to public so community can see it
             });
             setToast({ show: true, message: 'Palette saved successfully!' });
             setPaletteName('');
@@ -180,18 +334,26 @@ const PaletteGenerator = () => {
         setShowExportModal(false);
     };
 
-    const moveCardOrder = (from, to) => {
-        const newOrder = [...cardOrder];
-        const [moved] = newOrder.splice(from, 1);
-        newOrder.splice(to, 0, moved);
-        setCardOrder(newOrder);
-    };
-
     const toggleCardExpand = (cardId) => {
         setExpandedCards(prev => ({
             ...prev,
             [cardId]: !prev[cardId]
         }));
+    };
+
+    const handleToggleCard = (cardId) => {
+        setVisibleCards(prev => {
+            if (prev.includes(cardId)) {
+                return prev.filter(id => id !== cardId);
+            }
+            // Ensure uniqueness and valid ids
+            const next = [...prev, cardId].filter(id => typeof id === 'string');
+            return Array.from(new Set(next));
+        });
+    };
+
+    const isCardVisible = (cardType) => {
+        return visibleCards.includes(cardType);
     };
 
     return (
@@ -214,7 +376,15 @@ const PaletteGenerator = () => {
                                 color: color.textColor
                             }}
                             onClick={() => handleColorClick(color.hex)}
+                            draggable
+                            onDragStart={(e) => handlePaletteDragStart(e, index)}
+                            onDragOver={handlePaletteDragOver}
+                            onDrop={(e) => handlePaletteDrop(e, index)}
+                            onDragEnd={handlePaletteDragEnd}
                         >
+                            <div className="palette-drag-handle desktop-only" title="Drag to reorder">
+                                <i className="bi bi-grip-vertical"></i>
+                            </div>
                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
                                 <h5 style={{ margin: 0, fontWeight: 'bold', fontSize: '1.1rem' }}>{color.hex}</h5>
                                 <p style={{ margin: 0, fontSize: '0.85rem' }}>{color.name}</p>
@@ -230,6 +400,26 @@ const PaletteGenerator = () => {
                             >
                                 <i className={color.locked ? 'bi bi-lock-fill' : 'bi bi-unlock'}></i>
                             </Button>
+                            <div className="palette-reorder-mobile mobile-only" onClick={(e) => e.stopPropagation()}>
+                                <Button
+                                    variant="light"
+                                    size="sm"
+                                    disabled={index === 0}
+                                    onClick={() => movePaletteColor(index, index - 1)}
+                                    aria-label="Move color up"
+                                >
+                                    <i className="bi bi-arrow-up"></i>
+                                </Button>
+                                <Button
+                                    variant="light"
+                                    size="sm"
+                                    disabled={index === palette.length - 1}
+                                    onClick={() => movePaletteColor(index, index + 1)}
+                                    aria-label="Move color down"
+                                >
+                                    <i className="bi bi-arrow-down"></i>
+                                </Button>
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -238,44 +428,182 @@ const PaletteGenerator = () => {
                 <div className="palette-dashboard-area">
                     {colorInfo ? (
                         <>
-                            <div style={{ /*marginBottom: '1rem'*/ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                {/* <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>Color Dashboard</h2> */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: 'var(--dashboard-text)' }}>
+                                    Dashboard
+                                </h3>
+                                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                                    <div className="btn-group btn-group-sm" role="group" aria-label="Dashboard layout">
+                                        <Button
+                                            variant={dashboardView === 'masonry' ? 'primary' : 'outline-primary'}
+                                            onClick={() => setDashboardView('masonry')}
+                                            title="Masonry view"
+                                        >
+                                            <i className="bi bi-grid-1x2" style={{ marginRight: '4px' }}></i>
+                                            Grid
+                                        </Button>
+                                        <Button
+                                            variant={dashboardView === 'stacked' ? 'primary' : 'outline-primary'}
+                                            onClick={() => setDashboardView('stacked')}
+                                            title="Stacked view"
+                                        >
+                                            <i className="bi bi-list" style={{ marginRight: '4px' }}></i>
+                                            Stacked
+                                        </Button>
+                                    </div>
+                                    <Button
+                                        variant="outline-primary"
+                                        size="sm"
+                                        onClick={() => setShowSettingsModal(true)}
+                                        title="Manage Cards"
+                                    >
+                                        <i className="bi bi-grid-3x3-gap me-1"></i>
+                                        Cards
+                                    </Button>
+                                    <Button
+                                        variant="outline-secondary"
+                                        size="sm"
+                                        onClick={generatePalette}
+                                        title="Generate New Palette"
+                                    >
+                                        <i className="bi bi-arrow-clockwise me-1"></i>
+                                        Generate
+                                    </Button>
+                                    <Button
+                                        variant="outline-secondary"
+                                        size="sm"
+                                        onClick={openSaveModal}
+                                        title="Save Palette"
+                                    >
+                                        <i className="bi bi-floppy me-1"></i>
+                                        Save
+                                    </Button>
+                                    <Button
+                                        variant="outline-secondary"
+                                        size="sm"
+                                        onClick={() => setShowShareModal(true)}
+                                        title="Share Palette"
+                                        disabled={palette.length === 0}
+                                    >
+                                        <i className="bi bi-share me-1"></i>
+                                        Share
+                                    </Button>
+                                    <Button
+                                        variant="outline-secondary"
+                                        size="sm"
+                                        onClick={() => setShowExportModal(true)}
+                                        title="Export Palette"
+                                    >
+                                        <i className="bi bi-download me-1"></i>
+                                        Export
+                                    </Button>
+                                </div>
                             </div>
-                            <div className="dashboard-grid">
-                                {cardOrder.map((idx) => {
-                                    if (idx === 0) return (
-                                        <ColorDataCard
-                                            key="data"
-                                            color={selectedColor}
-                                            colorInfo={colorInfo}
-                                            index={0}
-                                            moveCard={moveCardOrder}
+                            <div className={`dashboard-grid ${dashboardView === 'stacked' ? 'dashboard-grid-stacked' : ''}`}>
+                                <AnimatePresence>
+                                    {cardOrder.map((cardId, index) => {
+                                        if (!isCardVisible(cardId)) return null;
+                                        const isExpanded = !!expandedCards[cardId];
+                                        const commonProps = {
+                                            index,
+                                            moveCard: (from, to) => {
+                                                setCardOrder(prev => {
+                                                    const updated = [...prev];
+                                                    const [moved] = updated.splice(from, 1);
+                                                    updated.splice(to, 0, moved);
+                                                    return updated;
+                                                });
+                                            },
+                                            isExpanded,
+                                            onToggleExpand: () => toggleCardExpand(cardId),
+                                        };
 
-                                        />
-                                    );
-                                    if (idx === 1) return (
-                                        <ColorHarmonyCard
-                                            key="harmony"
-                                            baseColor={selectedColor}
-                                            colorHarmonies={harmonies}
-                                            onHarmonySelect={handleHarmonySelect}
-                                            index={1}
-                                            moveCard={moveCardOrder}
+                                        const motionProps = {
+                                            layout: true,
+                                            initial: { opacity: 0, scale: 0.95 },
+                                            animate: { opacity: 1, scale: 1 },
+                                            exit: { opacity: 0, scale: 0.95 },
+                                            transition: { type: 'spring', stiffness: 250, damping: 20 },
+                                            style: { width: '100%' }
+                                        };
 
-                                        />
-                                    );
-                                    if (idx === 2) return (
-                                        <ColorContextCard
-                                            key="context"
-                                            color={selectedColor}
-                                            contextData={context}
-                                            index={2}
-                                            moveCard={moveCardOrder}
-
-                                        />
-                                    );
-                                    return null;
-                                })}
+                                        switch (cardId) {
+                                            case CARD_TYPES.COLOR_DATA:
+                                                return (
+                                                    <motion.div key={cardId} {...motionProps}>
+                                                        <ColorDataCard
+                                                            color={selectedColor}
+                                                            colorInfo={colorInfo}
+                                                            {...commonProps}
+                                                        />
+                                                    </motion.div>
+                                                );
+                                            case CARD_TYPES.COLOR_HARMONY:
+                                                return (
+                                                    <motion.div key={cardId} {...motionProps}>
+                                                        <ColorHarmonyCard
+                                                            baseColor={selectedColor}
+                                                            colorHarmonies={harmonies}
+                                                            onHarmonySelect={handleHarmonySelect}
+                                                            {...commonProps}
+                                                        />
+                                                    </motion.div>
+                                                );
+                                            case CARD_TYPES.COLOR_CONTEXT:
+                                                return (
+                                                    <motion.div key={cardId} {...motionProps}>
+                                                        <ColorContextCard
+                                                            color={selectedColor}
+                                                            contextData={context}
+                                                            {...commonProps}
+                                                        />
+                                                    </motion.div>
+                                                );
+                                            case CARD_TYPES.VISUALIZER:
+                                                return (
+                                                    <motion.div key={cardId} {...motionProps}>
+                                                        <ColorVisualizerCard
+                                                            color={selectedColor}
+                                                            colorInfo={colorInfo}
+                                                            {...commonProps}
+                                                        />
+                                                    </motion.div>
+                                                );
+                                            case CARD_TYPES.GRADIENT_BUILDER:
+                                                return (
+                                                    <motion.div key={cardId} {...motionProps}>
+                                                        <GradientBuilderCard
+                                                            color={selectedColor}
+                                                            colorInfo={colorInfo}
+                                                            {...commonProps}
+                                                        />
+                                                    </motion.div>
+                                                );
+                                            case CARD_TYPES.OKLCH_EXPLORER:
+                                                return (
+                                                    <motion.div key={cardId} {...motionProps}>
+                                                        <OKLCHExplorerCard
+                                                            color={selectedColor}
+                                                            colorInfo={colorInfo}
+                                                            {...commonProps}
+                                                        />
+                                                    </motion.div>
+                                                );
+                                            case CARD_TYPES.COLOR_SCALES:
+                                                return (
+                                                    <motion.div key={cardId} {...motionProps}>
+                                                        <ColorScalesCard
+                                                            color={selectedColor}
+                                                            colorInfo={colorInfo}
+                                                            {...commonProps}
+                                                        />
+                                                    </motion.div>
+                                                );
+                                            default:
+                                                return null;
+                                        }
+                                    })}
+                                </AnimatePresence>
                             </div>
                         </>
                     ) : (
@@ -284,36 +612,6 @@ const PaletteGenerator = () => {
                             <h4>Select a color to view details</h4>
                         </div>
                     )}
-                </div>
-
-                {/* Floating Action Buttons */}
-                <div className="fab-container" style={{ position: 'fixed', bottom: '20px', right: '20px', display: 'flex', flexDirection: 'column', gap: '10px', zIndex: 1050 }}>
-                    <Button
-                        variant="primary"
-                        onClick={generatePalette}
-                        style={{ borderRadius: '50%', width: '60px', height: '60px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
-                        title="Generate New Palette"
-                    >
-                        <i className="bi bi-arrow-clockwise" style={{ fontSize: '1.5rem' }}></i>
-                    </Button>
-                    <Button
-                        variant="primary"
-                        onClick={() => setShowSaveModal(true)}
-                        style={{ borderRadius: '50%', width: '60px', height: '60px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
-                        title="Save Palette"
-                        className="mobile-hidden"
-                    >
-                        <i className="bi bi-floppy" style={{ fontSize: '1.5rem' }}></i>
-                    </Button>
-                    <Button
-                        variant="primary"
-                        onClick={() => setShowExportModal(true)}
-                        style={{ borderRadius: '50%', width: '60px', height: '60px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
-                        title="Export Palette"
-                        className="mobile-hidden"
-                    >
-                        <i className="bi bi-download" style={{ fontSize: '1.5rem' }}></i>
-                    </Button>
                 </div>
 
                 {/* Save Modal */}
@@ -352,19 +650,45 @@ const PaletteGenerator = () => {
                     </Modal.Body>
                 </Modal>
 
+                {/* Dashboard Settings Modal */}
+                <DashboardSettings
+                    show={showSettingsModal}
+                    onHide={() => setShowSettingsModal(false)}
+                    visibleCards={visibleCards}
+                    onToggleCard={handleToggleCard}
+                />
+
                 {/* Toast */}
                 <Toast
                     show={toast.show}
                     onClose={() => setToast({ show: false, message: '' })}
                     delay={3000}
                     autohide
-                    style={{ position: 'fixed', bottom: '20px', left: '20px', zIndex: 1100 }}
+                    style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 1100 }}
                 >
                     <Toast.Header>
                         <strong className="me-auto">Notification</strong>
                     </Toast.Header>
                     <Toast.Body>{toast.message}</Toast.Body>
                 </Toast>
+                {showShareModal && (
+                    <SharePalette
+                        show={showShareModal}
+                        onClose={() => setShowShareModal(false)}
+                        palette={{
+                            name: paletteName || 'Shared Palette',
+                            colors: palette.map(c => c.hex)
+                        }}
+                        shareUrl={() => {
+                            const payload = {
+                                name: paletteName || 'Shared Palette',
+                                colors: palette.map(c => c.hex)
+                            };
+                            const encoded = encodeURIComponent(btoa(JSON.stringify(payload)));
+                            return `${window.location.origin}/palette-generator?palette=${encoded}`;
+                        }}
+                    />
+                )}
             </Container>
         </DndProvider>
     );

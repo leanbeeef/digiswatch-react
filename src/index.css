@@ -3,9 +3,8 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: #213547;
+  background-color: #ffffff;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -67,19 +66,107 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
+[data-theme="dark"] {
+  color: #e5e7eb;
+  background-color: #0b1221;
+}
 
-  a:hover {
-    color: #747bff;
-  }
+[data-theme="dark"] body {
+  background-color: #0b1221;
+  color: #e5e7eb;
+}
 
-  button {
-    background-color: #f9f9f9;
-  }
+[data-theme="dark"] .navbar {
+  background-color: #111827 !important;
+}
+
+[data-theme="dark"] .navbar .btn-outline-primary {
+  color: #e5e7eb;
+  border-color: #1f6feb;
+}
+
+[data-theme="dark"] .navbar .btn-outline-primary:hover {
+  background: #1f6feb;
+  color: #0b1221;
+}
+
+[data-theme="dark"] body {
+  background: #0b1221;
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] a {
+  color: #93c5fd;
+}
+
+[data-theme="dark"] .card,
+[data-theme="dark"] .glass-card,
+[data-theme="dark"] .dashboard-card,
+[data-theme="dark"] .pp-card,
+[data-theme="dark"] .cs-hero,
+[data-theme="dark"] .cs-container,
+[data-theme="dark"] .palette-dashboard-area {
+  background: #111827 !important;
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .palette-sidebar {
+  background: #0f172a;
+  border-color: #1f2937;
+}
+
+[data-theme="dark"] .palette-card-item {
+  border-bottom: 1px solid #1f2937;
+}
+
+[data-theme="dark"] .dashboard-card-header,
+[data-theme="dark"] .dashboard-card-body,
+[data-theme="dark"] .pp-hero,
+[data-theme="dark"] .pp-palette-name,
+[data-theme="dark"] .cs-season-desc,
+[data-theme="dark"] .cs-section-header {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .pp-hero {
+  background: linear-gradient(135deg, #111827, #0b1221);
+}
+
+[data-theme="dark"] .cs-hero {
+  background: linear-gradient(135deg, #0b1221, #0f172a);
+}
+
+[data-theme="dark"] .pp-action-ghost {
+  background: #0f172a;
+  border-color: #1f2937;
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .pp-action-ghost:hover {
+  background: #111827;
+  border-color: #2563eb;
+}
+
+[data-theme="dark"] .cs-palette-strip {
+  box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+}
+
+[data-theme="dark"] .pp-actions,
+[data-theme="dark"] .cs-controls,
+[data-theme="dark"] .cs-split-layout {
+  color: #e5e7eb;
+}
+
+.logo-dark {
+  display: none;
+}
+
+[data-theme="dark"] .logo-light {
+  display: none;
+}
+
+[data-theme="dark"] .logo-dark {
+  display: inline;
 }
 
 
@@ -381,6 +468,16 @@ body,
 --ds-ink:#0f172a; /* dark slate */
 --ds-ink-50:#334155;
 --ds-glass:#ffffffcc; /* glassy white */
+
+/* OKLCH Color Variables - Perceptually uniform color space */
+--ds-ink-oklch: oklch(14.54% 0.0237 264.05); /* equivalent to #0f172a */
+--ds-ink-50-oklch: oklch(32.89% 0.0268 264.05); /* equivalent to #334155 */
+--ds-glass-oklch: oklch(100% 0 0 / 0.8); /* equivalent to #ffffffcc */
+
+/* Additional OKLCH color palette for modern color manipulation */
+--color-primary-oklch: oklch(60% 0.15 250); /* vibrant blue */
+--color-accent-oklch: oklch(70% 0.19 142); /* fresh green */
+--color-neutral-oklch: oklch(50% 0.02 264); /* neutral gray */
 }
 
 
@@ -427,3 +524,126 @@ linear-gradient(180deg,#fff, #f7f7fb 60%, #f3f4f6);
 
 
 .grain{ position:absolute; inset:0; pointer-events:none; background-image:url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22160%22 height=%22160%22 viewBox=%220 0 160 160%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%222%22 stitchTiles=%22stitch%22/%3E%3CfeColorMatrix type=%22saturate%22 values=%220%22/%3E%3C/filter%3E%3Crect width=%22160%22 height=%22160%22 filter=%22url(%23n)%22 opacity=%220.035%22/%3E%3C/svg%3E'); mix-blend-mode:multiply; }
+
+
+/* Streamlined action pills (likes/save/share) */
+.action-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  white-space: nowrap;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+}
+
+.action-pill:hover {
+  transform: translateY(-1px);
+  border-color: #cbd5e1;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+  background: #f8fafc;
+}
+
+.action-pill .pill-label {
+  font-size: 0.85rem;
+}
+
+.action-pill .count-chip {
+  background: #eef2ff;
+  color: #4338ca;
+  border: 1px solid #e0e7ff;
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.action-pill i {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.action-pill.like.is-active {
+  color: #b91c1c;
+  border-color: #fecdd3;
+  background: #fff1f2;
+}
+
+.action-pill.save.is-active {
+  color: #854d0e;
+  border-color: #fef08a;
+  background: #fffbeb;
+}
+
+.action-pill.share {
+  color: #1d4ed8;
+}
+
+.action-pill.export {
+  color: #0ea5e9;
+}
+
+.action-pill.danger {
+  color: #b91c1c;
+}
+
+.action-pill.success {
+  color: #166534;
+}
+
+.action-pill.muted {
+  color: #475569;
+}
+
+.palette-actions-inline {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  align-items: center;
+  overflow-x: auto;
+}
+
+/* Ghost buttons reuse styles from PopularPalettes */
+.pp-action-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #0f172a;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.pp-action-ghost:hover {
+  transform: translateY(-1px);
+  border-color: #cbd5e1;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+  background: #f8fafc;
+}
+
+.pp-action-ghost.danger {
+  color: #b91c1c;
+  border-color: #fecdd3;
+  background: #fff1f2;
+}
+
+.pp-action-ghost.success {
+  color: #166534;
+  border-color: #bbf7d0;
+  background: #dcfce7;
+}
+
+.pp-action-ghost.muted {
+  color: #475569;
+}

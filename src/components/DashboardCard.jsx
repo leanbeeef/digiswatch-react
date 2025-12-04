@@ -17,6 +17,8 @@ const DashboardCard = ({
     isDraggable = true,
     index,
     moveCard,
+    previewContent,
+    extraHeaderActions = null,
 }) => {
     const ref = React.useRef(null);
 
@@ -44,10 +46,11 @@ const DashboardCard = ({
         },
     });
 
-    // Only apply drag/drop if draggable
-    if (isDraggable && moveCard) {
-        drag(drop(ref));
-    }
+    // Connect drop to the main container
+    drop(ref);
+
+    // Connect preview to the main container (so the whole card looks like it's dragging)
+    preview(ref);
 
     return (
         <div
@@ -58,6 +61,7 @@ const DashboardCard = ({
             <div className="dashboard-card-header">
                 <h3 className="dashboard-card-title">{title}</h3>
                 <div className="dashboard-card-actions">
+                    {extraHeaderActions}
                     {onToggle && (
                         <button
                             className="dashboard-card-action-btn"
@@ -68,13 +72,14 @@ const DashboardCard = ({
                         </button>
                     )}
                     {isDraggable && (
-                        <button
+                        <div
+                            ref={drag}
                             className="dashboard-card-action-btn"
-                            style={{ cursor: 'grab' }}
+                            style={{ cursor: 'grab', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                             title="Drag to reorder"
                         >
                             <i className="bi bi-grip-vertical"></i>
-                        </button>
+                        </div>
                     )}
                     {onClose && (
                         <button
@@ -88,7 +93,18 @@ const DashboardCard = ({
                 </div>
             </div>
             <div className="dashboard-card-body">
-                {children}
+                {!isExpanded && previewContent ? (
+                    <div
+                        className="dashboard-card-preview"
+                        onClick={onToggle}
+                        style={{ cursor: 'pointer' }}
+                        title="Click to expand"
+                    >
+                        {previewContent}
+                    </div>
+                ) : (
+                    children
+                )}
             </div>
         </div>
     );

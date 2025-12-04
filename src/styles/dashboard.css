@@ -29,26 +29,19 @@
     --spring-timing: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Dashboard Grid Layout */
+/* Dashboard Grid Layout - Masonry Style */
 .dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: var(--card-gap);
+    display: block;
+    column-width: 320px;
+    column-gap: var(--card-gap);
     padding: var(--card-gap);
     width: 100%;
     animation: fadeIn var(--transition-base) ease-out;
 }
 
-@media (min-width: 768px) {
-    .dashboard-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (min-width: 1200px) {
-    .dashboard-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
+.dashboard-grid-stacked {
+    column-count: 1;
+    column-width: 100%;
 }
 
 /* Card Base Styles */
@@ -58,10 +51,17 @@
     box-shadow: var(--card-shadow-sm);
     padding: var(--card-padding);
     transition: transform var(--transition-base),
-        box-shadow var(--transition-base);
+        box-shadow var(--transition-base),
+        opacity var(--transition-base);
     position: relative;
     overflow: hidden;
     animation: cardSlideIn var(--spring-duration) var(--spring-timing);
+
+    /* Masonry Layout Support */
+    break-inside: avoid;
+    margin-bottom: var(--card-gap);
+    display: inline-block;
+    width: 100%;
 }
 
 .dashboard-card:hover {
@@ -374,7 +374,7 @@
 /* Responsive Adjustments */
 @media (max-width: 768px) {
     .dashboard-grid {
-        grid-template-columns: 1fr;
+        column-count: 1;
         padding: 0.5rem;
     }
 
@@ -428,6 +428,29 @@
     background-color: #fff;
     display: flex;
     flex-direction: column;
+}
+
+.palette-drag-handle {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    color: rgba(0, 0, 0, 0.4);
+    cursor: grab;
+    font-size: 1.1rem;
+}
+
+.palette-reorder-mobile {
+    display: none;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.desktop-only {
+    display: inline-flex;
+}
+
+.mobile-only {
+    display: none;
 }
 
 .palette-card-item {
@@ -485,6 +508,18 @@
         border-bottom: none;
         border-right: 1px solid rgba(0, 0, 0, 0.1);
         padding: 0.5rem;
+    }
+
+    .desktop-only {
+        display: none !important;
+    }
+
+    .mobile-only {
+        display: inline-flex !important;
+    }
+
+    .palette-reorder-mobile {
+        display: inline-flex;
     }
 
     .palette-card-item h5 {

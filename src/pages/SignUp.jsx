@@ -1,22 +1,26 @@
 // src/pages/SignUp.jsx
 import React, { useState } from 'react';
 import { useAuth } from '../AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import SEO from '../components/SEO';
+import { FaGoogle } from 'react-icons/fa';
+import './Login.css';
 
 const SignUp = () => {
     const { signUp, loginWithGoogle } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleEmailSignUp = async (e) => {
         e.preventDefault();
         try {
+            setLoading(true);
             setError('');
-            await signUp(email, password); // Call the AuthContext method
-            navigate('/'); // Navigate to the home page after successful signup
+            await signUp(email, password);
+            navigate('/');
         } catch (err) {
             console.error('Sign Up Error: ', err);
             switch (err.code) {
@@ -32,62 +36,68 @@ const SignUp = () => {
                 default:
                     setError('Failed to sign up. Please try again.');
             }
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleGoogleSignUp = async () => {
         try {
+            setLoading(true);
             setError('');
-            await loginWithGoogle(); // Call the AuthContext method
+            await loginWithGoogle();
             navigate('/');
         } catch (err) {
             console.error('Google Sign Up Error: ', err);
-            switch (err.code) {
-                case 'auth/popup-closed-by-user':
-                    setError('Sign-in was canceled. Please try again.');
-                    break;
-                case 'auth/network-request-failed':
-                    setError('Network error. Please try again.');
-                    break;
-                default:
-                    setError('Failed to sign up with Google.');
-            }
+            setError('Failed to sign up with Google.');
+        } finally {
+            setLoading(false);
         }
     };
 
-
     return (
-        <div className="container mt-5">
+        <div className="auth-page">
             <SEO title="Sign Up" description="Create a free DigiSwatch account to save unlimited color palettes and share your creations." url="/signup" />
-            <h1>Sign Up</h1>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-            <form onSubmit={handleEmailSignUp}>
-                <div className="mb-3">
-                    <label>Email</label>
+            <div className="auth-card glass-card">
+                <div className="auth-header">
+                    <p className="auth-chip">Join DigiSwatch</p>
+                    <h1>Create your account</h1>
+                    <p className="auth-subtitle">Save palettes, share with the community, and sync across devices.</p>
+                </div>
+                {error && <div className="auth-error">{error}</div>}
+                <form onSubmit={handleEmailSignUp} className="auth-form">
+                    <label className="form-label">Email</label>
                     <input
                         type="email"
-                        className="form-control"
+                        className="form-control auth-input"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
                     />
-                </div>
-                <div className="mb-3">
-                    <label>Password</label>
+                    <label className="form-label mt-3">Password</label>
                     <input
                         type="password"
-                        className="form-control"
+                        className="form-control auth-input"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
                     />
+                    <button type="submit" className="btn btn-primary w-100 mt-4" disabled={loading}>
+                        {loading ? 'Creating account...' : 'Sign up'}
+                    </button>
+                </form>
+                <div className="auth-divider">
+                    <span></span>
+                    <p>or</p>
+                    <span></span>
                 </div>
-                <button type="submit" className="btn btn-primary w-100">Sign Up</button>
-            </form>
-            <div className="mt-3">
-                <button className="btn btn-outline-primary w-100" onClick={handleGoogleSignUp}>
-                    Sign Up with Google
+                <button className="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2" onClick={handleGoogleSignUp} disabled={loading}>
+                    <FaGoogle /> Continue with Google
                 </button>
+                <div className="auth-footer">
+                    <p className="mb-1">Already have an account?</p>
+                    <Link to="/login" className="auth-link">Sign in</Link>
+                </div>
             </div>
         </div>
     );

@@ -75,12 +75,22 @@
     width: 300px;
     height: 300px;
     border-radius: 50%;
-    overflow: hidden;
+    overflow: visible;
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
     border: 8px solid #fff;
     margin-bottom: 2rem;
     transition: transform 0.3s ease;
     background: #f8f9fa;
+}
+
+.cs-color-ring-band {
+    position: absolute;
+    inset: -18px;
+    border-radius: 50%;
+    pointer-events: none;
+    mask: radial-gradient(circle at center, transparent 66%, #000 67%);
+    -webkit-mask: radial-gradient(circle at center, transparent 66%, #000 67%);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
 }
 
 .cs-image-preview-container:hover {
@@ -92,6 +102,58 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: 50%;
+}
+
+.cs-color-ring-polar {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 360px;
+    height: 360px;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+}
+
+.cs-color-ring-swatch {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(15,23,42,0.1);
+    cursor: pointer;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    pointer-events: auto;
+}
+
+.cs-color-ring-swatch:hover {
+    transform: translate(-50%, -50%) scale(1.25);
+    box-shadow: 0 12px 20px rgba(0,0,0,0.12), 0 0 0 2px rgba(255,255,255,0.9);
+    z-index: 3;
+}
+
+.cs-color-ring-swatch:hover .cs-color-tooltip {
+    opacity: 1;
+    transform: translate(-50%, -8px);
+}
+
+.cs-color-tooltip {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translate(-50%, 0);
+    padding: 4px 8px;
+    background: rgba(15, 23, 42, 0.9);
+    color: #fff;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.12s ease, transform 0.12s ease;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
 }
 
 .cs-controls {
@@ -170,27 +232,48 @@
     font-weight: 800;
 }
 
-.cs-full-palette-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.cs-palette-swatch {
+.cs-palette-strip {
+    display: flex;
     width: 100%;
-    aspect-ratio: 1;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    border: 2px solid #fff;
+    height: 80px;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-top: 1rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
-.cs-palette-swatch:hover {
-    transform: scale(1.1);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-    z-index: 10;
+.cs-palette-strip-swatch {
+    flex: 1;
+    position: relative;
+    transition: flex 0.25s ease, transform 0.18s ease;
+    cursor: pointer;
+}
+
+.cs-palette-strip-swatch:hover {
+    flex: 1.3;
+    z-index: 2;
+}
+
+.cs-palette-strip-swatch:hover .cs-palette-tooltip {
+    opacity: 1;
+    transform: translate(-50%, -8px);
+}
+
+.cs-palette-tooltip {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translate(-50%, 0);
+    background: rgba(15, 23, 42, 0.9);
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.12s ease, transform 0.12s ease;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
 }
 
 /* Suggestions Section (Bottom) */

@@ -96,6 +96,72 @@
     letter-spacing: -0.01em;
 }
 
+.pp-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.pp-card-head-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.pp-like-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid #fecdd3;
+    background: #fff1f2;
+    color: #b91c1c;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    white-space: nowrap;
+}
+
+.pp-like-inline:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgba(185, 28, 28, 0.12);
+}
+
+.pp-like-inline .pp-like-count-inline {
+    background: #fee2e2;
+    border-radius: 999px;
+    padding: 0.1rem 0.45rem;
+    border: 1px solid #fecdd3;
+    font-size: 0.8rem;
+}
+
+.pp-like-inline.is-active {
+    border-color: #fb7185;
+    background: #ffe4e6;
+}
+
+.pp-open-generator {
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    border-radius: 999px;
+    padding: 0.3rem 0.45rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.pp-open-generator:hover {
+    transform: translateY(-1px);
+    border-color: #cbd5e1;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+    background: #f8fafc;
+}
+
 /* Color Strip Animation */
 .pp-color-strip {
     display: flex;
@@ -105,6 +171,7 @@
     overflow: hidden;
     margin-bottom: 1.5rem;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    position: relative;
 }
 
 .pp-color-swatch {
@@ -139,44 +206,54 @@
     opacity: 1;
 }
 
+.pp-strip-action {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 6px 10px;
+    z-index: 2;
+}
+
 /* Action Buttons */
 .pp-actions {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    gap: 0.5rem;
     margin-top: auto;
-    padding-top: 1rem;
+    padding: 0.5rem 0.25rem 0;
     border-top: 1px solid rgba(0, 0, 0, 0.05);
+    overflow-x: auto;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-.pp-action-btn {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 50%;
-    transition: all 0.2s ease;
-    display: flex;
+.pp-action-ghost {
+    display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
-    color: var(--ds-ink-50);
+    gap: 0.35rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #0f172a;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
 
-.pp-action-btn:hover {
-    background: rgba(0, 0, 0, 0.05);
-    transform: scale(1.1);
+.pp-action-ghost:hover {
+    transform: translateY(-1px);
+    border-color: #cbd5e1;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+    background: #f8fafc;
 }
 
-.pp-action-btn.liked {
-    color: #ef4444;
-}
-
-.pp-action-btn.saved {
-    color: #eab308;
-}
-
-.pp-action-btn.share {
-    color: #3b82f6;
+.pp-action-ghost.is-active {
+    color: #854d0e;
+    border-color: #fef08a;
+    background: #fffbeb;
 }
 
 .pp-like-count {

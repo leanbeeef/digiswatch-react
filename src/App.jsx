@@ -43,7 +43,7 @@ function App() {
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/contrastchecker" element={<ContrastChecker />} />
                 <Route path="/imagecolorextractor" element={<ImageColorExtractor />} />
-                {/* <Route path="/color-season" element={<ColorSeason />} /> */}
+                <Route path="/color-season" element={<ColorSeason />} />
                 {/* <Route path="/ai-palette-generator" element={<AIPaletteGenerator />} /> */}
                 {/* Add other routes as needed */}
               </Routes>

@@ -1,33 +1,22 @@
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collectionGroup, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 
 export const fetchPublicPalettes = async () => {
   try {
-    const usersCollection = collection(db, "users");
-    const usersSnapshot = await getDocs(usersCollection);
+    // Use a collection group query so we don't need to list /users (which is blocked by rules)
+    const createdPalettesGroup = collectionGroup(db, "createdPalettes");
+    const snapshot = await getDocs(createdPalettesGroup);
 
-    let publicPalettes = [];
-
-    // Iterate through each user
-    for (const userDoc of usersSnapshot.docs) {
-      const userId = userDoc.id;
-      const createdPalettesCollection = collection(db, "users", userId, "createdPalettes");
-
-      // Query palettes marked as public
-      const publicPalettesQuery = query(
-        createdPalettesCollection,
-        where("visibility", "==", "public")
-      );
-      const palettesSnapshot = await getDocs(publicPalettesQuery);
-
-      // Add public palettes to the result array
-      palettesSnapshot.forEach((paletteDoc) => {
-        publicPalettes.push({
-          id: paletteDoc.id,
-          ...paletteDoc.data(),
-        });
+    const publicPalettes = [];
+    snapshot.forEach((paletteDoc) => {
+      const data = paletteDoc.data();
+      // Treat missing visibility as public; exclude explicit private
+      if (data.visibility && data.visibility === "private") return;
+      publicPalettes.push({
+        id: paletteDoc.id,
+        ...data,
       });
-    }
+    });
 
     return publicPalettes;
   } catch (error) {

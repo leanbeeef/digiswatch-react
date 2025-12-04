@@ -55,6 +55,16 @@ export const hexToHsvString = (hex) => {
   return `hsv(${Math.round(hsv.h)}, ${Math.round(hsv.s * 100)}%, ${Math.round(hsv.v * 100)}%)`;
 };
 
+// Convert HEX to OKLCH string
+export const hexToOklchString = (hex) => {
+  const oklch = chroma(hex).oklch();
+  // oklch[0] = lightness (0-1), oklch[1] = chroma (0-0.4 typically), oklch[2] = hue (0-360)
+  const l = (oklch[0] * 100).toFixed(2);
+  const c = oklch[1].toFixed(4);
+  const h = isNaN(oklch[2]) ? 0 : oklch[2].toFixed(2); // Handle achromatic colors (gray) where hue is NaN
+  return `oklch(${l}% ${c} ${h})`;
+};
+
 // Main function to gather all color formats
 export const getColorInfo = (color) => {
   return {
@@ -66,5 +76,6 @@ export const getColorInfo = (color) => {
     ypbpr: hexToYpbprString(color),
     xvycc: hexToXvYccString(color),
     hsv: hexToHsvString(color),
+    oklch: hexToOklchString(color),
   };
 };

@@ -16,6 +16,7 @@ import {
 import namer from 'color-namer';
 import tinycolor from 'tinycolor2';
 import SEO from '../components/SEO';
+import '../PopularPalettes.css';
 
 
 const getTextColor = (backgroundColor) => {
@@ -305,44 +306,50 @@ const Profile = () => {
                   <div key={palette.id} className="mb-3 p-3 glass-card rounded-4 border border-1 border-white">
                     <Card.Body>
                       <h6>{palette.name}</h6>
-                      <div id="palette-display" className="palette-display d-flex">
+                      <div className="pp-color-strip">
                         {palette.colors.map((color, idx) => (
                           <div
                             key={idx}
-                            style={{
-                              backgroundColor: color,
-                              flex: 1,
-                              height: '60px',
-                            }}
+                            className="pp-color-swatch"
+                            style={{ backgroundColor: color }}
+                            data-color={color}
+                            onClick={() => navigator.clipboard.writeText(color)}
+                            title="Click to copy hex"
                           />
                         ))}
-                      </div>
-                      <div className="d-flex justify-content-between mt-2">
-
-                        <Button
-                          variant="link"
-                          onClick={() => handleShareClick(palette)}
-                          style={{ color: '#007bff' }}
-                        >
-                          <i className="bi bi-share-fill me-2"></i>
-                        </Button>
-                        <Button
-                          variant="link"
+                        <button
+                          className="pp-action-ghost danger pp-strip-action"
                           onClick={() => handleDeletePalette(palette.id, 'palettes')}
-                          style={{ color: 'red' }}
+                          title="Delete palette"
                         >
-                          <i className="bi bi-trash-fill"></i>
-                        </Button>
-                        <Button
-                          variant='link'
+                          <i className="bi bi-trash3"></i>
+                        </button>
+                      </div>
+                      <div className="palette-actions-inline mt-2">
+                        <button
+                          className="pp-action-ghost"
+                          onClick={() => handleShareClick(palette)}
+                        >
+                          <i className="bi bi-share-fill"></i>
+                          <span>Share</span>
+                        </button>
+                        <button
+                          className="pp-action-ghost"
                           onClick={() => {
-                            setCurrentPalette(palette.colors); // Set the current palette
-                            setShowExportModal(true); // Show the export modal
+                            setCurrentPalette(palette.colors);
+                            setShowExportModal(true);
                           }}
-                          style={{ color: 'blue' }}
                         >
                           <i className="bi bi-cloud-arrow-down-fill"></i>
-                        </Button>
+                          <span>Export</span>
+                        </button>
+                        {/* <button
+                          className="pp-action-ghost danger"
+                          onClick={() => handleDeletePalette(palette.id, 'palettes')}
+                        >
+                          <i className="bi bi-trash-fill"></i>
+                          <span>Delete</span>
+                        </button> */}
                       </div>
                     </Card.Body>
                   </div>
@@ -354,64 +361,68 @@ const Profile = () => {
                   <div key={palette.id} className="mb-3 p-3 glass-card rounded-4 border border-1 border-white">
                     <div>
                       <h6>{palette.name}</h6>
-                      <div id="palette-display" className="palette-display d-flex">
+                      <div className="pp-color-strip">
                         {palette.colors.map((color, idx) => (
                           <div
                             key={idx}
-                            style={{
-                              backgroundColor: color,
-                              flex: 1,
-                              height: '60px',
-                            }}
+                            className="pp-color-swatch"
+                            style={{ backgroundColor: color }}
+                            data-color={color}
+                            onClick={() => navigator.clipboard.writeText(color)}
+                            title="Click to copy hex"
                           />
                         ))}
+                        <button
+                          className="pp-action-ghost danger pp-strip-action"
+                          onClick={() => handleDeletePalette(palette.id, 'createdPalettes')}
+                          title="Delete palette"
+                        >
+                          <i className="bi bi-trash3"></i>
+                        </button>
                       </div>
-                      <div className="d-flex justify-content-between mt-2">
-                        <Button
-                          variant="link"
+                      <div className="palette-actions-inline mt-2">
+                        <button
+                          className={`pp-action-ghost ${palette.visibility === 'public' ? 'success' : 'muted'}`}
                           onClick={() => togglePaletteVisibility(palette.id, palette.visibility || 'private')}
-                          style={{ color: palette.visibility === 'public' ? 'green' : 'gray' }}
                         >
                           <i className={`bi bi-eye${palette.visibility === 'public' ? '-slash' : ''}-fill`}></i>
-                          {palette.visibility === 'public' ? '' : ''}
-                        </Button>
-                        <Button
-                          variant="link"
+                          <span>{palette.visibility === 'public' ? 'Make Private' : 'Make Public'}</span>
+                        </button>
+                        <button
+                          className="pp-action-ghost"
                           onClick={() => handleShareClick(palette)}
-                          style={{ color: '#007bff' }}
                         >
-                          <i className="bi bi-share-fill me-2"></i>
-                        </Button>
-                        <Button
-                          variant="link"
-                          onClick={() => handleDeletePalette(palette.id, 'createdPalettes')}
-                          style={{ color: 'red' }}
-                        >
-                          <i className="bi bi-trash-fill"></i>
-                        </Button>
-
-                        <Button
-                          variant="link"
+                          <i className="bi bi-share-fill"></i>
+                          <span>Share</span>
+                        </button>
+                        <button
+                          className="pp-action-ghost"
                           onClick={() => {
                             if (palette.colors && Array.isArray(palette.colors)) {
-                              // Ensure the colors are correctly structured
                               setCurrentPalette(
                                 palette.colors.map((color) => ({
-                                  hex: color, // Assuming palette.colors contains hex values
-                                  name: namer(color).ntc[0].name, // Get color name using `namer`
-                                  textColor: getTextColor(color), // Get text color for readability
+                                  hex: color,
+                                  name: namer(color).ntc[0].name,
+                                  textColor: getTextColor(color),
                                 }))
                               );
-                              setShowExportModal(true); // Show the export modal
+                              setShowExportModal(true);
                             } else {
                               console.error("Palette colors are undefined or invalid:", palette.colors);
                               alert("Unable to export: Invalid palette data.");
                             }
                           }}
-                          style={{ color: 'blue' }}
                         >
                           <i className="bi bi-cloud-arrow-down-fill"></i>
-                        </Button>
+                          <span>Export</span>
+                        </button>
+                        {/* <button
+                          className="pp-action-ghost danger"
+                          onClick={() => handleDeletePalette(palette.id, 'createdPalettes')}
+                        >
+                          <i className="bi bi-trash-fill"></i>
+                          <span>Delete</span>
+                        </button> */}
                       </div>
                     </div>
                   </div>

@@ -1,58 +1,86 @@
 // src/components/SharePalette.jsx
 import React from 'react';
 import { Modal, Button } from 'react-bootstrap';
-import { FaFacebookF, FaTwitter, FaLinkedinIn, FaPinterest, FaRedditAlien, FaWhatsapp, FaEnvelope } from 'react-icons/fa';
+import { FaFacebookF, FaTwitter, FaLinkedinIn, FaPinterest, FaRedditAlien, FaWhatsapp, FaEnvelope, FaLink } from 'react-icons/fa';
+import './SharePalette.css';
 
-const SharePalette = ({ show, onClose, palette }) => {
-    const websiteURL = window.location.origin; // Replace with actual website URL
+const SharePalette = ({ show, onClose, palette, shareUrl }) => {
     const paletteName = palette?.name || "Color Palette";
-    const paletteColors = palette?.colors?.join(", ") || "";
-    const baseURL = window.location.origin; // Get the base URL of your site
-    const popularPalettesURL = `${baseURL}/popular-palettes`;
-    const shareMessage = `Check out the color palette ${paletteName} ${paletteColors} I just made on DigiSwatch.io: ${popularPalettesURL}`;
+    const paletteColors = (palette?.colors || []).map((c) => c.hex || c);
+    const baseURL = window.location.origin;
+    const defaultUrl = `${baseURL}/popular-palettes`;
+    const resolvedShareUrl = typeof shareUrl === 'function' ? shareUrl() : shareUrl;
+    const urlToShare = resolvedShareUrl || defaultUrl;
+    const shareMessage = `Check out the color palette ${paletteName} ${paletteColors.join(", ")} I made on DigiSwatch.io: ${urlToShare}`;
 
     const shareLinks = {
-        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(websiteURL)}&quote=${encodeURIComponent(shareMessage )}`,
-        twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage )}&url=${encodeURIComponent(websiteURL)}`,
-        linkedin: `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(websiteURL)}&title=${encodeURIComponent(paletteName)}&summary=${encodeURIComponent(shareMessage )}`,
-        pinterest: `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(websiteURL)}&description=${encodeURIComponent(shareMessage )}`,
-        reddit: `https://www.reddit.com/submit?title=${encodeURIComponent(paletteName)}&url=${encodeURIComponent(websiteURL)}`,
+        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(urlToShare)}&quote=${encodeURIComponent(shareMessage)}`,
+        twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}&url=${encodeURIComponent(urlToShare)}`,
+        linkedin: `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(urlToShare)}&title=${encodeURIComponent(paletteName)}&summary=${encodeURIComponent(shareMessage)}`,
+        pinterest: `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(urlToShare)}&description=${encodeURIComponent(shareMessage)}`,
+        reddit: `https://www.reddit.com/submit?title=${encodeURIComponent(paletteName)}&url=${encodeURIComponent(urlToShare)}`,
         whatsapp: `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`,
-        email: `mailto:?subject=${encodeURIComponent(paletteName)}&body=${encodeURIComponent(shareMessage )}`,
+        email: `mailto:?subject=${encodeURIComponent(paletteName)}&body=${encodeURIComponent(shareMessage)}`,
+    };
+
+    const copyLink = () => {
+        navigator.clipboard.writeText(urlToShare);
     };
 
     return (
-        <Modal show={show} onHide={onClose} centered>
-            <Modal.Header closeButton>
-                <Modal.Title>Share This Palette</Modal.Title>
+        <Modal show={show} onHide={onClose} centered contentClassName="share-modal">
+            <Modal.Header closeButton className="border-0">
+                <div className="w-100">
+                    <p className="share-chip">Share palette</p>
+                    <h4 className="share-title">{paletteName}</h4>
+                    <p className="share-subtitle">Spread the word or copy the link</p>
+                </div>
             </Modal.Header>
-            <Modal.Body className="text-center">
-                <p>Share this palette with others!</p>
-                <div className="d-flex justify-content-center gap-3">
-                    <a href={shareLinks.facebook} target="_blank" rel="noopener noreferrer">
-                        <FaFacebookF size={30} style={{ color: '#4267B2' }} />
+            <Modal.Body>
+                <div className="share-preview">
+                    <div className="share-palette-strip">
+                        {paletteColors.slice(0, 10).map((c, i) => (
+                            <div key={i} style={{ background: c }} title={c} />
+                        ))}
+                    </div>
+                    <div className="share-link-row">
+                        <input
+                            className="share-link-input"
+                            type="text"
+                            value={urlToShare}
+                            readOnly
+                            onFocus={(e) => e.target.select()}
+                        />
+                        <Button variant="outline-primary" onClick={copyLink} className="share-copy-btn">
+                            <FaLink /> Copy
+                        </Button>
+                    </div>
+                </div>
+                <div className="share-grid">
+                    <a className="share-card facebook" href={shareLinks.facebook} target="_blank" rel="noopener noreferrer">
+                        <FaFacebookF /> Facebook
                     </a>
-                    <a href={shareLinks.twitter} target="_blank" rel="noopener noreferrer">
-                        <FaTwitter size={30} style={{ color: '#1DA1F2' }} />
+                    <a className="share-card twitter" href={shareLinks.twitter} target="_blank" rel="noopener noreferrer">
+                        <FaTwitter /> Twitter
                     </a>
-                    <a href={shareLinks.linkedin} target="_blank" rel="noopener noreferrer">
-                        <FaLinkedinIn size={30} style={{ color: '#0077B5' }} />
+                    <a className="share-card linkedin" href={shareLinks.linkedin} target="_blank" rel="noopener noreferrer">
+                        <FaLinkedinIn /> LinkedIn
                     </a>
-                    <a href={shareLinks.pinterest} target="_blank" rel="noopener noreferrer">
-                        <FaPinterest size={30} style={{ color: '#E60023' }} />
+                    <a className="share-card pinterest" href={shareLinks.pinterest} target="_blank" rel="noopener noreferrer">
+                        <FaPinterest /> Pinterest
                     </a>
-                    <a href={shareLinks.reddit} target="_blank" rel="noopener noreferrer">
-                        <FaRedditAlien size={30} style={{ color: '#FF4500' }} />
+                    <a className="share-card reddit" href={shareLinks.reddit} target="_blank" rel="noopener noreferrer">
+                        <FaRedditAlien /> Reddit
                     </a>
-                    <a href={shareLinks.whatsapp} target="_blank" rel="noopener noreferrer">
-                        <FaWhatsapp size={30} style={{ color: '#25D366' }} />
+                    <a className="share-card whatsapp" href={shareLinks.whatsapp} target="_blank" rel="noopener noreferrer">
+                        <FaWhatsapp /> WhatsApp
                     </a>
-                    <a href={shareLinks.email} target="_blank" rel="noopener noreferrer">
-                        <FaEnvelope size={30} style={{ color: '#0072C6' }} />
+                    <a className="share-card email" href={shareLinks.email} target="_blank" rel="noopener noreferrer">
+                        <FaEnvelope /> Email
                     </a>
                 </div>
             </Modal.Body>
-            <Modal.Footer>
+            <Modal.Footer className="border-0">
                 <Button variant="secondary" onClick={onClose}>
                     Close
                 </Button>

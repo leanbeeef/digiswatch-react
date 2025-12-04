@@ -1,0 +1,134 @@
+.share-modal {
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
+}
+
+.share-chip {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  font-size: 0.75rem;
+}
+
+.share-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.share-subtitle {
+  margin: 4px 0 0;
+  color: #6b7280;
+}
+
+.share-preview {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.share-palette-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(28px, 1fr));
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.share-palette-strip div {
+  height: 28px;
+  border-radius: 8px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+
+.share-link-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.share-link-input {
+  flex: 1;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 0.9rem;
+  background: #fff;
+}
+
+.share-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.share-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.share-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  color: #0f172a;
+  text-decoration: none;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.06);
+}
+
+.share-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.1);
+  border-color: #d1d5db;
+}
+
+.share-card.facebook { color: #2563eb; }
+.share-card.twitter { color: #0ea5e9; }
+.share-card.linkedin { color: #0a66c2; }
+.share-card.pinterest { color: #e60023; }
+.share-card.reddit { color: #f97316; }
+.share-card.whatsapp { color: #16a34a; }
+.share-card.email { color: #9333ea; }
+
+[data-theme="dark"] .share-modal {
+  background: #0f172a;
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .share-chip {
+  background: rgba(147, 197, 253, 0.15);
+  color: #93c5fd;
+}
+
+[data-theme="dark"] .share-title { color: #e5e7eb; }
+[data-theme="dark"] .share-subtitle { color: #9ca3af; }
+[data-theme="dark"] .share-preview {
+  background: #111827;
+  border-color: #1f2937;
+}
+[data-theme="dark"] .share-link-input {
+  background: #0b1221;
+  border-color: #1f2937;
+  color: #e5e7eb;
+}
+[data-theme="dark"] .share-card {
+  background: #111827;
+  border-color: #1f2937;
+  color: #e5e7eb;
+}

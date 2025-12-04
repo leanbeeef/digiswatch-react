@@ -1,0 +1,170 @@
+/* Dashboard Settings Modal Styles */
+
+.dashboard-settings-modal .modal-dialog {
+    max-width: 600px;
+}
+
+.dashboard-settings-modal .modal-header {
+    border-bottom: 2px solid var(--dashboard-border);
+    padding: 1.5rem;
+}
+
+.dashboard-settings-modal .modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--dashboard-text);
+}
+
+.dashboard-settings-modal .modal-body {
+    padding: 1.5rem;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+/* Settings Summary */
+.settings-summary {
+    padding: 0.75rem;
+    background: var(--dashboard-bg);
+    border-radius: 8px;
+    text-align: center;
+}
+
+/* Card Category */
+.card-category {
+    margin-bottom: 2rem;
+}
+
+.category-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--dashboard-border);
+}
+
+/* Card List */
+.card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Card Item */
+.card-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.875rem 1rem;
+    background: var(--card-bg);
+    border: 1px solid var(--dashboard-border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.card-item:hover:not(.disabled) {
+    border-color: var(--dashboard-accent);
+    background: rgba(3, 102, 214, 0.02);
+    transform: translateX(4px);
+}
+
+.card-item.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--dashboard-bg);
+}
+
+.card-item-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.card-icon {
+    font-size: 1.25rem;
+    color: var(--dashboard-accent);
+    min-width: 24px;
+}
+
+.card-item.disabled .card-icon {
+    color: var(--dashboard-text-muted);
+}
+
+.card-info {
+    flex: 1;
+}
+
+.card-title-row {
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    color: var(--dashboard-text);
+    margin-bottom: 0.25rem;
+}
+
+.card-description {
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+/* Checkbox Styling */
+.card-item .form-check {
+    margin: 0;
+}
+
+.card-item .form-check-input {
+    cursor: pointer;
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.card-item .form-check-input:checked {
+    background-color: var(--dashboard-accent);
+    border-color: var(--dashboard-accent);
+}
+
+/* Badge */
+.card-item .badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    font-weight: 600;
+}
+
+/* Search Input */
+.dashboard-settings-modal input[type="text"] {
+    border-radius: 8px;
+    border: 1px solid var(--dashboard-border);
+    padding: 0.75rem;
+}
+
+.dashboard-settings-modal input[type="text"]:focus {
+    border-color: var(--dashboard-accent);
+    box-shadow: 0 0 0 0.2rem rgba(3, 102, 214, 0.15);
+}
+
+/* Modal Footer */
+.dashboard-settings-modal .modal-footer {
+    border-top: 2px solid var(--dashboard-border);
+    padding: 1rem 1.5rem;
+}
+
+/* Scrollbar Styling */
+.dashboard-settings-modal .modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.dashboard-settings-modal .modal-body::-webkit-scrollbar-track {
+    background: var(--dashboard-bg);
+    border-radius: 4px;
+}
+
+.dashboard-settings-modal .modal-body::-webkit-scrollbar-thumb {
+    background: var(--dashboard-border);
+    border-radius: 4px;
+}
+
+.dashboard-settings-modal .modal-body::-webkit-scrollbar-thumb:hover {
+    background: var(--dashboard-text-muted);
+}

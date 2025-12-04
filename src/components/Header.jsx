@@ -3,6 +3,7 @@ import { Navbar, Container, Button, Image } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../AuthContext'; // Access authentication context
 import logoLight from '../assets/ds_hz_black.svg';
+import logoDark from '../assets/ds_hz_white.svg';
 import avatars from '../utils/avatarImages'; // Assuming avatars are used
 
 const Header = ({ onOpenSidebar }) => {
@@ -22,7 +23,8 @@ const Header = ({ onOpenSidebar }) => {
       <Container fluid className="d-flex align-items-center justify-content-between">
         {/* Left Section: Logo */}
         <Navbar.Brand href="/" className="d-flex align-items-center">
-          <img src={logoLight} alt="DigiSwatch Logo" height="40" className="me-2" />
+          <img src={logoLight} alt="DigiSwatch Logo" height="40" className="me-2 logo-light" />
+          <img src={logoDark} alt="DigiSwatch Logo" height="40" className="me-2 logo-dark" />
         </Navbar.Brand>
 
         {/* Right Section: User Info and Sidebar Toggle */}

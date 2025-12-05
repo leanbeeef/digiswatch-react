@@ -43,6 +43,23 @@ const AI_COOLDOWN_MS = 8000;
 const AI_TIMEOUT_MS = 12000;
 const MAX_PROMPT_LENGTH = 180;
 const MIN_PROMPT_LENGTH = 6;
+const OWNER_EMAIL = 'jodrey48@gmail.com';
+const aiLockOverlayStyle = {
+    position: 'absolute',
+    inset: 0,
+    background: 'rgba(0,0,0,0.25)',
+    backdropFilter: 'blur(3px)',
+    WebkitBackdropFilter: 'blur(3px)',
+    borderRadius: '12px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#f5d776',
+    fontWeight: 600,
+    gap: '8px',
+    cursor: 'pointer',
+    zIndex: 2,
+};
 
 const getTextColor = (bg) => {
     return tinycolor.readability(bg, "#FFFFFF") >= 4.5 ? "#FFFFFF" : "#000000";
@@ -51,6 +68,7 @@ const getTextColor = (bg) => {
 const PaletteGenerator = () => {
     const location = useLocation();
     const { currentUser } = useAuth();
+    const isOwner = currentUser?.email === OWNER_EMAIL;
     const [palette, setPalette] = useState([]);
     // dashboardActive is no longer needed as it's always visible, but we'll keep the logic simple
     const [selectedColor, setSelectedColor] = useState(null);
@@ -107,8 +125,16 @@ const PaletteGenerator = () => {
     const [aiError, setAiError] = useState('');
     const [cooldownSeconds, setCooldownSeconds] = useState(0);
     const [aiUsesLeft, setAiUsesLeft] = useState(10);
+    const [showAuthModal, setShowAuthModal] = useState(false);
     const aiCooldownTimerRef = useRef(null);
     const lastAiRequestRef = useRef(0);
+    const showAiError = (message) => {
+        setAiError(message);
+        setToast({ show: true, message });
+    };
+    const requireAuthToast = () => {
+        setShowAuthModal(true);
+    };
     
 
     // Save visible cards to localStorage
@@ -227,6 +253,10 @@ const PaletteGenerator = () => {
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
+        if (isOwner) {
+            setAiUsesLeft(Infinity);
+            return;
+        }
         const key = `aiPromptUses_${currentUser?.uid || 'guest'}`;
         const stored = localStorage.getItem(key);
         if (stored) {
@@ -237,10 +267,10 @@ const PaletteGenerator = () => {
             }
         }
         setAiUsesLeft(10);
-    }, [currentUser]);
+    }, [currentUser, isOwner]);
 
     const persistAiUses = (next) => {
-        if (typeof window === 'undefined') return;
+        if (typeof window === 'undefined' || isOwner) return;
         const key = `aiPromptUses_${currentUser?.uid || 'guest'}`;
         localStorage.setItem(key, String(next));
     };
@@ -287,28 +317,34 @@ const PaletteGenerator = () => {
 
     const handleGenerateWithPrompt = async (event) => {
         event?.preventDefault?.();
+        if (!currentUser) {
+            requireAuthToast();
+            return;
+        }
         const sanitizedPrompt = aiPrompt.trim().replace(/\s+/g, ' ');
         if (sanitizedPrompt.length < MIN_PROMPT_LENGTH) {
-            setAiError(`Add at least ${MIN_PROMPT_LENGTH} characters to describe the palette.`);
+            showAiError(`Add at least ${MIN_PROMPT_LENGTH} characters to describe the palette.`);
             return;
         }
         if (aiStatus === 'loading') return;
         if (cooldownSeconds > 0) {
-            setAiError('Please wait for the cooldown to finish before requesting another palette.');
+            showAiError('Please wait for the cooldown to finish before requesting another palette.');
             return;
         }
-        if (aiUsesLeft <= 0) {
-            setAiError('AI prompt limit reached (10 uses).');
+        if (!isOwner && aiUsesLeft <= 0) {
+            showAiError('AI prompt limit reached (10 uses).');
             return;
         }
 
         setAiStatus('loading');
         setAiError('');
-        setAiUsesLeft((prev) => {
-            const next = Math.max(0, prev - 1);
-            persistAiUses(next);
-            return next;
-        });
+        if (!isOwner) {
+            setAiUsesLeft((prev) => {
+                const next = Math.max(0, prev - 1);
+                persistAiUses(next);
+                return next;
+            });
+        }
 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), AI_TIMEOUT_MS);
@@ -335,9 +371,9 @@ const PaletteGenerator = () => {
             console.error('AI prompt generation failed', error);
             setAiStatus('error');
             if (error.name === 'AbortError') {
-                setAiError('Request timed out. Please try again in a moment.');
+                showAiError('Request timed out. Please try again in a moment.');
             } else {
-                setAiError('Could not generate palette from prompt. Please try again shortly.');
+                showAiError('Could not generate palette from prompt. Please try again shortly.');
             }
         } finally {
             clearTimeout(timeoutId);
@@ -579,48 +615,63 @@ const PaletteGenerator = () => {
                                     <div className="text-muted small" style={{ minWidth: '80px' }}>
                                         Uses left: {aiUsesLeft}
                                     </div>
-                                    <form className="d-flex gap-2" onSubmit={handleGenerateWithPrompt}>
-                                        <input
-                                            type="text"
-                                            className="form-control dashboard-search-input"
-                                            placeholder="Describe a palette (e.g., 'warm sunset + teal')"
-                                            value={aiPrompt}
-                                            maxLength={MAX_PROMPT_LENGTH}
-                                            onChange={(e) => {
-                                                setAiPrompt(e.target.value);
-                                                if (aiError) setAiError('');
-                                            }}
-                                            disabled={aiStatus === 'loading'}
-                                            aria-label="Describe a palette to generate with AI"
-                                        />
-                                        <Button
-                                            variant="primary"
-                                            size="sm"
-                                            type="submit"
-                                            disabled={
-                                                !aiPrompt.trim() ||
-                                                aiStatus === 'loading' ||
-                                                cooldownSeconds > 0 ||
-                                                aiUsesLeft <= 0
-                                            }
-                                            title={
-                                                aiUsesLeft <= 0
-                                                    ? 'AI prompt limit reached (10 uses).'
-                                                    : cooldownSeconds > 0
-                                                        ? 'Cooling down to prevent rapid-fire requests'
-                                                        : 'Generate palette from prompt'
-                                            }
-                                            className="dashboard-icon-btn"
-                                            aria-label="Generate palette from prompt"
-                                    >
-                                            {aiStatus === 'loading' ? (
-                                                <i className="bi bi-hourglass-split"></i>
-                                            ) : (
-                                                <i className="bi bi-arrow-right"></i>
-                                            )}
-                                        </Button>
-                                    </form>
-                                    {aiError && <div className="text-danger small">{aiError}</div>}
+                                    <div style={{ position: 'relative', minWidth: '300px' }}>
+                                        {!currentUser && (
+                                            <div
+                                                style={aiLockOverlayStyle}
+                                                onClick={() => setShowAuthModal(true)}
+                                                role="button"
+                                                aria-label="Sign in to use AI generation"
+                                            >
+                                                <i className="bi bi-lock-fill" style={{ fontSize: '1.1rem' }}></i>
+                                                <span>Sign in to use AI</span>
+                                            </div>
+                                        )}
+                                        <form className="d-flex gap-2" onSubmit={handleGenerateWithPrompt} style={{ filter: !currentUser ? 'blur(2px)' : 'none' }}>
+                                            <input
+                                                type="text"
+                                                className="form-control dashboard-search-input"
+                                                placeholder="Describe a palette (e.g., 'warm sunset + teal')"
+                                                value={aiPrompt}
+                                                maxLength={MAX_PROMPT_LENGTH}
+                                                onChange={(e) => {
+                                                    setAiPrompt(e.target.value);
+                                                    if (aiError) setAiError('');
+                                                }}
+                                                disabled={aiStatus === 'loading' || !currentUser}
+                                                aria-label="Describe a palette to generate with AI"
+                                            />
+                                            <Button
+                                                variant="primary"
+                                                size="sm"
+                                                type="submit"
+                                                disabled={
+                                                    !currentUser ||
+                                                    !aiPrompt.trim() ||
+                                                    aiStatus === 'loading' ||
+                                                    cooldownSeconds > 0 ||
+                                                    aiUsesLeft <= 0
+                                                }
+                                                title={
+                                                    !currentUser
+                                                        ? 'Create an account to use AI generation (10 per day).'
+                                                        : aiUsesLeft <= 0
+                                                            ? 'AI prompt limit reached (10 uses).'
+                                                            : cooldownSeconds > 0
+                                                                ? 'Cooling down to prevent rapid-fire requests'
+                                                                : 'Generate palette from prompt'
+                                                }
+                                                className="dashboard-icon-btn"
+                                                aria-label="Generate palette from prompt"
+                                            >
+                                                {aiStatus === 'loading' ? (
+                                                    <i className="bi bi-hourglass-split"></i>
+                                                ) : (
+                                                    <i className="bi bi-arrow-right"></i>
+                                                )}
+                                            </Button>
+                                        </form>
+                                    </div>
                                     <Button
                                         variant="primary"
                                         size="sm"
@@ -859,6 +910,95 @@ const PaletteGenerator = () => {
                     </Toast.Header>
                     <Toast.Body>{toast.message}</Toast.Body>
                 </Toast>
+                <Modal
+                    show={showAuthModal}
+                    onHide={() => setShowAuthModal(false)}
+                    centered
+                    size="md"
+                    backdrop="static"
+                    contentClassName="glass-card"
+                >
+                    <div style={{ borderRadius: '8px', overflow: 'hidden' }}>
+                        <div style={{
+                            background: 'linear-gradient(120deg, #1b1f3a 0%, #2d3d7a 55%, #0b1329 100%)',
+                            color: '#f8f9ff',
+                            padding: '20px 24px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                        }}>
+                            <div style={{
+                                width: '46px',
+                                height: '46px',
+                                borderRadius: '12px',
+                                background: 'rgba(255, 215, 128, 0.22)',
+                                display: 'grid',
+                                placeItems: 'center',
+                                color: '#f5d776',
+                                fontSize: '1.45rem',
+                            }}>
+                                <i className="bi bi-lock-fill"></i>
+                            </div>
+                            <div>
+                                <div style={{ fontSize: '1rem', letterSpacing: '0.2px', fontWeight: 700 }}>Unlock AI + saving</div>
+                                <div style={{ opacity: 0.88, fontSize: '0.9rem' }}>Sign in to access premium tools and keep your palettes.</div>
+                            </div>
+                            {/* <div style={{
+                                marginLeft: 'auto',
+                                padding: '8px 14px',
+                                borderRadius: '12px',
+                                background: 'rgba(255,255,255,0.14)',
+                                fontSize: '0.82rem',
+                                color: '#fffbea',
+                                fontWeight: 700,
+                            }}>
+                                10 Prompts
+                            </div> */}
+                        </div>
+                        <div style={{ background: '#f6f7fb', padding: '20px 24px 8px' }}>
+                            <div className="d-grid gap-2 mb-3">
+                                {[
+                                    { icon: 'bi-stars', title: 'AI palette generator', desc: 'Describe your idea and get a curated palette in seconds.' },
+                                    { icon: 'bi-shield-check', title: 'Daily AI allowance', desc: '10 generations per day to explore, iterate, and refine.' },
+                                    { icon: 'bi-bookmark-heart', title: 'Save & reuse', desc: 'Store palettes to revisit, export, and share anytime.' },
+                                ].map((item) => (
+                                    <div key={item.title} className="d-flex align-items-center gap-3 p-3 rounded-3" style={{ background: '#ffffff', border: '1px solid rgba(0,0,0,0.05)', boxShadow: '0 6px 16px rgba(0,0,0,0.06)' }}>
+                                        <div
+                                            className="rounded-3"
+                                            style={{
+                                                width: 52,
+                                                height: 52,
+                                                background: '#e9edff',
+                                                color: '#3f2ee8',
+                                                fontSize: '1.6rem',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                            }}
+                                        >
+                                            <i className={`bi ${item.icon}`}></i>
+                                        </div>
+                                        <div>
+                                            <div style={{ fontWeight: 800 }}>{item.title}</div>
+                                            <div className="text-muted small">{item.desc}</div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div style={{ padding: '0 24px 20px', display: 'flex', gap: '10px', background: '#f6f7fb', justifyContent: 'flex-end' }}>
+                            <Button variant="secondary" onClick={() => setShowAuthModal(false)}>
+                                Maybe later
+                            </Button>
+                            <Button variant="primary" onClick={() => { setShowAuthModal(false); window.location.href = '/signup'; }}>
+                                Sign up
+                            </Button>
+                            <Button variant="outline-primary" onClick={() => { setShowAuthModal(false); window.location.href = '/login'; }}>
+                                Log in
+                            </Button>
+                        </div>
+                    </div>
+                </Modal>
                 {showShareModal && (
                     <SharePalette
                         show={showShareModal}

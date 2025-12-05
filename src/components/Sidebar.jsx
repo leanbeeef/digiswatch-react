@@ -104,7 +104,7 @@ const Sidebar = ({ show, onClose }) => {
         <li className="nav-item">
         <button
           type="button"
-          className="nav-link btn btn-link text-start w-100"
+          className="nav-link link-dark text-start w-100"
           aria-current="page"
           onClick={() => handleNavigate('/home')}
         >
@@ -115,7 +115,7 @@ const Sidebar = ({ show, onClose }) => {
       <li>
         <button
           type="button"
-          className="nav-link link-dark btn btn-link text-start w-100"
+          className="nav-link link-dark text-start w-100"
           onClick={() => handleNavigate('/palette-generator')}
         >
           <i className="bi bi-speedometer2 me-2"></i>
@@ -135,7 +135,7 @@ const Sidebar = ({ show, onClose }) => {
         <li>
         <button
           type="button"
-          className="nav-link link-dark btn btn-link text-start w-100"
+          className="nav-link link-dark text-start w-100"
           onClick={() => handleNavigate('/popular-palettes')}
         >
           <i className="bi bi-fire me-2"></i>
@@ -145,7 +145,7 @@ const Sidebar = ({ show, onClose }) => {
       <li>
         <button
           type="button"
-          className="nav-link link-dark btn btn-link text-start w-100"
+          className="nav-link link-dark text-start w-100"
           onClick={() => handleNavigate('/contrastchecker')}
         >
           <i className="bi bi-spellcheck me-2"></i>
@@ -155,7 +155,7 @@ const Sidebar = ({ show, onClose }) => {
       <li>
         <button
           type="button"
-          className="nav-link link-dark btn btn-link text-start w-100"
+          className="nav-link link-dark text-start w-100"
           onClick={() => handleNavigate('/imagecolorextractor')}
         >
           <i className="bi bi-eyedropper me-2"></i>
@@ -165,7 +165,7 @@ const Sidebar = ({ show, onClose }) => {
       <li>
         <button
           type="button"
-          className="nav-link link-dark btn btn-link text-start w-100"
+          className="nav-link link-dark text-start w-100"
           onClick={() => handleNavigate('/color-season')}
         >
           <i className="bi bi-brush me-2"></i>

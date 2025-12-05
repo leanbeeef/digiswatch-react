@@ -3,7 +3,8 @@ const SEASON_PATH = '/api/analyze-color-season';
 const MAX_PROMPT_BYTES = 2000;
 const MAX_IMAGE_BYTES = 2_500_000; // ~2.5MB; keep reasonable for Workers
 const MIN_PROMPT_LEN = 6;
-const RATE_LIMIT = 10; // per window (shared across endpoints)
+// Raise the rate limit to effectively unlimited for owner use; adjust down if abuse observed.
+const RATE_LIMIT = 1000; // per window (shared across endpoints)
 const RATE_WINDOW_SECONDS = 60 * 60;
 const REQUEST_TIMEOUT_MS = 12000;
 

@@ -48,6 +48,13 @@ const Home = () => {
 
   const toolCards = [
     {
+      title: 'AI Palette Generator',
+      description: 'Describe a vibe and get a curated palette with 10 daily AI runs for signed-in users.',
+      badge: 'AI',
+      cta: () => navigate('/palette-generator'),
+      chips: ['Text-to-palette', '10/day for members', 'Save & export'],
+    },
+    {
       title: 'Palette Generator',
       description: 'Lock favorite colors, shuffle the rest, and export to every format we use in the course.',
       badge: 'Core tool',
@@ -140,7 +147,7 @@ const Home = () => {
             <Row className="align-items-center gy-4">
               <Col lg={6} className="order-2 order-lg-1">
                 <Badge bg="dark" className="mb-3 fw-normal rounded-pill ds-hero-badge">
-                  Course-ready tools
+                  Course-ready + AI powered
                 </Badge>
                 <motion.h1
                   className="display-5 fw-bold lh-tight mb-3"
@@ -164,7 +171,7 @@ const Home = () => {
                   </div>
                 </nav>
                 <div className="d-flex flex-wrap gap-2 mt-4">
-                  {['Lock & shuffle', 'Contrast built-in', 'Export for dev handoff'].map((item) => (
+                  {['AI palettes', 'Lock & shuffle', 'Contrast built-in', 'Export for dev handoff'].map((item) => (
                     <span key={item} className="pill-chip">
                       {item}
                     </span>
@@ -255,17 +262,17 @@ const Home = () => {
           <Row className="g-3 g-md-4">
             {generatorFeatures.map((item) => (
               <Col key={item.title} xs={12} sm={6} lg={4}>
-                <Card className="feature-card h-100">
-                  <Card.Body className="d-flex gap-3 align-items-start">
-                    <div className="icon-circle">
+                <div className="tool-card-custom h-100" style={{ alignContent: 'center' }}>
+                  <div className="d-flex gap-3 align-items-start">
+                    <div className="icon-circle  d-flex">
                       <i className={`bi ${item.icon}`} aria-hidden="true"></i>
                     </div>
                     <div>
                       <h3 className="h6 fw-bold mb-1">{item.title}</h3>
                       <p className="text-muted mb-0 small">{item.copy}</p>
                     </div>
-                  </Card.Body>
-                </Card>
+                  </div>
+                </div>
               </Col>
             ))}
           </Row>
@@ -275,33 +282,31 @@ const Home = () => {
         <Container className="py-5" as="section" aria-label="Course tools">
           <Row className="g-4">
             {toolCards.map((tool) => (
-              <Col key={tool.title} xs={12} md={4}>
-                <Card className="tool-card h-100">
-                  <Card.Body className="d-flex flex-column gap-3">
-                    <div className="d-flex align-items-center justify-content-between">
-                      <Badge bg="light" text="dark" className="border fw-semibold">
-                        {tool.badge}
-                      </Badge>
-                      <i className="bi bi-arrow-up-right-square text-muted" aria-hidden="true"></i>
-                    </div>
-                    <div>
-                      <h3 className="h4 mb-2">{tool.title}</h3>
-                      <p className="text-muted mb-0">{tool.description}</p>
-                    </div>
-                    <div className="d-flex flex-wrap gap-2">
-                      {tool.chips.map((chip) => (
-                        <span key={chip} className="pill-chip muted">
-                          {chip}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="mt-auto">
-                      <Button className="btn-neo w-100" size="lg" onClick={tool.cta}>
-                        Open {tool.title}
-                      </Button>
-                    </div>
-                  </Card.Body>
-                </Card>
+              <Col key={tool.title} xs={12} md={3}>
+                <div className="tool-card-custom d-flex flex-column gap-3">
+                  <div className="d-flex align-items-center justify-content-between">
+                    <Badge bg="light" text="dark" className="border fw-semibold">
+                      {tool.badge}
+                    </Badge>
+                    <i className="bi bi-arrow-up-right-square text-muted" aria-hidden="true"></i>
+                  </div>
+                  <div>
+                    <h3 className="h5 mb-1">{tool.title}</h3>
+                    <p className="text-muted mb-0 small">{tool.description}</p>
+                  </div>
+                  <div className="d-flex flex-wrap gap-2">
+                    {tool.chips.map((chip) => (
+                      <span key={chip} className="pill-chip muted">
+                        {chip}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="mt-auto">
+                    <Button className="btn-neo w-100" size="md" onClick={tool.cta}>
+                      Open {tool.title}
+                    </Button>
+                  </div>
+                </div>
               </Col>
             ))}
           </Row>

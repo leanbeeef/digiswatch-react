@@ -7,7 +7,9 @@ binding = "RL_KV"
 id = "2dbae0fd45fe43149b1aaa43dbbb52c6"
 preview_id = "fa06effaa4a343a99a0203bcb4ed5817"
 
-# Uncomment to bind routes (optional; otherwise use *.workers.dev)
-# routes = [
-#   { pattern = "api.yourdomain.com/api/generate-palette-from-prompt", zone_name = "yourdomain.com" }
-# ]
+# Bind the worker to your production domain so the frontend's relative /api calls
+# hit this Worker instead of the static host (which returned 405s).
+routes = [
+  { pattern = "digiswatch.io/api/*", zone_name = "digiswatch.io" },
+  { pattern = "www.digiswatch.io/api/*", zone_name = "digiswatch.io" }
+]

@@ -38,7 +38,12 @@ import { useAuth } from '../AuthContext';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import SEO from '../components/SEO';
 
-const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+// In production we default to the worker on digiswatch.io so relative calls don't 405 on static hosts.
+const DEFAULT_API_BASE =
+    typeof window !== 'undefined' && window.location.hostname.includes('localhost')
+        ? ''
+        : 'https://digiswatch.io';
+const API_BASE = ((import.meta.env.VITE_API_URL || '').replace(/\/$/, '')) || DEFAULT_API_BASE;
 const AI_COOLDOWN_MS = 8000;
 const AI_TIMEOUT_MS = 12000;
 const MAX_PROMPT_LENGTH = 180;

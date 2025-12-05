@@ -34,8 +34,12 @@ const AIPaletteGenerator = () => {
     const [toast, setToast] = useState({ show: false, message: '' });
     const [showExportModal, setShowExportModal] = useState(false);
    
-
-    const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+    // Default to the worker on digiswatch.io in production so static hosts don't reject POSTs to /api.
+    const DEFAULT_API_BASE =
+        typeof window !== 'undefined' && window.location.hostname.includes('localhost')
+            ? ''
+            : 'https://digiswatch.io';
+    const API_BASE = ((import.meta.env.VITE_API_URL || '').replace(/\/$/, '')) || DEFAULT_API_BASE;
 
     const generatePaletteFromPrompt = async (promptText) => {
         setLoading(true);

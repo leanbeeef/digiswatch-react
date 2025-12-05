@@ -1,0 +1,13 @@
+name = "palette-ai-proxy"
+main = "worker.js"
+compatibility_date = "2024-12-20"
+
+[[kv_namespaces]]
+binding = "RL_KV"
+id = "2dbae0fd45fe43149b1aaa43dbbb52c6"
+preview_id = "fa06effaa4a343a99a0203bcb4ed5817"
+
+# Uncomment to bind routes (optional; otherwise use *.workers.dev)
+# routes = [
+#   { pattern = "api.yourdomain.com/api/generate-palette-from-prompt", zone_name = "yourdomain.com" }
+# ]

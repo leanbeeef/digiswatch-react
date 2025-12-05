@@ -16,7 +16,6 @@ import Home from "./pages/Home"
 import ContrastChecker from "./pages/ContrastChecker"
 import ImageColorExtractor from './pages/ImageExtractor';
 import ColorSeason from './pages/ColorSeason';
-import AIPaletteGenerator from './pages/AIPaletteGenerator';
 import './index.css';
 
 function App() {

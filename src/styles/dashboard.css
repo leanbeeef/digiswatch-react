@@ -504,6 +504,12 @@
     padding: 0;
 }
 
+.dashboard-search-input {
+    height: 36px;
+    min-width: 240px;
+    max-width: 360px;
+}
+
 /* Mobile Layout for Palette Generator */
 @media (max-width: 768px) {
     .palette-generator-container {

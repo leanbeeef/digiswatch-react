@@ -1,5 +1,5 @@
 // src/pages/PaletteGenerator.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Container, Button, Toast, Modal } from 'react-bootstrap';
 import { useLocation } from 'react-router-dom';
 import { DndProvider } from 'react-dnd';
@@ -37,6 +37,12 @@ import { db } from '../firebase';
 import { useAuth } from '../AuthContext';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import SEO from '../components/SEO';
+
+const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const AI_COOLDOWN_MS = 8000;
+const AI_TIMEOUT_MS = 12000;
+const MAX_PROMPT_LENGTH = 180;
+const MIN_PROMPT_LENGTH = 6;
 
 const getTextColor = (bg) => {
     return tinycolor.readability(bg, "#FFFFFF") >= 4.5 ? "#FFFFFF" : "#000000";
@@ -96,6 +102,13 @@ const PaletteGenerator = () => {
     });
     const [draggingPaletteIndex, setDraggingPaletteIndex] = useState(null);
     const [showShareModal, setShowShareModal] = useState(false);
+    const [aiPrompt, setAiPrompt] = useState('');
+    const [aiStatus, setAiStatus] = useState('idle'); // idle | loading | success | error
+    const [aiError, setAiError] = useState('');
+    const [cooldownSeconds, setCooldownSeconds] = useState(0);
+    const [aiUsesLeft, setAiUsesLeft] = useState(10);
+    const aiCooldownTimerRef = useRef(null);
+    const lastAiRequestRef = useRef(0);
     
 
     // Save visible cards to localStorage
@@ -202,6 +215,135 @@ const PaletteGenerator = () => {
             }
             return newPaletteData;
         });
+    };
+
+    useEffect(() => {
+        return () => {
+            if (aiCooldownTimerRef.current) {
+                clearInterval(aiCooldownTimerRef.current);
+            }
+        };
+    }, []);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const key = `aiPromptUses_${currentUser?.uid || 'guest'}`;
+        const stored = localStorage.getItem(key);
+        if (stored) {
+            const parsed = parseInt(stored, 10);
+            if (!Number.isNaN(parsed)) {
+                setAiUsesLeft(Math.max(0, parsed));
+                return;
+            }
+        }
+        setAiUsesLeft(10);
+    }, [currentUser]);
+
+    const persistAiUses = (next) => {
+        if (typeof window === 'undefined') return;
+        const key = `aiPromptUses_${currentUser?.uid || 'guest'}`;
+        localStorage.setItem(key, String(next));
+    };
+
+    const startAICooldown = () => {
+        lastAiRequestRef.current = Date.now();
+        if (aiCooldownTimerRef.current) {
+            clearInterval(aiCooldownTimerRef.current);
+        }
+        setCooldownSeconds(Math.ceil(AI_COOLDOWN_MS / 1000));
+        aiCooldownTimerRef.current = setInterval(() => {
+            const elapsed = Date.now() - lastAiRequestRef.current;
+            const remaining = Math.max(0, Math.ceil((AI_COOLDOWN_MS - elapsed) / 1000));
+            setCooldownSeconds(remaining);
+            if (remaining <= 0 && aiCooldownTimerRef.current) {
+                clearInterval(aiCooldownTimerRef.current);
+                aiCooldownTimerRef.current = null;
+            }
+        }, 500);
+    };
+
+    const applyPaletteFromColors = (colors) => {
+        if (!Array.isArray(colors) || colors.length === 0) {
+            throw new Error('No colors returned from AI prompt');
+        }
+        const normalized = colors
+            .filter(Boolean)
+            .slice(0, 8)
+            .map((hex) => {
+                const normalizedHex = new TinyColor(hex).toHexString();
+                return {
+                    hex: normalizedHex,
+                    name: namer(normalizedHex).ntc[0].name,
+                    textColor: getTextColor(normalizedHex),
+                    locked: false
+                };
+            });
+        if (!normalized.length) {
+            throw new Error('No usable colors returned from AI prompt');
+        }
+        setPalette(normalized);
+        setTimeout(() => handleColorClick(normalized[0].hex), 0);
+    };
+
+    const handleGenerateWithPrompt = async (event) => {
+        event?.preventDefault?.();
+        const sanitizedPrompt = aiPrompt.trim().replace(/\s+/g, ' ');
+        if (sanitizedPrompt.length < MIN_PROMPT_LENGTH) {
+            setAiError(`Add at least ${MIN_PROMPT_LENGTH} characters to describe the palette.`);
+            return;
+        }
+        if (aiStatus === 'loading') return;
+        if (cooldownSeconds > 0) {
+            setAiError('Please wait for the cooldown to finish before requesting another palette.');
+            return;
+        }
+        if (aiUsesLeft <= 0) {
+            setAiError('AI prompt limit reached (10 uses).');
+            return;
+        }
+
+        setAiStatus('loading');
+        setAiError('');
+        setAiUsesLeft((prev) => {
+            const next = Math.max(0, prev - 1);
+            persistAiUses(next);
+            return next;
+        });
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), AI_TIMEOUT_MS);
+
+        try {
+            const response = await fetch(`${API_BASE || ''}/api/generate-palette-from-prompt`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ prompt: sanitizedPrompt }),
+                signal: controller.signal,
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to generate palette');
+            }
+
+            const data = await response.json();
+            const colors = data?.colors || data?.palette?.colors || data?.palette || [];
+            applyPaletteFromColors(colors);
+            setAiStatus('success');
+        } catch (error) {
+            console.error('AI prompt generation failed', error);
+            setAiStatus('error');
+            if (error.name === 'AbortError') {
+                setAiError('Request timed out. Please try again in a moment.');
+            } else {
+                setAiError('Could not generate palette from prompt. Please try again shortly.');
+            }
+        } finally {
+            clearTimeout(timeoutId);
+            startAICooldown();
+            setTimeout(() => setAiStatus('idle'), 800);
+        }
     };
 
     // Effect to select the first color when palette changes if no selection or invalid
@@ -434,8 +576,53 @@ const PaletteGenerator = () => {
                                     Dashboard
                                 </h3>
                                 <div className="dashboard-action-bar">
+                                    <div className="text-muted small" style={{ minWidth: '80px' }}>
+                                        Uses left: {aiUsesLeft}
+                                    </div>
+                                    <form className="d-flex gap-2" onSubmit={handleGenerateWithPrompt}>
+                                        <input
+                                            type="text"
+                                            className="form-control dashboard-search-input"
+                                            placeholder="Describe a palette (e.g., 'warm sunset + teal')"
+                                            value={aiPrompt}
+                                            maxLength={MAX_PROMPT_LENGTH}
+                                            onChange={(e) => {
+                                                setAiPrompt(e.target.value);
+                                                if (aiError) setAiError('');
+                                            }}
+                                            disabled={aiStatus === 'loading'}
+                                            aria-label="Describe a palette to generate with AI"
+                                        />
+                                        <Button
+                                            variant="primary"
+                                            size="sm"
+                                            type="submit"
+                                            disabled={
+                                                !aiPrompt.trim() ||
+                                                aiStatus === 'loading' ||
+                                                cooldownSeconds > 0 ||
+                                                aiUsesLeft <= 0
+                                            }
+                                            title={
+                                                aiUsesLeft <= 0
+                                                    ? 'AI prompt limit reached (10 uses).'
+                                                    : cooldownSeconds > 0
+                                                        ? 'Cooling down to prevent rapid-fire requests'
+                                                        : 'Generate palette from prompt'
+                                            }
+                                            className="dashboard-icon-btn"
+                                            aria-label="Generate palette from prompt"
+                                    >
+                                            {aiStatus === 'loading' ? (
+                                                <i className="bi bi-hourglass-split"></i>
+                                            ) : (
+                                                <i className="bi bi-arrow-right"></i>
+                                            )}
+                                        </Button>
+                                    </form>
+                                    {aiError && <div className="text-danger small">{aiError}</div>}
                                     <Button
-                                        variant="outline-primary"
+                                        variant="primary"
                                         size="sm"
                                         onClick={() => setShowSettingsModal(true)}
                                         title="Manage Cards"

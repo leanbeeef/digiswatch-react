@@ -24,6 +24,28 @@ const Home = () => {
   const [demoIndex, setDemoIndex] = useState(0);
   const activeDemo = heroPalettes[demoIndex];
 
+  const metrics = useMemo(
+    () => [
+      { label: 'Palettes generated', start: 12000, end: 60000, divisor: 1000, suffix: 'k+' },
+      { label: 'Contrast checks', start: 50000, end: 120000, divisor: 1000, suffix: 'k' },
+      { label: 'Avg. export time', start: 9, end: 4, suffix: 's' },
+    ],
+    []
+  );
+  const [animatedMetrics, setAnimatedMetrics] = useState(metrics.map((metric) => metric.start));
+
+  const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+
+  const formatMetricValue = (value, metric) => {
+    if (!metric) return value;
+    if (metric.divisor) {
+      const rounded = Math.round(value / metric.divisor);
+      return `${rounded}${metric.suffix || ''}`;
+    }
+    const rounded = metric.decimals ? value.toFixed(metric.decimals) : Math.round(value);
+    return `${rounded}${metric.suffix || ''}`;
+  };
+
   const toolCards = [
     {
       title: 'Palette Generator',
@@ -80,6 +102,28 @@ const Home = () => {
     return () => clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    const duration = 1200;
+    const startTime = performance.now();
+    let frame;
+
+    const animateMetrics = (now) => {
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = easeOutCubic(progress);
+
+      setAnimatedMetrics(
+        metrics.map((metric) => metric.start + (metric.end - metric.start) * eased)
+      );
+
+      if (progress < 1) {
+        frame = requestAnimationFrame(animateMetrics);
+      }
+    };
+
+    frame = requestAnimationFrame(animateMetrics);
+    return () => cancelAnimationFrame(frame);
+  }, [metrics]);
+
   return (
     <>
       <SEO
@@ -127,16 +171,15 @@ const Home = () => {
                   ))}
                 </div>
                 <div className="hero-metrics d-flex gap-3 flex-wrap mt-4">
-                  {[
-                    { label: 'Palettes generated', value: '60k+' },
-                    { label: 'Contrast checks', value: '120k' },
-                    { label: 'Avg. export time', value: '4s' },
-                  ].map((metric) => (
-                    <div key={metric.label} className="metric-chip">
-                      <div className="metric-value">{metric.value}</div>
-                      <div className="metric-label">{metric.label}</div>
-                    </div>
-                  ))}
+                  {metrics.map((metric, index) => {
+                    const currentValue = animatedMetrics[index] ?? metric.start;
+                    return (
+                      <div key={metric.label} className="metric-chip">
+                        <div className="metric-value">{formatMetricValue(currentValue, metric)}</div>
+                        <div className="metric-label">{metric.label}</div>
+                      </div>
+                    );
+                  })}
                 </div>
               </Col>
               <Col lg={6} className="order-1 order-lg-2">

@@ -23,12 +23,21 @@ import SEO from '../components/SEO';
 const PopularPalettes = () => {
   const [palettes, setPalettes] = useState(paletteData);
   const [userPalettes, setUserPalettes] = useState([]);
-  const [activeTab, setActiveTab] = useState('predefined');
+  // Start on community tab so public palettes are shown first
+  const [activeTab, setActiveTab] = useState('userCreated');
   const [likes, setLikes] = useState({});
   const [savedPalettes, setSavedPalettes] = useState({});
   const [selectedPalette, setSelectedPalette] = useState(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [animateLike, setAnimateLike] = useState({});
+  const [likedPalettes, setLikedPalettes] = useState(() => {
+    try {
+      const stored = localStorage.getItem('ds-liked-palettes');
+      return stored ? JSON.parse(stored) : {};
+    } catch {
+      return {};
+    }
+  });
   const [toast, setToast] = useState({ show: false, message: '' });
   const { currentUser } = useAuth();
   const navigate = useNavigate();
@@ -64,6 +73,15 @@ const PopularPalettes = () => {
     sortPalettesByLikes();
   }, [likes]);
 
+  // Persist liked palettes locally to prevent multiple likes from the same user/device
+  useEffect(() => {
+    try {
+      localStorage.setItem('ds-liked-palettes', JSON.stringify(likedPalettes));
+    } catch {
+      // ignore
+    }
+  }, [likedPalettes]);
+
   const fetchLikes = async () => {
     try {
       const likesCollection = collection(db, "likes");
@@ -93,6 +111,11 @@ const PopularPalettes = () => {
   };
 
   const handleLike = async (paletteName) => {
+    if (likedPalettes[paletteName]) {
+      setToast({ show: true, message: 'You already liked this palette.' });
+      return;
+    }
+
     try {
       const paletteRef = doc(db, "likes", paletteName);
       const paletteDoc = await getDoc(paletteRef);
@@ -114,6 +137,8 @@ const PopularPalettes = () => {
         ...prevLikes,
         [paletteName]: (prevLikes[paletteName] || 0) + 1,
       }));
+
+      setLikedPalettes((prev) => ({ ...prev, [paletteName]: true }));
     } catch (error) {
       console.error("Error updating likes: ", error);
     }
@@ -180,6 +205,7 @@ const PopularPalettes = () => {
                   className={`pp-like-inline ${likes[palette.name] ? 'is-active' : ''} ${animateLike[palette.name] ? 'animate-like' : ''}`}
                   onClick={() => handleLike(palette.name)}
                   title="Like palette"
+                  disabled={!!likedPalettes[palette.name]}
                 >
                   <i className={`bi ${likes[palette.name] ? 'bi-heart-fill' : 'bi-heart'}`}></i>
                   <span className="pp-like-count-inline">{likes[palette.name] || 0}</span>

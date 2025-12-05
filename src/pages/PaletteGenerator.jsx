@@ -17,6 +17,7 @@ import DashboardSettings from '../components/DashboardSettings';  // ADD THIS
 import { getColorContext } from '../utils/getColorContext';
 import { CARD_TYPES, getDefaultVisibleCards, getImplementedCards } from '../utils/cardRegistry';  // ADD THIS
 import '../styles/dashboard.css';
+import '../styles/exportModal.css';
 import {
     generateRandomPalette,
     generateMonochromatic,
@@ -428,55 +429,37 @@ const PaletteGenerator = () => {
                 <div className="palette-dashboard-area">
                     {colorInfo ? (
                         <>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                            <div className="dashboard-header-row">
                                 <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: 'var(--dashboard-text)' }}>
                                     Dashboard
                                 </h3>
-                                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                                    <div className="btn-group btn-group-sm" role="group" aria-label="Dashboard layout">
-                                        <Button
-                                            variant={dashboardView === 'masonry' ? 'primary' : 'outline-primary'}
-                                            onClick={() => setDashboardView('masonry')}
-                                            title="Masonry view"
-                                        >
-                                            <i className="bi bi-grid-1x2" style={{ marginRight: '4px' }}></i>
-                                            Grid
-                                        </Button>
-                                        <Button
-                                            variant={dashboardView === 'stacked' ? 'primary' : 'outline-primary'}
-                                            onClick={() => setDashboardView('stacked')}
-                                            title="Stacked view"
-                                        >
-                                            <i className="bi bi-list" style={{ marginRight: '4px' }}></i>
-                                            Stacked
-                                        </Button>
-                                    </div>
+                                <div className="dashboard-action-bar">
                                     <Button
                                         variant="outline-primary"
                                         size="sm"
                                         onClick={() => setShowSettingsModal(true)}
                                         title="Manage Cards"
+                                        className="dashboard-icon-btn"
                                     >
-                                        <i className="bi bi-grid-3x3-gap me-1"></i>
-                                        Cards
+                                        <i className="bi bi-grid-3x3-gap"></i>
                                     </Button>
                                     <Button
                                         variant="outline-secondary"
                                         size="sm"
                                         onClick={generatePalette}
                                         title="Generate New Palette"
+                                        className="dashboard-icon-btn"
                                     >
-                                        <i className="bi bi-arrow-clockwise me-1"></i>
-                                        Generate
+                                        <i className="bi bi-arrow-clockwise"></i>
                                     </Button>
                                     <Button
                                         variant="outline-secondary"
                                         size="sm"
                                         onClick={openSaveModal}
                                         title="Save Palette"
+                                        className="dashboard-icon-btn"
                                     >
-                                        <i className="bi bi-floppy me-1"></i>
-                                        Save
+                                        <i className="bi bi-floppy"></i>
                                     </Button>
                                     <Button
                                         variant="outline-secondary"
@@ -484,18 +467,18 @@ const PaletteGenerator = () => {
                                         onClick={() => setShowShareModal(true)}
                                         title="Share Palette"
                                         disabled={palette.length === 0}
+                                        className="dashboard-icon-btn"
                                     >
-                                        <i className="bi bi-share me-1"></i>
-                                        Share
+                                        <i className="bi bi-share"></i>
                                     </Button>
                                     <Button
                                         variant="outline-secondary"
                                         size="sm"
                                         onClick={() => setShowExportModal(true)}
                                         title="Export Palette"
+                                        className="dashboard-icon-btn"
                                     >
-                                        <i className="bi bi-download me-1"></i>
-                                        Export
+                                        <i className="bi bi-download"></i>
                                     </Button>
                                 </div>
                             </div>
@@ -635,19 +618,37 @@ const PaletteGenerator = () => {
                 </Modal>
 
                 {/* Export Modal */}
-                <Modal show={showExportModal} onHide={() => setShowExportModal(false)} centered>
-                    <Modal.Header closeButton>
-                        <Modal.Title>Export Palette</Modal.Title>
+                <Modal show={showExportModal} onHide={() => setShowExportModal(false)} centered contentClassName="export-modal">
+                    <Modal.Header closeButton className="border-0">
+                        <div className="w-100">
+                            <p className="share-chip">Export palette</p>
+                            <h4 className="share-title mb-0">Choose a format</h4>
+                        </div>
                     </Modal.Header>
                     <Modal.Body>
-                        <div className="d-flex flex-column gap-2">
-                            {['PNG', 'JPEG', 'SVG', 'CSS', 'JSON', 'Text'].map(format => (
-                                <Button key={format} variant="outline-primary" onClick={() => handleExport(format.toLowerCase())}>
-                                    Export as {format}
-                                </Button>
+                        <div className="export-grid">
+                            {[
+                                { label: 'PNG', icon: 'bi bi-image' },
+                                { label: 'JPEG', icon: 'bi bi-file-earmark-image' },
+                                { label: 'SVG', icon: 'bi bi-vector-pen' },
+                                { label: 'CSS', icon: 'bi bi-file-earmark-code' },
+                                { label: 'JSON', icon: 'bi bi-braces' },
+                                { label: 'Text', icon: 'bi bi-file-earmark-text' }
+                            ].map(item => (
+                                <button
+                                    key={item.label}
+                                    className="export-card"
+                                    onClick={() => handleExport(item.label.toLowerCase())}
+                                >
+                                    <i className={item.icon}></i>
+                                    <span>{item.label}</span>
+                                </button>
                             ))}
                         </div>
                     </Modal.Body>
+                    <Modal.Footer className="border-0">
+                        <Button variant="secondary" onClick={() => setShowExportModal(false)}>Close</Button>
+                    </Modal.Footer>
                 </Modal>
 
                 {/* Dashboard Settings Modal */}

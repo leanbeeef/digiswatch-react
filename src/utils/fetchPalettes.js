@@ -1,11 +1,12 @@
-import { collectionGroup, getDocs } from "firebase/firestore";
+import { collectionGroup, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 
 export const fetchPublicPalettes = async () => {
   try {
-    // Use a collection group query so we don't need to list /users (which is blocked by rules)
+    // Only ask Firestore for public palettes to avoid rule failures on private docs
     const createdPalettesGroup = collectionGroup(db, "createdPalettes");
-    const snapshot = await getDocs(createdPalettesGroup);
+    const publicQuery = query(createdPalettesGroup, where("visibility", "==", "public"));
+    const snapshot = await getDocs(publicQuery);
 
     const publicPalettes = [];
     snapshot.forEach((paletteDoc) => {

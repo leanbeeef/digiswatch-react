@@ -479,6 +479,31 @@
     height: 100%;
 }
 
+.dashboard-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.dashboard-action-bar {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.dashboard-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 36px;
+    padding: 0;
+}
+
 /* Mobile Layout for Palette Generator */
 @media (max-width: 768px) {
     .palette-generator-container {
@@ -487,11 +512,10 @@
 
     .palette-sidebar {
         width: 100%;
-        height: 110px;
-        /* Fixed height for horizontal strip */
-        min-height: 110px;
+        height: 100px;
+        min-height: 100px;
         flex-direction: row;
-        overflow-x: auto;
+        overflow-x: hidden;
         overflow-y: hidden;
         border-right: none;
         border-bottom: 1px solid #dee2e6;
@@ -501,13 +525,11 @@
 
     .palette-card-item {
         height: 100%;
-        width: 20%;
-        /* 5 cards = 100% */
-        min-width: 80px;
-        /* Minimum width to prevent squishing */
+        width: 16.66%;
+        min-width: 54px;
         border-bottom: none;
         border-right: 1px solid rgba(0, 0, 0, 0.1);
-        padding: 0.5rem;
+        padding: 0.35rem;
     }
 
     .desktop-only {
@@ -515,24 +537,46 @@
     }
 
     .mobile-only {
-        display: inline-flex !important;
+        display: none !important;
     }
 
+    /* hide arrows by default on mobile */
     .palette-reorder-mobile {
-        display: inline-flex;
+        display: none;
+    }
+
+    /* show arrows only in landscape */
+    @media (orientation: landscape) {
+        .palette-reorder-mobile {
+            display: inline-flex;
+        }
     }
 
     .palette-card-item h5 {
-        font-size: 0.9rem !important;
+        font-size: 0.7rem !important;
+        display: none;
     }
 
     .palette-card-item p {
-        font-size: 0.7rem !important;
+        font-size: 0.65rem !important;
         display: none;
         /* Hide name on mobile to save space if needed, or keep it small */
     }
 
     .palette-dashboard-area {
         padding: 1rem 0.5rem;
+    }
+
+    /* Smaller lock buttons on mobile */
+    #lock-button {
+        padding: 2px 6px;
+        font-size: 0.7rem;
+        min-width: 32px;
+    }
+
+    /* Compact dashboard action buttons */
+    .palette-dashboard-area .btn {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.9rem;
     }
 }

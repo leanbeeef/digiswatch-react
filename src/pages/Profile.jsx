@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Modal, Form, Image, Toast } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { useAuth } from '../AuthContext';
 import { db } from '../firebase';
@@ -26,6 +27,7 @@ const getTextColor = (backgroundColor) => {
 
 const Profile = () => {
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
   const [profileData, setProfileData] = useState({});
   const [savedPalettes, setSavedPalettes] = useState([]);
   const [createdPalettes, setCreatedPalettes] = useState([]);
@@ -117,20 +119,25 @@ const Profile = () => {
     }
   };
 
-  const togglePaletteVisibility = async (paletteId, currentVisibility) => {
+  const togglePaletteVisibility = async (palette) => {
+    if (!palette?.id) {
+      setToastMessage('Unable to update visibility: missing palette id.');
+      setShowToast(true);
+      return;
+    }
     try {
-      const paletteRef = doc(db, 'users', currentUser.uid, 'createdPalettes', paletteId);
+      const paletteRef = doc(db, 'users', currentUser.uid, 'createdPalettes', palette.id);
+      const currentVisibility = palette.visibility || 'private';
       const newVisibility = currentVisibility === 'public' ? 'private' : 'public';
 
-      await updateDoc(paletteRef, { visibility: newVisibility });
-
-      console.log(`Updated palette visibility to: ${newVisibility}`);
+      // Use merge in case the document was never created with visibility yet
+      await setDoc(paletteRef, { visibility: newVisibility }, { merge: true });
 
       setCreatedPalettes((prevPalettes) =>
-        prevPalettes.map((palette) =>
-          palette.id === paletteId
-            ? { ...palette, visibility: newVisibility }
-            : palette
+        prevPalettes.map((p) =>
+          p.id === palette.id
+            ? { ...p, visibility: newVisibility }
+            : p
         )
       );
 
@@ -169,6 +176,11 @@ const Profile = () => {
   };
 
   const handleDeletePalette = async (paletteId, collectionType) => {
+    if (!paletteId) {
+      setToastMessage('Unable to delete: missing palette id.');
+      setShowToast(true);
+      return;
+    }
     try {
       const paletteDocRef = doc(db, 'users', currentUser.uid, collectionType, paletteId);
       await deleteDoc(paletteDocRef);
@@ -186,6 +198,18 @@ const Profile = () => {
       setToastMessage('Failed to delete the palette.');
       setShowToast(true);
     }
+  };
+
+  const handleOpenInGenerator = (palette) => {
+    if (!palette?.colors) return;
+    navigate('/palette-generator', {
+      state: {
+        palette: {
+          name: palette.name || 'Palette',
+          colors: palette.colors,
+        }
+      }
+    });
   };
 
   return (
@@ -305,7 +329,27 @@ const Profile = () => {
                 {savedPalettes.map((palette) => (
                   <div key={palette.id} className="mb-3 p-3 glass-card rounded-4 border border-1 border-white">
                     <Card.Body>
-                      <h6>{palette.name}</h6>
+                      <div className="pp-card-head">
+                        <div className="pp-palette-name mb-0">{palette.name}</div>
+                        <div className="pp-card-head-actions">
+                          <button
+                            className="pp-open-generator"
+                            onClick={() => handleOpenInGenerator(palette)}
+                            title="Open in Palette Generator"
+                          >
+                            <img src="/favicon.ico" alt="Open" width="18" height="18" />
+                          </button>
+                          <button
+                            className="pp-open-generator"
+                            style={{ color: '#b91c1c' }}
+                            onClick={() => handleDeletePalette(palette.id, 'palettes')}
+                            title="Delete palette"
+                          >
+                            <i className="bi bi-trash-fill"></i>
+                          </button>
+                        </div>
+                      </div>
+
                       <div className="pp-color-strip">
                         {palette.colors.map((color, idx) => (
                           <div
@@ -317,13 +361,6 @@ const Profile = () => {
                             title="Click to copy hex"
                           />
                         ))}
-                        <button
-                          className="pp-action-ghost danger pp-strip-action"
-                          onClick={() => handleDeletePalette(palette.id, 'palettes')}
-                          title="Delete palette"
-                        >
-                          <i className="bi bi-trash3"></i>
-                        </button>
                       </div>
                       <div className="palette-actions-inline mt-2">
                         <button
@@ -343,13 +380,6 @@ const Profile = () => {
                           <i className="bi bi-cloud-arrow-down-fill"></i>
                           <span>Export</span>
                         </button>
-                        {/* <button
-                          className="pp-action-ghost danger"
-                          onClick={() => handleDeletePalette(palette.id, 'palettes')}
-                        >
-                          <i className="bi bi-trash-fill"></i>
-                          <span>Delete</span>
-                        </button> */}
                       </div>
                     </Card.Body>
                   </div>
@@ -360,7 +390,26 @@ const Profile = () => {
                 {createdPalettes.map((palette) => (
                   <div key={palette.id} className="mb-3 p-3 glass-card rounded-4 border border-1 border-white">
                     <div>
-                      <h6>{palette.name}</h6>
+                      <div className="pp-card-head">
+                        <div className="pp-palette-name mb-0">{palette.name}</div>
+                        <div className="pp-card-head-actions">
+                          <button
+                            className="pp-open-generator"
+                            onClick={() => handleOpenInGenerator(palette)}
+                            title="Open in Palette Generator"
+                          >
+                            <img src="/favicon.ico" alt="Open" width="18" height="18" />
+                          </button>
+                          <button
+                            className="pp-open-generator"
+                            style={{ color: '#b91c1c' }}
+                            onClick={() => handleDeletePalette(palette.id, 'createdPalettes')}
+                            title="Delete palette"
+                          >
+                            <i className="bi bi-trash-fill"></i>
+                          </button>
+                        </div>
+                      </div>
                       <div className="pp-color-strip">
                         {palette.colors.map((color, idx) => (
                           <div
@@ -372,21 +421,14 @@ const Profile = () => {
                             title="Click to copy hex"
                           />
                         ))}
-                        <button
-                          className="pp-action-ghost danger pp-strip-action"
-                          onClick={() => handleDeletePalette(palette.id, 'createdPalettes')}
-                          title="Delete palette"
-                        >
-                          <i className="bi bi-trash3"></i>
-                        </button>
                       </div>
                       <div className="palette-actions-inline mt-2">
                         <button
                           className={`pp-action-ghost ${palette.visibility === 'public' ? 'success' : 'muted'}`}
-                          onClick={() => togglePaletteVisibility(palette.id, palette.visibility || 'private')}
+                          onClick={() => togglePaletteVisibility(palette)}
                         >
-                          <i className={`bi bi-eye${palette.visibility === 'public' ? '-slash' : ''}-fill`}></i>
-                          <span>{palette.visibility === 'public' ? 'Make Private' : 'Make Public'}</span>
+                          <i className="bi bi-eye-fill"></i>
+                          <span>{palette.visibility === 'public' ? 'Public' : 'Private'}</span>
                         </button>
                         <button
                           className="pp-action-ghost"
@@ -416,13 +458,6 @@ const Profile = () => {
                           <i className="bi bi-cloud-arrow-down-fill"></i>
                           <span>Export</span>
                         </button>
-                        {/* <button
-                          className="pp-action-ghost danger"
-                          onClick={() => handleDeletePalette(palette.id, 'createdPalettes')}
-                        >
-                          <i className="bi bi-trash-fill"></i>
-                          <span>Delete</span>
-                        </button> */}
                       </div>
                     </div>
                   </div>

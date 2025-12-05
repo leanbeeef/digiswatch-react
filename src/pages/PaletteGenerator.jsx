@@ -38,12 +38,18 @@ import { useAuth } from '../AuthContext';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import SEO from '../components/SEO';
 
-// In production we default to the worker on digiswatch.io so relative calls don't 405 on static hosts.
-const DEFAULT_API_BASE =
-    typeof window !== 'undefined' && window.location.hostname.includes('localhost')
-        ? ''
-        : 'https://digiswatch.io';
-const API_BASE = ((import.meta.env.VITE_API_URL || '').replace(/\/$/, '')) || DEFAULT_API_BASE;
+// Prefer relative /api on the digiswatch.io domain (routed to the Worker); otherwise fall back to env or direct Worker URL.
+const deriveApiBase = () => {
+    const envBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+    if (typeof window !== 'undefined') {
+        const host = window.location.hostname;
+        if (host.endsWith('digiswatch.io')) {
+            return ''; // relative hits the Worker route
+        }
+    }
+    return envBase || 'https://palette-ai-proxy.jodrey48.workers.dev';
+};
+const API_BASE = deriveApiBase();
 const AI_COOLDOWN_MS = 8000;
 const AI_TIMEOUT_MS = 12000;
 const MAX_PROMPT_LENGTH = 180;

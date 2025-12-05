@@ -34,12 +34,18 @@ const AIPaletteGenerator = () => {
     const [toast, setToast] = useState({ show: false, message: '' });
     const [showExportModal, setShowExportModal] = useState(false);
    
-    // Default to the worker on digiswatch.io in production so static hosts don't reject POSTs to /api.
-    const DEFAULT_API_BASE =
-        typeof window !== 'undefined' && window.location.hostname.includes('localhost')
-            ? ''
-            : 'https://digiswatch.io';
-    const API_BASE = ((import.meta.env.VITE_API_URL || '').replace(/\/$/, '')) || DEFAULT_API_BASE;
+    // Prefer relative /api on digiswatch.io (routed to the Worker); otherwise use env or direct Worker URL.
+    const deriveApiBase = () => {
+        const envBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+        if (typeof window !== 'undefined') {
+            const host = window.location.hostname;
+            if (host.endsWith('digiswatch.io')) {
+                return ''; // relative hits the Worker route
+            }
+        }
+        return envBase || 'https://palette-ai-proxy.jodrey48.workers.dev';
+    };
+    const API_BASE = deriveApiBase();
 
     const generatePaletteFromPrompt = async (promptText) => {
         setLoading(true);

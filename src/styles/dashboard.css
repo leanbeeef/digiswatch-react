@@ -495,15 +495,28 @@
     align-items: center;
     flex-wrap: wrap;
 }
+
 .dashboard-prompt-row{
     margin-bottom: 0.75rem;
+}
+
+.prompt-flex{
+    display: flex;
+    justify-content: flex-start;
+    width: 100%;
+}
+
+.dashboard-prompt-row form{
+    margin-left: auto;
+    width: 100%;
+    max-width: 640px;
 }
 .dashboard-sticky{
     position: sticky;
     top: 0;
     z-index: 3;
     background: #ffffff;
-    padding: 1.25rem 0 1.75rem;;
+    padding: 1.25rem 0 1.75rem;
     border-bottom: 1px solid #e2e8f0;
     margin-bottom: 0.75rem;
 }
@@ -739,12 +752,21 @@
     .dashboard-action-bar{
         flex-wrap: wrap;
         overflow: visible;
+        justify-content: flex-end;
     }
+
+    .dashboard-header-row {
+        justify-content: space-around;
+    }
+
     .dashboard-prompt-row{
         margin-bottom: 0.5rem;
     }
-    .dashboard-prompt-row{
-        margin-bottom: 0.5rem;
+    .prompt-flex{
+        justify-content: flex-end;
+    }
+    .dashboard-prompt-row form{
+        max-width: 100%;
     }
 
     .palette-sidebar {
@@ -855,6 +877,14 @@
         flex: 0 0 auto;
     }
     .palette-card-item button {
+        margin-left: auto;
+    }
+
+    .prompt-flex{
+        justify-content: flex-end;
+    }
+    .dashboard-prompt-row form{
+        max-width: 100%;
         margin-left: auto;
     }
 }

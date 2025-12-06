@@ -1,234 +1,186 @@
 // src/components/ColorVisualizerCard.jsx
-import React, { useState } from 'react';
-import { Card, ButtonGroup, Button, Form } from 'react-bootstrap';
+// Palette-focused mockup visualizer for the dashboard
+import React, { useMemo, useState } from 'react';
+import { Modal } from 'react-bootstrap';
 import DashboardCard from './DashboardCard';
-import tinycolor from 'tinycolor2';
+import mockup1Raw from '../assets/mockup-1.svg?raw';
+import mockup2Raw from '../assets/mockup-2.svg?raw';
+import mockup4Raw from '../assets/mockup-4.svg?raw';
+import mockup6Raw from '../assets/mockup-6.svg?raw';
+import { parseSync, stringify } from 'svgson';
+import { colord } from 'colord';
 
-const ColorVisualizerCard = ({ color, colorInfo, index, moveCard, isExpanded, onToggleExpand }) => {
-    const [context, setContext] = useState('button'); // button, input, header, card, text
-    const [background, setBackground] = useState('light'); // light, dark
+const fallbackPalette = ['#7c3aed', '#2563eb', '#22c55e', '#f59e0b', '#f43f5e'];
 
-    const getTextColor = (bg) => {
-        return tinycolor.readability(bg, "#FFFFFF") >= 4.5 ? "#FFFFFF" : "#000000";
-    };
+const normalizeHex = (hex) => hex?.toString().trim().toUpperCase();
 
-    const bgColor = background === 'light' ? '#f8f9fa' : '#212529';
-    const textColor = background === 'light' ? '#212529' : '#f8f9fa';
+// Only protect near-white values to avoid blowing out highlights/whitespace
+const PROTECTED_HEX = new Set(
+    ['#FFFFFF', '#FEFEFF', '#FEFFFB', '#FDFFFE', '#FDFDFD', '#FEFAFD', '#FEFBFD'].map(normalizeHex)
+);
 
-    const renderContext = () => {
-        switch (context) {
-            case 'button':
-                return (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1.5rem', background: bgColor, borderRadius: '8px' }}>
-                        <button style={{
-                            background: color,
-                            color: getTextColor(color),
-                            border: 'none',
-                            padding: '0.75rem 1.5rem',
-                            borderRadius: '6px',
-                            fontSize: '1rem',
-                            fontWeight: 600,
-                            cursor: 'pointer'
-                        }}>
-                            Primary Button
-                        </button>
-                        <button style={{
-                            background: 'transparent',
-                            color: color,
-                            border: `2px solid ${color}`,
-                            padding: '0.75rem 1.5rem',
-                            borderRadius: '6px',
-                            fontSize: '1rem',
-                            fontWeight: 600,
-                            cursor: 'pointer'
-                        }}>
-                            Outline Button
-                        </button>
-                        <button style={{
-                            background: tinycolor(color).setAlpha(0.1).toRgbString(),
-                            color: color,
-                            border: 'none',
-                            padding: '0.75rem 1.5rem',
-                            borderRadius: '6px',
-                            fontSize: '1rem',
-                            fontWeight: 600,
-                            cursor: 'pointer'
-                        }}>
-                            Ghost Button
-                        </button>
-                    </div>
-                );
+const brightness = (hex) => {
+    const { r, g, b } = colord(hex).toRgb();
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
 
-            case 'input':
-                return (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1.5rem', background: bgColor, borderRadius: '8px' }}>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', color: textColor, fontSize: '0.875rem', fontWeight: 600 }}>
-                                Email Address
-                            </label>
-                            <input
-                                type="email"
-                                placeholder="you@example.com"
-                                style={{
-                                    width: '100%',
-                                    padding: '0.75rem',
-                                    border: `2px solid ${color}`,
-                                    borderRadius: '6px',
-                                    fontSize: '1rem',
-                                    outline: 'none',
-                                    background: background === 'light' ? '#fff' : '#1a1a1a',
-                                    color: textColor
-                                }}
-                                onMouseDown={(e) => e.stopPropagation()}
-                            />
-                        </div>
-                        <div>
-                            <input
-                                type="checkbox"
-                                id="remember"
-                                style={{ accentColor: color, marginRight: '0.5rem' }}
-                                onMouseDown={(e) => e.stopPropagation()}
-                            />
-                            <label htmlFor="remember" style={{ color: textColor, fontSize: '0.875rem' }}>
-                                Remember me
-                            </label>
-                        </div>
-                    </div>
-                );
+const colorDistance = (hexA, hexB) => {
+    const a = colord(hexA).toRgb();
+    const b = colord(hexB).toRgb();
+    const dr = a.r - b.r;
+    const dg = a.g - b.g;
+    const db = a.b - b.b;
+    return Math.sqrt(dr * dr + dg * dg + db * db);
+};
 
-            case 'header':
-                return (
-                    <div style={{ background: color, color: getTextColor(color), padding: '1.5rem', borderRadius: '8px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>Brand Header</h3>
-                            <div style={{ display: 'flex', gap: '1rem' }}>
-                                <a style={{ color: getTextColor(color), textDecoration: 'none', fontWeight: 500 }}>Home</a>
-                                <a style={{ color: getTextColor(color), textDecoration: 'none', fontWeight: 500 }}>About</a>
-                                <a style={{ color: getTextColor(color), textDecoration: 'none', fontWeight: 500 }}>Contact</a>
-                            </div>
-                        </div>
-                    </div>
-                );
+const isProtectedColor = (hex) => {
+    if (PROTECTED_HEX.has(hex)) return true;
+    const lightness = brightness(hex);
+    if (lightness >= 245) return true; // protect near-white
+    return false;
+};
 
-            case 'card':
-                return (
-                    <div style={{ background: bgColor, padding: '1.5rem', borderRadius: '8px' }}>
-                        <div style={{
-                            background: background === 'light' ? '#fff' : '#1a1a1a',
-                            borderLeft: `4px solid ${color}`,
-                            padding: '1.25rem',
-                            borderRadius: '8px',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                        }}>
-                            <h4 style={{ margin: '0 0 0.75rem 0', color: color, fontSize: '1.125rem', fontWeight: 600 }}>
-                                Featured Card
-                            </h4>
-                            <p style={{ margin: 0, color: textColor, fontSize: '0.875rem', lineHeight: '1.5' }}>
-                                This is how your brand color looks as an accent in a card-style layout with text content.
-                            </p>
-                        </div>
-                    </div>
-                );
+const extractUniqueHexes = (svg) => {
+    const matches = svg.match(/#[0-9a-fA-F]{6}\b/g) || [];
+    return Array.from(new Set(matches.map(normalizeHex)));
+};
 
-            case 'text':
-                return (
-                    <div style={{ background: bgColor, padding: '1.5rem', borderRadius: '8px' }}>
-                        <h2 style={{ color: color, margin: '0 0 1rem 0', fontSize: '1.75rem', fontWeight: 700 }}>
-                            Heading Text
-                        </h2>
-                        <p style={{ color: textColor, margin: '0 0 0.75rem 0', fontSize: '1rem', lineHeight: '1.6' }}>
-                            Regular paragraph text with a <a href="#" style={{ color: color, textDecoration: 'underline' }}>colored link</a> embedded within the content to show how it reads.
-                        </p>
-                        <p style={{ color: color, margin: 0, fontSize: '0.875rem', lineHeight: '1.6' }}>
-                            Entire paragraph in the brand color to test readability and visual weight.
-                        </p>
-                    </div>
-                );
+const applyPaletteToSvg = (svg, swatches, { respectProtected = true } = {}) => {
+    if (!swatches.length) return svg;
 
-            default:
-                return null;
+    const paletteColors = swatches.map((c) => normalizeHex(colord(c).toHex()));
+    if (!paletteColors.length) return svg;
+
+    const hexRegex = /#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})\b/g;
+    const matches = svg.match(hexRegex) || [];
+    const uniqueColors = Array.from(new Set(matches.map((m) => normalizeHex(colord(m).toHex()))));
+
+    const replacements = new Map();
+    uniqueColors.forEach((color, idx) => {
+        const isWhite = brightness(color) >= 245;
+        if (respectProtected && (isProtectedColor(color) || isWhite)) return;
+        const target = paletteColors[idx % paletteColors.length];
+        replacements.set(color, target);
+    });
+
+    return svg.replace(hexRegex, (match) => {
+        const normalized = normalizeHex(colord(match).toHex());
+        if (replacements.has(normalized)) {
+            return replacements.get(normalized);
         }
-    };
+        return match;
+    });
+};
+
+const ColorVisualizerCard = ({ palette = [], index, moveCard, isExpanded, onToggleExpand }) => {
+    const [activeIndex, setActiveIndex] = useState(0);
+    const [showZoom, setShowZoom] = useState(false);
+    const swatches = useMemo(() => {
+        const hexes = palette.map((c) => normalizeHex(c?.hex || c)).filter(Boolean);
+        return hexes.length ? hexes : fallbackPalette;
+    }, [palette]);
+
+    const baseMockups = useMemo(
+        () => [
+            { label: 'Design 1', svgRaw: mockup1Raw },
+            { label: 'Design 2', svgRaw: mockup2Raw },
+            { label: 'Design 3', svgRaw: mockup4Raw },
+            { label: 'Design 4', svgRaw: mockup6Raw },
+        ],
+        []
+    );
+
+    const mockups = useMemo(
+        () =>
+            baseMockups.map((item) =>
+                item.staticSrc
+                    ? item
+                    : {
+                          ...item,
+                          svg: applyPaletteToSvg(item.svgRaw, swatches, { respectProtected: false }),
+                      }
+            ),
+        [baseMockups, swatches]
+    );
+
+    const selected = mockups[activeIndex % mockups.length];
+
+    const previewContent = (
+        <div className="visualizer-preview">
+            <div className="visualizer-dot-row">
+                {swatches.slice(0, 4).map((hex) => (
+                    <span key={hex} className="visualizer-dot" style={{ background: hex }} />
+                ))}
+            </div>
+            <div className="visualizer-preview-label">Palette mockups</div>
+        </div>
+    );
 
     return (
         <DashboardCard
             index={index}
-            title="Color Visualizer"
+            title="Palette Visualizer"
             moveCard={moveCard}
             isExpanded={isExpanded}
             onToggle={onToggleExpand}
-            previewContent={
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    <div style={{ width: '24px', height: '24px', borderRadius: '4px', background: color }}></div>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--dashboard-text-muted)' }}>
-                        Visualizing {context} context
+            previewContent={previewContent}
+            
+        >
+            <div className="palette-visualizer">
+                <div className="mockup-controls">
+                    <div className="mockup-nav">
+                        <button
+                            type="button"
+                            className="mockup-nav-btn"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveIndex((prev) => (prev - 1 + mockups.length) % mockups.length);
+                            }}
+                        >
+                            ‹
+                        </button>
+                        <button
+                            type="button"
+                            className="mockup-nav-btn"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveIndex((prev) => (prev + 1) % mockups.length);
+                            }}
+                        >
+                            ›
+                        </button>
                     </div>
                 </div>
-            }
-        >
-            <Card.Body>
 
-                {/* Context Selector */}
-                <div className="mb-3">
-                    <label className="form-label text-muted small">Context</label>
-                    <ButtonGroup size="sm" className="w-100 mb-2">
-                        <Button
-                            variant={context === 'button' ? 'primary' : 'outline-primary'}
-                            onClick={() => setContext('button')}
-                            onMouseDown={(e) => e.stopPropagation()}
-                        >
-                            Buttons
-                        </Button>
-                        <Button
-                            variant={context === 'input' ? 'primary' : 'outline-primary'}
-                            onClick={() => setContext('input')}
-                            onMouseDown={(e) => e.stopPropagation()}
-                        >
-                            Inputs
-                        </Button>
-                        <Button
-                            variant={context === 'header' ? 'primary' : 'outline-primary'}
-                            onClick={() => setContext('header')}
-                            onMouseDown={(e) => e.stopPropagation()}
-                        >
-                            Header
-                        </Button>
-                    </ButtonGroup>
-                    <ButtonGroup size="sm" className="w-100">
-                        <Button
-                            variant={context === 'card' ? 'primary' : 'outline-primary'}
-                            onClick={() => setContext('card')}
-                            onMouseDown={(e) => e.stopPropagation()}
-                        >
-                            Card
-                        </Button>
-                        <Button
-                            variant={context === 'text' ? 'primary' : 'outline-primary'}
-                            onClick={() => setContext('text')}
-                            onMouseDown={(e) => e.stopPropagation()}
-                        >
-                            Text
-                        </Button>
-                    </ButtonGroup>
+                <div className="mockup-grid single">
+                    <div key={selected.label} className="mockup-frame">
+                        {selected.staticSrc ? (
+                            <div className="mockup-img" role="img" aria-label={`${selected.label} (unchanged)`}>
+                                <img src={selected.staticSrc} alt={`${selected.label} mockup`} loading="lazy" />
+                            </div>
+                        ) : (
+                            <div
+                                className="mockup-img"
+                                role="img"
+                                aria-label={`${selected.label} colored with current palette`}
+                                dangerouslySetInnerHTML={{ __html: selected.svg }}
+                            />
+                        )}
+                        <div className="mockup-caption">
+                            <span className="caption-dot" style={{ background: swatches[0] }} />
+                            {selected.label}
+                        </div>
+                    </div>
                 </div>
-
-                {/* Background Toggle */}
-                <div className="mb-3">
-                    <Form.Check
-                        type="switch"
-                        id="dark-mode"
-                        label={`${background === 'light' ? 'Light' : 'Dark'} Background`}
-                        checked={background === 'dark'}
-                        onChange={(e) => setBackground(e.target.checked ? 'dark' : 'light')}
-                        onMouseDown={(e) => e.stopPropagation()}
-                    />
+                <div className="visualizer-swatches">
+                    {swatches.slice(0, 8).map((hex) => (
+                        <div key={hex} className="visualizer-swatch">
+                            <span className="visualizer-swatch-chip" style={{ background: hex }} />
+                            <code>{hex}</code>
+                        </div>
+                    ))}
                 </div>
-
-                {/* Preview */}
-                <div>
-                    {renderContext()}
-                </div>
-            </Card.Body>
+            </div>
         </DashboardCard>
     );
 };

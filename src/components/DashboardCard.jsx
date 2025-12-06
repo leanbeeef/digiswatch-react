@@ -19,6 +19,7 @@ const DashboardCard = ({
     moveCard,
     previewContent,
     extraHeaderActions = null,
+    className = '',
 }) => {
     const ref = React.useRef(null);
 
@@ -55,7 +56,7 @@ const DashboardCard = ({
     return (
         <div
             ref={ref}
-            className={`dashboard-card ${isExpanded ? 'is-expanded' : ''} ${isDragging ? 'is-dragging' : ''}`}
+            className={`dashboard-card ${className} ${isExpanded ? 'is-expanded' : ''} ${isDragging ? 'is-dragging' : ''}`}
             style={{ opacity: isDragging ? 0.5 : 1 }}
         >
             <div className="dashboard-card-header">

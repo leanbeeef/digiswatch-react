@@ -16,6 +16,7 @@
     "chroma-js": "^3.1.2",
     "color-convert": "^2.0.1",
     "color-namer": "^1.4.0",
+    "colord": "^2.9.3",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
@@ -38,6 +39,7 @@
     "react-sortablejs": "^6.1.4",
     "sass": "^1.80.7",
     "sortablejs": "^1.15.3",
+    "svgson": "^5.3.1",
     "tinycolor2": "^1.6.0"
   },
   "devDependencies": {

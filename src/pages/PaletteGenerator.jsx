@@ -618,15 +618,85 @@ const PaletteGenerator = () => {
                 <div className="palette-dashboard-area">
                     {colorInfo ? (
                         <>
-                            <div className="dashboard-header-row">
-                                <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: 'var(--dashboard-text)' }}>
-                                    Dashboard
-                                </h3>
-                                <div className="dashboard-action-bar">
-                                    <div className="text-muted small" style={{ minWidth: '80px' }}>
-                                        Uses left: {aiUsesLeft}
+                            <div className="dashboard-sticky">
+                                <div className="dashboard-header-row">
+                                    <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: 'var(--dashboard-text)' }}>
+                                        Dashboard
+                                    </h3>
+                                    <div className="dashboard-action-bar">
+                                        <div className="text-muted small" style={{ minWidth: '80px' }}>
+                                            Uses left: {aiUsesLeft}
+                                        </div>
+                                        <Button
+                                            variant="primary"
+                                            size="sm"
+                                            onClick={() => setShowSettingsModal(true)}
+                                            title="Manage Cards"
+                                            className="dashboard-icon-btn"
+                                        >
+                                            <i className="bi bi-sliders"></i>
+                                        </Button>
+                                        <Button
+                                            variant={dashboardView === 'masonry' ? 'primary' : 'outline-secondary'}
+                                            size="sm"
+                                            onClick={() => setDashboardView('masonry')}
+                                            title="Masonry view"
+                                            className="dashboard-icon-btn mobile-hidden"
+                                            aria-label="Masonry view"
+                                        >
+                                            <i className="bi bi-grid-3x3-gap"></i>
+                                        </Button>
+                                        <Button
+                                            variant={dashboardView === 'stacked' ? 'primary' : 'outline-secondary'}
+                                            size="sm"
+                                            onClick={() => setDashboardView('stacked')}
+                                            title="Stacked view"
+                                            className="dashboard-icon-btn mobile-hidden"
+                                            aria-label="Stacked view"
+                                        >
+                                            <i className="bi bi-view-stacked"></i>
+                                        </Button>
+                                        <Button
+                                            variant="outline-secondary"
+                                            size="sm"
+                                            onClick={generatePalette}
+                                            title="Generate New Palette"
+                                            className="dashboard-icon-btn"
+                                        >
+                                            <i className="bi bi-arrow-clockwise"></i>
+                                        </Button>
+                                        <Button
+                                            variant="outline-secondary"
+                                            size="sm"
+                                            onClick={openSaveModal}
+                                            title="Save Palette"
+                                            className="dashboard-icon-btn"
+                                        >
+                                            <i className="bi bi-floppy"></i>
+                                        </Button>
+                                        <Button
+                                            variant="outline-secondary"
+                                            size="sm"
+                                            onClick={() => setShowShareModal(true)}
+                                            title="Share Palette"
+                                            disabled={palette.length === 0}
+                                            className="dashboard-icon-btn"
+                                        >
+                                            <i className="bi bi-share"></i>
+                                        </Button>
+                                        <Button
+                                            variant="outline-secondary"
+                                            size="sm"
+                                            onClick={() => setShowExportModal(true)}
+                                            title="Export Palette"
+                                            className="dashboard-icon-btn"
+                                        >
+                                            <i className="bi bi-download"></i>
+                                        </Button>
                                     </div>
-                                    <div style={{ position: 'relative', minWidth: '300px' }}>
+                                </div>
+                                <div className="dashboard-prompt-row">
+                                    <div style={{ position: 'relative', width: '100%' }}>
                                         {!currentUser && (
                                             <div
                                                 style={aiLockOverlayStyle}
@@ -641,7 +711,7 @@ const PaletteGenerator = () => {
                                         <form className="d-flex gap-2" onSubmit={handleGenerateWithPrompt} style={{ filter: !currentUser ? 'blur(2px)' : 'none' }}>
                                             <input
                                                 type="text"
-                                                className="form-control dashboard-search-input"
+                                                className="form-control dashboard-search-input w-100"
                                                 placeholder="Describe a palette (e.g., 'warm sunset + teal')"
                                                 value={aiPrompt}
                                                 maxLength={MAX_PROMPT_LENGTH}
@@ -683,52 +753,6 @@ const PaletteGenerator = () => {
                                             </Button>
                                         </form>
                                     </div>
-                                    <Button
-                                        variant="primary"
-                                        size="sm"
-                                        onClick={() => setShowSettingsModal(true)}
-                                        title="Manage Cards"
-                                        className="dashboard-icon-btn"
-                                    >
-                                        <i className="bi bi-grid-3x3-gap"></i>
-                                    </Button>
-                                    <Button
-                                        variant="outline-secondary"
-                                        size="sm"
-                                        onClick={generatePalette}
-                                        title="Generate New Palette"
-                                        className="dashboard-icon-btn"
-                                    >
-                                        <i className="bi bi-arrow-clockwise"></i>
-                                    </Button>
-                                    <Button
-                                        variant="outline-secondary"
-                                        size="sm"
-                                        onClick={openSaveModal}
-                                        title="Save Palette"
-                                        className="dashboard-icon-btn"
-                                    >
-                                        <i className="bi bi-floppy"></i>
-                                    </Button>
-                                    <Button
-                                        variant="outline-secondary"
-                                        size="sm"
-                                        onClick={() => setShowShareModal(true)}
-                                        title="Share Palette"
-                                        disabled={palette.length === 0}
-                                        className="dashboard-icon-btn"
-                                    >
-                                        <i className="bi bi-share"></i>
-                                    </Button>
-                                    <Button
-                                        variant="outline-secondary"
-                                        size="sm"
-                                        onClick={() => setShowExportModal(true)}
-                                        title="Export Palette"
-                                        className="dashboard-icon-btn"
-                                    >
-                                        <i className="bi bi-download"></i>
-                                    </Button>
                                 </div>
                             </div>
                             <div className={`dashboard-grid ${dashboardView === 'stacked' ? 'dashboard-grid-stacked' : ''}`}>
@@ -795,8 +819,7 @@ const PaletteGenerator = () => {
                                                 return (
                                                     <motion.div key={cardId} {...motionProps}>
                                                         <ColorVisualizerCard
-                                                            color={selectedColor}
-                                                            colorInfo={colorInfo}
+                                                            palette={palette}
                                                             {...commonProps}
                                                         />
                                                     </motion.div>

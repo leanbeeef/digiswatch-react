@@ -34,7 +34,7 @@ const Header = ({ onOpenSidebar }) => {
             <Button
               variant="primary"
               onClick={handleLoginClick}
-              className="me-3"
+              className="me-3 mobile-hidden"
             >
               Sign In
             </Button>

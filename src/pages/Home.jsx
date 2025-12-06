@@ -2,13 +2,14 @@
 // Updated home experience to align with course design and improve mobile CTA behavior
 
 import { useEffect, useMemo, useState } from 'react';
-import { Container, Row, Col, Card, Button, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Button, Badge } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import '../PopularPalettes.css';
 import SEO from '../components/SEO';
 import popularPalettes from '../utils/paletteData';
+import heroSectionBg from '../assets/hero_section_bg.svg';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -23,28 +24,6 @@ const Home = () => {
   );
   const [demoIndex, setDemoIndex] = useState(0);
   const activeDemo = heroPalettes[demoIndex];
-
-  const metrics = useMemo(
-    () => [
-      { label: 'Palettes generated', start: 12000, end: 60000, divisor: 1000, suffix: 'k+' },
-      { label: 'Contrast checks', start: 50000, end: 120000, divisor: 1000, suffix: 'k' },
-      { label: 'Avg. export time', start: 9, end: 4, suffix: 's' },
-    ],
-    []
-  );
-  const [animatedMetrics, setAnimatedMetrics] = useState(metrics.map((metric) => metric.start));
-
-  const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
-
-  const formatMetricValue = (value, metric) => {
-    if (!metric) return value;
-    if (metric.divisor) {
-      const rounded = Math.round(value / metric.divisor);
-      return `${rounded}${metric.suffix || ''}`;
-    }
-    const rounded = metric.decimals ? value.toFixed(metric.decimals) : Math.round(value);
-    return `${rounded}${metric.suffix || ''}`;
-  };
 
   const toolCards = [
     {
@@ -109,28 +88,6 @@ const Home = () => {
     return () => clearInterval(id);
   }, []);
 
-  useEffect(() => {
-    const duration = 1200;
-    const startTime = performance.now();
-    let frame;
-
-    const animateMetrics = (now) => {
-      const progress = Math.min((now - startTime) / duration, 1);
-      const eased = easeOutCubic(progress);
-
-      setAnimatedMetrics(
-        metrics.map((metric) => metric.start + (metric.end - metric.start) * eased)
-      );
-
-      if (progress < 1) {
-        frame = requestAnimationFrame(animateMetrics);
-      }
-    };
-
-    frame = requestAnimationFrame(animateMetrics);
-    return () => cancelAnimationFrame(frame);
-  }, [metrics]);
-
   return (
     <>
       <SEO
@@ -142,110 +99,91 @@ const Home = () => {
 
       <section className="home-shell">
         {/* HERO */}
-        <header className="ds-hero home-hero split-hero text-center text-md-start position-relative overflow-hidden" role="banner">
+        <header
+          className="home-hero simple-hero position-relative overflow-hidden"
+          role="banner"
+          style={{ '--hero-bg': `url(${heroSectionBg})` }}
+        >
           <Container>
-            <Row className="align-items-center gy-4">
-              <Col lg={6} className="order-2 order-lg-1">
-                <Badge bg="dark" className="mb-3 fw-normal rounded-pill ds-hero-badge">
-                  Course-ready + AI powered
-                </Badge>
+            <Row className="align-items-center gy-5">
+              <Col lg={6}>
+                {/* <Badge bg="light" text="dark" className="mb-3 fw-semibold rounded-pill ds-hero-badge-soft">
+                  Calmer workspace · Course-built
+                </Badge> */}
                 <motion.h1
-                  className="display-5 fw-bold lh-tight mb-3"
+                  className="display-4 fw-bold lh-tight mb-3 hero-heading"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
                 >
-                  Design bold palettes without the guesswork in <span className="gradient-text">DigiSwatch</span>
+                  Design bold palettes without the busywork
                 </motion.h1>
-                <p className="lead text-dark-50 mb-4">
-                  The generator, checker, and palette library from the course live together here. Spin, lock, and ship palettes that are already classroom-approved.
+                <p className="lead hero-subtext mb-4">
+                  A focused hero for the generator, contrast checker, and palette library. Less clutter, clearer calls to action, and everything ready for handoff.
                 </p>
                 <nav aria-label="Primary actions">
                   <div className="d-flex gap-3 flex-wrap hero-actions">
                     <Button size="lg" className="btn-neo" onClick={() => navigate('/palette-generator')}>
-                      Start generating
+                      Launch the generator
                     </Button>
-                    <Button size="lg" className="btn-ghost" onClick={() => navigate('/popular-palettes')}>
-                      Browse popular
+                    <Button size="lg" className="btn-ghost inverse" onClick={() => navigate('/popular-palettes')}>
+                      Browse palettes
                     </Button>
                   </div>
                 </nav>
-                <div className="d-flex flex-wrap gap-2 mt-4">
-                  {['AI palettes', 'Lock & shuffle', 'Contrast built-in', 'Export for dev handoff'].map((item) => (
-                    <span key={item} className="pill-chip">
-                      {item}
-                    </span>
+                <div className="hero-inline-stats d-flex flex-wrap gap-3 mt-4">
+                  {[
+                    { label: 'Generator', value: 'Lock, shuffle, export' },
+                    { label: 'Contrast', value: 'AA / AAA ready' },
+                    { label: 'Handoff', value: 'CSS, SVG, JSON' },
+                  ].map((item) => (
+                    <div key={item.label} className="hero-stat">
+                      <div className="hero-stat-label">{item.label}</div>
+                      <div className="hero-stat-value">{item.value}</div>
+                    </div>
                   ))}
                 </div>
-                <div className="hero-metrics d-flex gap-3 flex-wrap mt-4">
-                  {metrics.map((metric, index) => {
-                    const currentValue = animatedMetrics[index] ?? metric.start;
-                    return (
-                      <div key={metric.label} className="metric-chip">
-                        <div className="metric-value">{formatMetricValue(currentValue, metric)}</div>
-                        <div className="metric-label">{metric.label}</div>
-                      </div>
-                    );
-                  })}
-                </div>
               </Col>
-              <Col lg={6} className="order-1 order-lg-2">
-                <div className="hero-visual position-relative">
-                  <div className="hero-orb"></div>
-                  <motion.div
-                    className="home-preview card-floating shadow-sm live-demo-card"
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.1 }}
-                  >
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                      <div>
-                        <div className="d-flex align-items-center gap-2">
-                          <span className="pulse-dot" aria-hidden="true"></span>
-                          <p className="text-uppercase small mb-0 text-dark-50">Live mini generator</p>
-                        </div>
-                        <h3 className="h4 mb-0">{activeDemo?.name}</h3>
-                      </div>
-                      <Badge bg="secondary">Auto-play</Badge>
-                    </div>
-                    <div className="palette-row rounded-4 overflow-hidden mb-3" role="img" aria-label={`Live palette ${activeDemo?.name}`}>
-                      <AnimatePresence initial={false} mode="wait">
-                        <motion.div
-                          key={activeDemo?.name}
-                          className="d-flex w-100 h-100"
-                          initial={{ opacity: 0, y: 12 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -12 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          {activeDemo?.colors.map((color) => (
-                            <div key={color} className="palette-swatch" style={{ backgroundColor: color }} title={color}></div>
-                          ))}
-                        </motion.div>
-                      </AnimatePresence>
-                    </div>
-                    <div className="d-flex flex-wrap gap-2 mb-3">
-                      {activeDemo?.colors.map((c) => (
-                        <code key={c} className="hex-chip">
-                          {c}
-                        </code>
-                      ))}
-                    </div>
-                    <div className="d-flex flex-wrap gap-2">
-                      <Button size="sm" className="btn-ghost" onClick={shuffleDemo}>
-                        <i className="bi bi-shuffle me-1"></i>Shuffle
-                      </Button>
-                      <Button size="sm" className="btn-neo" onClick={() => handleOpenInGenerator(activeDemo)}>
-                        Open in generator
-                      </Button>
-                    </div>
-                  </motion.div>
-                </div>
+              <Col lg={5} className="ms-lg-auto">
+                <motion.div
+                  className="hero-demo-card card-floating shadow-sm"
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.1 }}
+                >
+                  <div className="d-flex align-items-center justify-content-between mb-2">
+                    <p className="text-uppercase small hero-subtext mb-0">Palette of the moment</p>
+                    <span className="pill-chip muted small-pill">Try it Now!</span>
+                  </div>
+                  <h3 className="h4 fw-bold mb-3">{activeDemo?.name}</h3>
+                  <div className="hero-strip rounded-4 overflow-hidden mb-3" role="img" aria-label={`Live palette ${activeDemo?.name}`}>
+                    <AnimatePresence initial={false} mode="wait">
+                      <motion.div
+                        key={activeDemo?.name}
+                        className="d-flex w-100 h-100"
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -12 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        {activeDemo?.colors.map((color) => (
+                          <div key={color} className="hero-strip-swatch" style={{ backgroundColor: color }} title={color}></div>
+                        ))}
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
+                  <div className="d-flex flex-wrap gap-2">
+                    <Button size="sm" className="btn-ghost inverse" onClick={shuffleDemo}>
+                      <i className="bi bi-shuffle me-1"></i>Shuffle
+                    </Button>
+                    <Button size="sm" className="btn-neo" onClick={() => handleOpenInGenerator(activeDemo)}>
+                      Open in generator
+                    </Button>
+                  </div>
+                </motion.div>
               </Col>
             </Row>
           </Container>
-          <div className="blob blob-1"></div>
-          <div className="blob blob-2"></div>
         </header>
 
         {/* GENERATOR FEATURES */}
@@ -353,14 +291,6 @@ const Home = () => {
                             onClick={() => handleCopy(color)}
                             title="Click to copy hex"
                           ></div>
-                        ))}
-                      </div>
-
-                      <div className="d-flex flex-wrap gap-2 mt-3">
-                        {palette.colors.map((c, i) => (
-                          <code key={i} className="hex-chip">
-                            {c}
-                          </code>
                         ))}
                       </div>
 

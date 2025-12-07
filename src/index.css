@@ -100,6 +100,11 @@ button:focus-visible {
   font-weight: 800;
   letter-spacing: 0.04em;
   color: #111827;
+  letter-spacing: -10px;
+}
+
+.pwa-wordmark .pwa-letter:nth-child(n + 5) {
+  font-weight: 400 !important;
 }
 
 .pwa-letter {

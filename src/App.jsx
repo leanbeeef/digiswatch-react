@@ -16,10 +16,12 @@ import Home from "./pages/Home"
 import ContrastChecker from "./pages/ContrastChecker"
 import ImageColorExtractor from './pages/ImageExtractor';
 import ColorSeason from './pages/ColorSeason';
+import PwaSplash from './components/PwaSplash';
 import './index.css';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
 
   const openSidebar = () => setSidebarOpen(true);
   const closeSidebar = () => setSidebarOpen(false);
@@ -29,6 +31,7 @@ function App() {
       <AuthProvider>
         <Router>
           <div className="full-page">
+            <PwaSplash show={showSplash} onDone={() => setShowSplash(false)} />
             <Header onOpenSidebar={openSidebar} />
             <Sidebar show={sidebarOpen} onClose={closeSidebar} />
             <main className="main-content full-height-minus-header overflow-hidden">

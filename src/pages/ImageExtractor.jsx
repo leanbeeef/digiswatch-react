@@ -1,4 +1,6 @@
-import { useRef, useState, useEffect, useMemo, useLayoutEffect } from "react";
+﻿import { useRef, useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { Toast } from "react-bootstrap";
 import namer from "color-namer";
 import tinycolor from "tinycolor2";
 import defaultImage from "../assets/example.jpeg";
@@ -7,7 +9,7 @@ import SEO from '../components/SEO';
 
 /**
  * ImageColorExtractor — draggable eyedroppers + zoom lens
- * Now constrained to the viewport height so the page never scrolls.
+ * Constrained to the viewport height so the page never scrolls.
  */
 export default function ImageColorExtractor() {
   const visibleCanvasRef = useRef(null);
@@ -15,27 +17,33 @@ export default function ImageColorExtractor() {
   const overlayRef = useRef(null);
   const lensCanvasRef = useRef(null); // magnifier canvas
   const imgRef = useRef(null);
+  const navigate = useNavigate();
 
   const [imageURL, setImageURL] = useState(defaultImage);
   const [droppers, setDroppers] = useState([]); // {id,x,y,color,name,locked}
   const [activeId, setActiveId] = useState(null);
-  const [count, setCount] = useState(5);
+  const [count] = useState(6);
   const [lens, setLens] = useState({ visible: false, vx: 0, vy: 0 });
-  const [availH, setAvailH] = useState(0); // available content height (px)
-  const maxDroppers = 12
-
-  // Computed square size for right-column swatches so the page never scrolls
-  const tileSize = useMemo(() => {
-    const gaps = Math.max(0, count - 1) * 3; // 8px gap between squares
-    const s = Math.floor((availH - gaps) / Math.max(1, count));
-    return Math.max(100, s || 100);
-  }, [availH, count]);
+  const [toast, setToast] = useState({ show: false, message: "" });
 
   // Keep a Set of hex colors to bias initial placement toward unique swatches
   const sampledInitColors = useMemo(() => new Set(), [imageURL]);
 
-  // Helper: bottom navbar height (now floating, so we use a fixed offset)
-  const getBottomOffset = () => 100;
+  const paletteColors = useMemo(
+    () => droppers.slice(0, 6).map(({ color, name, id }) => ({ color, name, id })),
+    [droppers]
+  );
+
+  const getReadableText = (bg) => {
+    return tinycolor.readability(bg, "#0f172a") < 4 ? "#f8fafc" : "#0f172a";
+  };
+
+  const downloadDataUrl = (dataUrl, filename) => {
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.download = filename;
+    link.click();
+  };
 
   // Fit canvases to viewport without page scroll
   const layoutAndDraw = () => {
@@ -52,8 +60,6 @@ export default function ImageColorExtractor() {
     const container = vis.parentElement; // .ie-canvas-container
     // We can just use the container's height since it's now controlled by flexbox
     const availableHeight = container.clientHeight - 20; // 20px padding
-    setAvailH(availableHeight);
-
     // Width constraint from container
     const maxW = container.clientWidth - 40; // padding
 
@@ -81,11 +87,6 @@ export default function ImageColorExtractor() {
     // Align overlay to the canvas box so dropper coords match
     alignOverlay();
   };
-
-  // Force overlay alignment after DOM updates (e.g. when availH changes container size)
-  useLayoutEffect(() => {
-    alignOverlay();
-  }, [availH]);
 
   const alignOverlay = () => {
     const vis = visibleCanvasRef.current;
@@ -187,6 +188,75 @@ export default function ImageColorExtractor() {
     const color = tinycolor({ r: pixel[0], g: pixel[1], b: pixel[2] }).toHexString();
     const name = namer(color).ntc[0].name;
     return { color, name, hx, hy };
+  };
+
+  const buildPaletteImage = () => {
+    if (!paletteColors.length) return null;
+    const swatchWidth = 170;
+    const height = 160;
+    const canvas = document.createElement("canvas");
+    canvas.width = paletteColors.length * swatchWidth;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#f8fafc";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    paletteColors.forEach((p, i) => {
+      const x = i * swatchWidth;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(x, 0, swatchWidth, height - 42);
+      ctx.fillStyle = getReadableText(p.color);
+      ctx.font = "700 16px Inter, system-ui, -apple-system, sans-serif";
+      ctx.fillText(`#${i + 1}`, x + 12, height - 60);
+      ctx.font = "600 15px Inter, system-ui, -apple-system, sans-serif";
+      ctx.fillText(p.color, x + 12, height - 36);
+    });
+
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        resolve({ blob, dataUrl: canvas.toDataURL("image/png") });
+      }, "image/png");
+    });
+  };
+
+  const buildCompositeShareImage = () => {
+    if (!imgRef.current || !paletteColors.length) return null;
+    const img = imgRef.current;
+    const maxWidth = 960;
+    const scale = Math.min(maxWidth / img.width, 1);
+    const imgW = Math.round(img.width * scale);
+    const imgH = Math.round(img.height * scale);
+    const padding = 24;
+    const targetWidth = Math.max(imgW, paletteColors.length * 140);
+    const paletteHeight = 200;
+    const canvas = document.createElement("canvas");
+    canvas.width = targetWidth + padding * 2;
+    canvas.height = imgH + paletteHeight + padding * 2;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#f8fafc";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const imgX = (canvas.width - imgW) / 2;
+    ctx.drawImage(img, imgX, padding, imgW, imgH);
+
+    const swatchWidth = targetWidth / paletteColors.length;
+    paletteColors.forEach((p, i) => {
+      const x = padding + i * swatchWidth;
+      const swatchHeight = paletteHeight - 48;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(x, padding + imgH + 12, swatchWidth, swatchHeight);
+      ctx.fillStyle = getReadableText(p.color);
+      ctx.font = "700 15px Inter, system-ui, -apple-system, sans-serif";
+      ctx.fillText(`#${i + 1}`, x + 10, padding + imgH + swatchHeight - 36);
+      ctx.font = "600 14px Inter, system-ui, -apple-system, sans-serif";
+      ctx.fillText(p.color, x + 10, padding + imgH + swatchHeight - 14);
+    });
+
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        resolve({ blob, dataUrl: canvas.toDataURL("image/png") });
+      }, "image/png");
+    });
   };
 
   // Draw the zoom lens and keep it on-screen (no page scroll)
@@ -291,13 +361,65 @@ export default function ImageColorExtractor() {
     reader.readAsDataURL(file);
   };
 
-  const addDropper = () => setCount((n) => Math.min(maxDroppers, n + 1));
-  const removeDropper = () => setCount((n) => Math.max(2, n - 1));
-
   // Randomize: re-seed droppers with fresh unique positions/colors for current count
   const randomizeDroppers = () => {
     sampledInitColors.clear();
     seedDroppers(count);
+  };
+
+  const handleSendToGenerator = () => {
+    if (!paletteColors.length) return;
+    navigate("/palette-generator", {
+      state: {
+        palette: {
+          name: "Image extracted palette",
+          colors: paletteColors.map((p) => p.color),
+        },
+      },
+    });
+  };
+
+  const handleExportPalette = async () => {
+    const paletteImage = await buildPaletteImage();
+    if (!paletteImage) return;
+    downloadDataUrl(paletteImage.dataUrl, "extracted-palette.png");
+    setToast({ show: true, message: "Palette exported as PNG." });
+  };
+
+  const handleSharePalette = async () => {
+    try {
+      const composite = await buildCompositeShareImage();
+      if (!composite) return;
+      const file = new File([composite.blob], "image-with-palette.png", {
+        type: "image/png",
+      });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: "Palette from my image",
+          text: "Check out this palette I extracted with DigiSwatch.",
+          files: [file],
+        });
+        setToast({ show: true, message: "Shared with your device tools." });
+      } else {
+        downloadDataUrl(composite.dataUrl, "image-with-palette.png");
+        setToast({
+          show: true,
+          message: "Downloaded a share-ready image with your palette.",
+        });
+      }
+    } catch (err) {
+      console.error("Share failed", err);
+      setToast({ show: true, message: "Unable to share right now." });
+    }
+  };
+
+  const handleCopyHex = async (hex) => {
+    try {
+      await navigator.clipboard.writeText(hex);
+      setToast({ show: true, message: `${hex} copied to clipboard` });
+    } catch {
+      setToast({ show: true, message: "Copy failed. Try again." });
+    }
   };
 
   const toggleLock = (id) =>
@@ -305,10 +427,8 @@ export default function ImageColorExtractor() {
 
 
   // Derived list for right column (kept in same order as droppers)
-  const extracted = droppers.map(({ color, name, id }) => ({ color, name, id }));
-
   return (
-    <div className="w-100 d-flex flex-column" style={{ height: "calc(100vh - 82px)", overflow: "auto", background: "#f3f4f6" }}>
+    <div className="ie-page w-100 d-flex flex-column" style={{ height: "calc(100vh - 82px)", overflow: "auto", background: "#f3f4f6" }}>
       <SEO
         title="Image to Color Palette Extractor"
         description="Extract beautiful color palettes from any image. Upload your photo and automatically generate a color scheme based on its dominant colors."
@@ -325,7 +445,7 @@ export default function ImageColorExtractor() {
       </div>
 
       {/* Main Content */}
-      <div className="container px-4 flex-grow-1" style={{ minHeight: 0 }}>
+      <div className="container px-4 flex-grow-1 heightAdj" style={{ minHeight: 0 }}>
         <div className="row g-4 h-100">
 
           {/* Left: Canvas Panel */}
@@ -356,31 +476,74 @@ export default function ImageColorExtractor() {
             </div>
           </div>
 
-          {/* Right: Color List Panel */}
+          {/* Right: Color Palette Panel */}
           <div className="col-12 col-md-5">
-            <div className="ie-glass-panel">
-              <div className="ie-swatch-grid">
-                {extracted.map(({ color, name, id }, i) => (
-                  <div
-                    key={id}
-                    className="ie-swatch-card"
-                    style={{
-                      width: tileSize,
-                      height: tileSize,
-                      background: color,
-                      flexGrow: 1,
-                      minWidth: '100px'
-                    }}
-                    onClick={() => navigator.clipboard.writeText(color)}
-                    title="Click to copy hex"
-                  >
-                    <div className="ie-swatch-badge">#{i + 1}</div>
-                    <div className="ie-swatch-info">
-                      <div className="fw-bold text-truncate">{name}</div>
-                      <div className="opacity-75 font-monospace small">{color}</div>
-                    </div>
+            <div className="ie-glass-panel ie-palette-panel">
+              <div className="ie-palette-card">
+                <div className="ie-palette-header">
+                  <div>
+                    <p className="ie-chip">Extracted palette</p>
+                    <h4 className="mb-1">Share, export, or edit</h4>
+                    <div className="text-muted small">Move the droppers on the photo to refine your six-color strip.</div>
                   </div>
-                ))}
+                </div>
+
+                <div className="ie-palette-strip">
+                  {paletteColors.map((swatch, i) => (
+                    <div
+                      key={swatch.id || i}
+                      className="ie-palette-swatch"
+                      style={{ background: swatch.color, color: getReadableText(swatch.color) }}
+                      title={`${swatch.name} Â· ${swatch.color}`}
+                      onClick={() => handleCopyHex(swatch.color)}
+                    >
+                      <span className="fw-bold">#{i + 1}</span>
+                      <span className="font-monospace small">{swatch.color}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="ie-strip-actions">
+                    <button className="ie-action-btn" onClick={handleSendToGenerator} title="Open in Palette Generator" disabled={!paletteColors.length}>
+                      <img src="/favicon.ico" alt="Open in generator" width="18" height="18" />
+                    </button>
+                    <button className="ie-action-btn" onClick={handleExportPalette} title="Export palette" disabled={!paletteColors.length}>
+                      <i className="bi bi-download"></i>
+                    </button>
+                    <button className="ie-action-btn" onClick={handleSharePalette} title="Share image + palette" disabled={!paletteColors.length}>
+                      <i className="bi bi-share"></i>
+                    </button>
+                  </div>
+
+                <div className="ie-palette-list">
+                  {paletteColors.map((swatch, i) => (
+                    <div
+                      key={swatch.id || i}
+                      className="ie-palette-row"
+                      onClick={() => handleCopyHex(swatch.color)}
+                    >
+                      <div
+                        className="ie-palette-row-chip"
+                        style={{ background: swatch.color, color: getReadableText(swatch.color) }}
+                      >
+                        #{i + 1}
+                      </div>
+                      
+                        <div className="fw-bold text-truncate">{swatch.name}</div>
+                        <div className="text-muted font-monospace small">{swatch.color}</div>
+                    
+                      <button
+                        className="ie-row-copy"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCopyHex(swatch.color);
+                        }}
+                        title="Copy hex"
+                      >
+                        <i className="bi bi-clipboard"></i>
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -403,13 +566,10 @@ export default function ImageColorExtractor() {
         </div>
 
         <div className="ie-control-group">
-          <button className="ie-btn" onClick={removeDropper} disabled={count <= 2}>
-            <i className="bi bi-dash-lg"></i>
-          </button>
-          <span className="fw-bold text-dark" style={{ minWidth: '30px', textAlign: 'center' }}>{count}</span>
-          <button className="ie-btn" onClick={addDropper} disabled={count >= maxDroppers}>
-            <i className="bi bi-plus-lg"></i>
-          </button>
+          <div className="ie-pill-solid">
+            <i className="bi bi-droplet me-1"></i> 6 fixed droppers
+          </div>
+          <span className="text-muted small">Move them anywhere on your image.</span>
         </div>
 
         <div className="ie-control-group">
@@ -418,6 +578,25 @@ export default function ImageColorExtractor() {
           </button>
         </div>
       </div>
+
+      <Toast
+        show={toast.show}
+        onClose={() => setToast({ show: false, message: "" })}
+        delay={2500}
+        autohide
+        style={{
+          position: "fixed",
+          bottom: "18px",
+          right: "18px",
+          zIndex: 1200,
+          minWidth: "240px",
+        }}
+      >
+        <Toast.Header closeButton>
+          <strong className="me-auto">DigiSwatch</strong>
+        </Toast.Header>
+        <Toast.Body>{toast.message}</Toast.Body>
+      </Toast>
 
       {/* Zoom lens canvas - Fixed position to avoid clipping */}
       <canvas
@@ -474,3 +653,6 @@ function Dropper({ d, idx, active, onPointerDown, onToggleLock }) {
     </div>
   );
 }
+
+
+

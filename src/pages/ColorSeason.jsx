@@ -103,6 +103,7 @@ const ColorSeason = () => {
 
     const canvasRef = useRef(null);
     const fileInputRef = useRef(null);
+    const cameraInputRef = useRef(null);
     const originalImageRef = useRef(null);
 
     // Load Face API Models
@@ -137,6 +138,9 @@ const ColorSeason = () => {
             };
             reader.readAsDataURL(file);
         }
+    };
+    const handleCameraCapture = (e) => {
+        handleUpload(e);
     };
 
     useEffect(() => {
@@ -297,17 +301,23 @@ const ColorSeason = () => {
                                 accept="image/*"
                                 style={{ display: 'none' }}
                             />
+                            <input
+                                type="file"
+                                ref={cameraInputRef}
+                                onChange={handleCameraCapture}
+                                accept="image/*"
+                                capture="user"
+                                style={{ display: 'none' }}
+                            />
                             <button className="cs-btn cs-btn-secondary" onClick={() => fileInputRef.current.click()}>
                                 {image ? 'Change Photo' : 'Upload Photo'}
+                            </button>
+                            <button className="cs-btn cs-btn-secondary" onClick={() => cameraInputRef.current.click()}>
+                                Use Camera
                             </button>
                             {image && (
                                 <button className="cs-btn cs-btn-primary" onClick={analyzeColors} disabled={analyzing || !modelsLoaded}>
                                     {analyzing ? <><Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" /> Analyzing...</> : 'Analyze My Season'}
-                                </button>
-                            )}
-                            {Object.keys(activeMakeup).length > 0 && (
-                                <button className="cs-btn cs-btn-secondary" onClick={clearMakeup}>
-                                    Clear Makeup
                                 </button>
                             )}
                         </div>
@@ -320,7 +330,7 @@ const ColorSeason = () => {
                             <h2 className="cs-season-title">Your Season is {season}</h2>
                             <p className="cs-season-desc">{SEASONS[season].description}</p>
 
-                            <div className="d-flex align-items-center gap-2">
+                            <div className="d-flex align-items-center gap-2 cs-cta-row">
                                 <h4 className="cs-section-header m-0">Your Color Palette</h4>
                                 <button
                                     type="button"

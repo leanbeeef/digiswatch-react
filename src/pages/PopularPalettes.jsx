@@ -24,7 +24,7 @@ const PopularPalettes = () => {
   const [palettes, setPalettes] = useState(paletteData);
   const [userPalettes, setUserPalettes] = useState([]);
   // Start on community tab so public palettes are shown first
-  const [activeTab, setActiveTab] = useState('userCreated');
+  const [activeTab, setActiveTab] = useState('predefined');
   const [likes, setLikes] = useState({});
   const [savedPalettes, setSavedPalettes] = useState({});
   const [selectedPalette, setSelectedPalette] = useState(null);

@@ -65,7 +65,7 @@ export const CARD_DEFINITIONS = {
     },
     [CARD_TYPES.VISUALIZER]: {
         id: CARD_TYPES.VISUALIZER,
-        title: 'Color Visualizer',
+        title: 'Palette Visualizer',
         description: 'Preview in UI contexts',
         icon: 'bi-eye',
         defaultVisible: false,
@@ -108,10 +108,10 @@ export const CARD_DEFINITIONS = {
         title: 'Accessibility',
         description: 'WCAG contrast & suggestions',
         icon: 'bi-universal-access',
-        defaultVisible: false,
+        defaultVisible: true,
         priority: 8,
         category: CARD_CATEGORIES.ACCESSIBILITY,
-        implemented: false
+        implemented: true
     },
     [CARD_TYPES.HARMONIZER]: {
         id: CARD_TYPES.HARMONIZER,

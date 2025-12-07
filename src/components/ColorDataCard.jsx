@@ -42,7 +42,7 @@ const ColorDataCard = ({ color, colorInfo, index, moveCard, isExpanded, onToggle
             previewContent={
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <div style={{ width: '24px', height: '24px', borderRadius: '4px', background: color, border: '1px solid var(--dashboard-border)' }}></div>
-                    <div style={{ fontSize: '0.9rem', fontFamily: 'monospace', fontWeight: 600 }}>
+                    <div style={{ fontSize: '0.8rem', fontFamily: 'monospace', fontWeight: 600 }}>
                         {colorInfo.hex}
                     </div>
                 </div>
@@ -76,7 +76,7 @@ const ColorDataCard = ({ color, colorInfo, index, moveCard, isExpanded, onToggle
                 ))}
             </div>
 
-            {/* Contrast Preview */}
+            {/* Contrast Preview
             <div className="contrast-preview">
                 <div
                     className="contrast-box"
@@ -100,7 +100,7 @@ const ColorDataCard = ({ color, colorInfo, index, moveCard, isExpanded, onToggle
                     On Black
                     <span className="contrast-ratio">{contrastWithBlack.toFixed(2)}:1</span>
                 </div>
-            </div>
+            </div> */}
         </DashboardCard>
     );
 };

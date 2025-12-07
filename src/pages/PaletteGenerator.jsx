@@ -13,6 +13,7 @@ import GradientBuilderCard from "../components/GradientBuilderCard";
 import OKLCHExplorerCard from "../components/OKLCHExplorerCard"; // ADD THIS
 import ColorScalesCard from "../components/ColorScalesCard"; // ADD THIS
 import ColorVisualizerCard from "../components/ColorVisualizerCard"; // ADD THIS
+import AccessibilityCard from "../components/AccessibilityCard";
 import DashboardSettings from "../components/DashboardSettings"; // ADD THIS
 import { getColorContext } from "../utils/getColorContext";
 import {
@@ -101,7 +102,11 @@ const PaletteGenerator = () => {
       const storedOrder = localStorage.getItem("dashboardCardOrder");
       if (storedOrder) {
         try {
-          return JSON.parse(storedOrder);
+          const parsed = JSON.parse(storedOrder);
+          // Merge with implemented cards to include newly added cards
+          const implemented = getImplementedCards().map((card) => card.id);
+          const newCards = implemented.filter((id) => !parsed.includes(id));
+          return [...parsed, ...newCards];
         } catch (e) {
           console.warn("Failed to parse stored card order, resetting.", e);
         }
@@ -123,7 +128,10 @@ const PaletteGenerator = () => {
             Array.isArray(parsed) &&
             parsed.every((item) => typeof item === "string")
           ) {
-            return Array.from(new Set(parsed));
+            // Merge with default visible cards to include newly added default-visible cards
+            const defaults = getDefaultVisibleCards();
+            const merged = Array.from(new Set([...parsed, ...defaults]));
+            return merged;
           }
         } catch (e) {
           console.warn("Failed to parse stored visible cards, resetting.", e);
@@ -144,6 +152,7 @@ const PaletteGenerator = () => {
   });
   const [draggingPaletteIndex, setDraggingPaletteIndex] = useState(null);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showMobileToolbar, setShowMobileToolbar] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiStatus, setAiStatus] = useState("idle"); // idle | loading | success | error
   const [aiError, setAiError] = useState("");
@@ -252,11 +261,11 @@ const PaletteGenerator = () => {
           color.locked
             ? color
             : {
-                hex: newPalette[index],
-                name: namer(newPalette[index]).ntc[0].name,
-                textColor: getTextColor(newPalette[index]),
-                locked: false,
-              }
+              hex: newPalette[index],
+              name: namer(newPalette[index]).ntc[0].name,
+              textColor: getTextColor(newPalette[index]),
+              locked: false,
+            }
         );
       }
 
@@ -688,20 +697,83 @@ const PaletteGenerator = () => {
                   <h3
                     style={{
                       margin: 0,
-                      fontSize: "1.25rem",
+                      fontSize: "1.1rem",
                       fontWeight: 600,
                       color: "var(--dashboard-text)",
                     }}
                   >
                     Dashboard
                   </h3>
-                  <div className="dashboard-action-bar">
-                    <div
-                      className="text-muted small"
-                      style={{ minWidth: "80px" }}
+
+                  {/* AI Prompt - Inline */}
+
+                  <div className="dashboard-prompt-inline" style={{ position: "relative" }}>
+                    {!currentUser && (
+                      <div
+                        style={{
+                          ...aiLockOverlayStyle,
+                          borderRadius: "6px",
+                        }}
+                        onClick={() => setShowAuthModal(true)}
+                        role="button"
+                        aria-label="Sign in to use AI generation"
+                      >
+                        <i className="bi bi-lock-fill" style={{ fontSize: "0.9rem" }}></i>
+                        <span style={{ fontSize: "0.8rem" }}>Sign in</span>
+                      </div>
+                    )}
+
+                    <form
+                      onSubmit={handleGenerateWithPrompt}
+                      style={{ filter: !currentUser ? "blur(2px)" : "none" }}
                     >
-                      Uses left: {aiUsesLeft}
-                    </div>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Describe a palette..."
+                        value={aiPrompt}
+                        maxLength={MAX_PROMPT_LENGTH}
+                        onChange={(e) => {
+                          setAiPrompt(e.target.value);
+                          if (aiError) setAiError("");
+                        }}
+                        disabled={aiStatus === "loading" || !currentUser}
+                        aria-label="Describe a palette to generate with AI"
+                      />
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        type="submit"
+                        disabled={
+                          !currentUser ||
+                          !aiPrompt.trim() ||
+                          aiStatus === "loading" ||
+                          cooldownSeconds > 0 ||
+                          aiUsesLeft <= 0
+                        }
+                        title={
+                          !currentUser
+                            ? "Sign in to use AI (10/day)"
+                            : aiUsesLeft <= 0
+                              ? "Limit reached"
+                              : cooldownSeconds > 0
+                                ? "Cooling down..."
+                                : "Generate"
+                        }
+                        className="dashboard-icon-btn"
+                        aria-label="Generate palette from prompt"
+                      >
+                        {aiStatus === "loading" ? (
+                          <i className="bi bi-hourglass-split"></i>
+                        ) : (
+                          <i className="bi bi-stars"></i>
+                        )}
+                      </Button>
+                    </form>
+                  </div>
+
+                  <div className="dashboard-action-bar">
+
                     <Button
                       variant="primary"
                       size="sm"
@@ -777,80 +849,81 @@ const PaletteGenerator = () => {
                       <i className="bi bi-download"></i>
                     </Button>
                   </div>
-                </div>
-                <div className="dashboard-prompt-row">
-                  <div className="prompt-flex">
-                    <div style={{ position: "relative", width: "100%" }}>
-                      {!currentUser && (
-                        <div
-                          style={aiLockOverlayStyle}
-                          onClick={() => setShowAuthModal(true)}
-                          role="button"
-                          aria-label="Sign in to use AI generation"
-                        >
-                          <i
-                            className="bi bi-lock-fill"
-                            style={{ fontSize: "1.1rem" }}
-                          ></i>
-                          <span>Sign in to use AI</span>
-                        </div>
-                      )}
-                      <form
-                        className="d-flex gap-2 justify-content-end flex-wrap"
-                        onSubmit={handleGenerateWithPrompt}
-                        style={{ filter: !currentUser ? "blur(2px)" : "none" }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control dashboard-search-input w-100"
-                          placeholder="Describe a palette (e.g., 'warm sunset + teal')"
-                          value={aiPrompt}
-                          maxLength={MAX_PROMPT_LENGTH}
-                          onChange={(e) => {
-                            setAiPrompt(e.target.value);
-                            if (aiError) setAiError("");
-                          }}
-                          disabled={aiStatus === "loading" || !currentUser}
-                          aria-label="Describe a palette to generate with AI"
-                        />
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          type="submit"
-                          disabled={
-                            !currentUser ||
-                            !aiPrompt.trim() ||
-                            aiStatus === "loading" ||
-                            cooldownSeconds > 0 ||
-                            aiUsesLeft <= 0
-                          }
-                          title={
-                            !currentUser
-                              ? "Create an account to use AI generation (10 per day)."
-                              : aiUsesLeft <= 0
-                              ? "AI prompt limit reached (10 uses)."
-                              : cooldownSeconds > 0
-                              ? "Cooling down to prevent rapid-fire requests"
-                              : "Generate palette from prompt"
-                          }
-                          className="dashboard-icon-btn"
-                          aria-label="Generate palette from prompt"
-                        >
-                          {aiStatus === "loading" ? (
-                            <i className="bi bi-hourglass-split"></i>
-                          ) : (
-                            <i className="bi bi-arrow-right"></i>
-                          )}
-                        </Button>
-                      </form>
-                    </div>
-                  </div>
+
+                  {/* Mobile Toolbar Toggle */}
+                  <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    onClick={() => setShowMobileToolbar(!showMobileToolbar)}
+                    className="mobile-toolbar-toggle dashboard-icon-btn"
+                    aria-label="Open tools"
+                  >
+                    <i className="bi bi-three-dots-vertical"></i>
+                  </Button>
                 </div>
               </div>
+
+              {/* Mobile Toolbar Popout */}
               <div
-                className={`dashboard-grid ${
-                  dashboardView === "stacked" ? "dashboard-grid-stacked" : ""
-                }`}
+                className={`mobile-toolbar-backdrop ${showMobileToolbar ? 'is-open' : ''}`}
+                onClick={() => setShowMobileToolbar(false)}
+              />
+              <div className={`mobile-toolbar-popout ${showMobileToolbar ? 'is-open' : ''}`}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => { setShowSettingsModal(true); setShowMobileToolbar(false); }}
+                  title="Manage Cards"
+                >
+                  <i className="bi bi-sliders me-2"></i>Cards
+                </Button>
+                {/* <Button
+                  variant={dashboardView === "masonry" ? "primary" : "outline-secondary"}
+                  size="sm"
+                  onClick={() => { setDashboardView("masonry"); setShowMobileToolbar(false); }}
+                >
+                  <i className="bi bi-grid-3x3-gap me-2"></i>Masonry
+                </Button>
+                <Button
+                  variant={dashboardView === "stacked" ? "primary" : "outline-secondary"}
+                  size="sm"
+                  onClick={() => { setDashboardView("stacked"); setShowMobileToolbar(false); }}
+                >
+                  <i className="bi bi-view-stacked me-2"></i>Stacked
+                </Button> */}
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() => { generatePalette(); setShowMobileToolbar(false); }}
+                >
+                  <i className="bi bi-arrow-clockwise "></i>
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() => { openSaveModal(); setShowMobileToolbar(false); }}
+                >
+                  <i className="bi bi-floppy "></i>
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() => { setShowShareModal(true); setShowMobileToolbar(false); }}
+                  disabled={palette.length === 0}
+                >
+                  <i className="bi bi-share "></i>
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() => { setShowExportModal(true); setShowMobileToolbar(false); }}
+                >
+                  <i className="bi bi-download me-2"></i>Export
+                </Button>
+              </div>
+              <div
+                className={`dashboard-grid ${dashboardView === "stacked" ? "dashboard-grid-stacked" : ""
+                  }`}
               >
                 <AnimatePresence>
                   {cardOrder.map((cardId, index) => {
@@ -948,6 +1021,16 @@ const PaletteGenerator = () => {
                         return (
                           <motion.div key={cardId} {...motionProps}>
                             <ColorScalesCard
+                              color={selectedColor}
+                              colorInfo={colorInfo}
+                              {...commonProps}
+                            />
+                          </motion.div>
+                        );
+                      case CARD_TYPES.ACCESSIBILITY:
+                        return (
+                          <motion.div key={cardId} {...motionProps}>
+                            <AccessibilityCard
                               color={selectedColor}
                               colorInfo={colorInfo}
                               {...commonProps}

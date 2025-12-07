@@ -71,6 +71,103 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+/* PWA Splash */
+.pwa-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: grid;
+  place-items: center;
+  background: #ffffff;
+  animation: pwaFadeOut 0.5s ease forwards 1.6s;
+}
+
+.pwa-splash-card {
+  display: none;
+}
+
+.pwa-splash-inner {
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  transform: scale(1.08);
+}
+
+.pwa-wordmark {
+  display: inline-flex;
+  gap: 8px;
+  font-size: 2.6rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #111827;
+}
+
+.pwa-letter {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: pwaLetterIn 0.45s ease forwards;
+}
+
+.pwa-icon-blast {
+  width: 68px;
+  height: 68px;
+  animation: pwaIconIn 0.6s ease forwards 0.9s, pwaSpin 1.2s linear infinite 1.1s;
+}
+
+.pwa-logo {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  animation: pwaSpin 1.1s linear infinite;
+}
+
+.pwa-loading-row,
+.pwa-loading-text,
+.pwa-dots,
+.pwa-palette {
+  display: none;
+}
+
+@keyframes pwaFadeOut {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes pwaSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pwaLetterIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pwaIconIn {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
 [data-theme="dark"] {
   color: #e5e7eb;
   background-color: #0b1221;

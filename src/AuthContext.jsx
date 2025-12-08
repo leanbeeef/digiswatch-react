@@ -8,7 +8,7 @@ import {
   signOut,
   getRedirectResult,
 } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 
 export const AuthContext = createContext();
@@ -29,6 +29,20 @@ export const AuthProvider = ({ children }) => {
       if (userDoc.exists()) {
         return { ...user, ...userDoc.data() }; // Merge Firebase user and Firestore data
       }
+
+      // Seed a starter profile if it doesn't exist
+      const email = user.email || '';
+      const defaultUsername = email.includes('@') ? email.split('@')[0] : 'New user';
+      const starterProfile = {
+        username: defaultUsername,
+        email,
+        avatar: '/avatars/avatar (1).png',
+        usageGoal: '',
+        onboardingComplete: false,
+        createdAt: new Date().toISOString(),
+      };
+      await setDoc(userDocRef, starterProfile, { merge: true });
+      return { ...user, ...starterProfile };
     } catch (error) {
       console.error('Error fetching user data from Firestore:', error);
     }

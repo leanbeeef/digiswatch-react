@@ -7,6 +7,7 @@ import { db } from '../firebase';
 import { doc, collection, getDocs, getDoc, updateDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import SharePalette from '../components/SharePalette';
 import avatars from '../utils/avatarImages';
+import OnboardingModal from '../components/OnboardingModal';
 import {
   exportPaletteAsCSS,
   exportPaletteAsJSON,
@@ -41,6 +42,7 @@ const Profile = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [showExportModal, setShowExportModal] = useState(false);
   const [currentPalette, setCurrentPalette] = useState([]);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     if (currentUser) {
@@ -85,6 +87,22 @@ const Profile = () => {
         setNewUsername(data.username || '');
         setNewEmail(currentUser.email || '');
         setAvatar(data.avatar || avatars[0].src);
+        setShowOnboarding(!data.onboardingComplete);
+      } else {
+        // if somehow missing, seed minimal profile and prompt onboarding
+        const seed = {
+          username: currentUser.email?.split('@')[0] || 'New user',
+          email: currentUser.email || '',
+          avatar: avatars[0].src,
+          onboardingComplete: false,
+          usageGoal: '',
+        };
+        await setDoc(profileDoc, seed, { merge: true });
+        setProfileData(seed);
+        setNewUsername(seed.username);
+        setNewEmail(seed.email);
+        setAvatar(seed.avatar);
+        setShowOnboarding(true);
       }
     } catch (error) {
       console.error('Error fetching profile: ', error);
@@ -167,6 +185,44 @@ const Profile = () => {
       console.error('Error updating profile: ', error);
       setToastMessage('Failed to update profile.');
       setShowToast(true);
+    }
+  };
+
+  const handleOnboardingComplete = async ({ avatar: avatarUrl, username, usageGoal }) => {
+    if (!currentUser) return;
+    try {
+      const profileDocRef = doc(db, 'users', currentUser.uid);
+      const payload = {
+        avatar: avatarUrl || avatars[0].src,
+        username: username || currentUser.email?.split('@')[0] || 'New user',
+        email: currentUser.email || '',
+        usageGoal: usageGoal || '',
+        onboardingComplete: true,
+      };
+      await setDoc(profileDocRef, payload, { merge: true });
+      setProfileData((prev) => ({ ...prev, ...payload }));
+      setNewUsername(payload.username);
+      setNewEmail(payload.email);
+      setAvatar(payload.avatar);
+      setShowOnboarding(false);
+      setToastMessage('Profile set up!');
+      setShowToast(true);
+    } catch (error) {
+      console.error('Error saving onboarding profile:', error);
+      setToastMessage('Could not save profile setup.');
+      setShowToast(true);
+    }
+  };
+
+  const handleSkipOnboarding = async () => {
+    if (!currentUser) return setShowOnboarding(false);
+    try {
+      const profileDocRef = doc(db, 'users', currentUser.uid);
+      await setDoc(profileDocRef, { onboardingComplete: true }, { merge: true });
+      setShowOnboarding(false);
+    } catch (error) {
+      console.error('Error skipping onboarding:', error);
+      setShowOnboarding(false);
     }
   };
 
@@ -552,6 +608,13 @@ const Profile = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+
+      <OnboardingModal
+        show={showOnboarding}
+        onClose={handleSkipOnboarding}
+        onSave={handleOnboardingComplete}
+        currentUser={currentUser}
+      />
     </section>
   );
 };

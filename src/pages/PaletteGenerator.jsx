@@ -49,16 +49,19 @@ import { useAuth } from "../AuthContext";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import SEO from "../components/SEO";
 
-// Prefer relative /api on the digiswatch.io domain (routed to the Worker); otherwise fall back to env or direct Worker URL.
+// Prefer explicit Worker URL to avoid 405s from the static host; env override for local/dev.
 const deriveApiBase = () => {
   const envBase = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+  const workerBase = "https://palette-ai-proxy.jodrey48.workers.dev";
+  if (envBase) return envBase;
+
   if (typeof window !== "undefined") {
     const host = window.location.hostname;
     if (host.endsWith("digiswatch.io")) {
-      return ""; // relative hits the Worker route
+      return workerBase; // hit the Worker directly in production
     }
   }
-  return envBase || "https://palette-ai-proxy.jodrey48.workers.dev";
+  return workerBase;
 };
 const API_BASE = deriveApiBase();
 const AI_COOLDOWN_MS = 8000;

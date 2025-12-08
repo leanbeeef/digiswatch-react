@@ -40,6 +40,44 @@ body {
   min-height: 100vh;
 }
 
+.tool-panel {
+  border: 1px solid var(--bs-border-color, #e5e7eb);
+  background: linear-gradient(145deg, #ffffff, #f8fafc);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.tool-section {
+  border: 1px solid var(--bs-border-color, #e5e7eb);
+  border-radius: 12px;
+  padding: 12px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+}
+
+.library-scroll {
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.masonry-grid {
+  column-count: 2;
+  column-gap: 12px;
+}
+
+@media (min-width: 1400px) {
+  .masonry-grid {
+    column-count: 3;
+  }
+}
+
+.masonry-item {
+  break-inside: avoid;
+  margin-bottom: 12px;
+}
+
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
@@ -1172,3 +1210,4 @@ linear-gradient(180deg,#fff, #f7f7fb 60%, #f3f4f6);
     min-height: 360px;
   }
 }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Montserrat:wght@500;700&family=Playfair+Display:wght@500;700&family=Roboto+Mono:wght@400;600&display=swap');

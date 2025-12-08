@@ -152,6 +152,16 @@ const Sidebar = ({ show, onClose }) => {
           Contrast Checker
         </button>
       </li>
+      {/* <li>
+        <button
+          type="button"
+          className="nav-link link-dark text-start w-100"
+          onClick={() => handleNavigate('/mood-board')}
+        >
+          <i className="bi bi-grid-3x3-gap me-2"></i>
+          Mood Board
+        </button>
+      </li> */}
       <li>
         <button
           type="button"

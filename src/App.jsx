@@ -16,6 +16,7 @@ import Home from "./pages/Home"
 import ContrastChecker from "./pages/ContrastChecker"
 import ImageColorExtractor from './pages/ImageExtractor';
 import ColorSeason from './pages/ColorSeason';
+import MoodBoardPage from './moodboard/MoodBoardPage';
 import PwaSplash from './components/PwaSplash';
 import './index.css';
 
@@ -64,6 +65,7 @@ function App() {
                 <Route path="/contrastchecker" element={<ContrastChecker />} />
                 <Route path="/imagecolorextractor" element={<ImageColorExtractor />} />
                 <Route path="/color-season" element={<ColorSeason />} />
+                <Route path="/mood-board" element={<MoodBoardPage />} />
                 {/* <Route path="/ai-palette-generator" element={<AIPaletteGenerator />} /> */}
                 {/* Add other routes as needed */}
               </Routes>

@@ -68,7 +68,7 @@ const AI_COOLDOWN_MS = 8000;
 const AI_TIMEOUT_MS = 12000;
 const MAX_PROMPT_LENGTH = 180;
 const MIN_PROMPT_LENGTH = 6;
-const OWNER_EMAIL = "jodrey48@gmail.com";
+const OWNER_EMAIL = "jodrey48@gmail.com, heather@velsoft.com";
 const aiLockOverlayStyle = {
   position: "absolute",
   inset: 0,

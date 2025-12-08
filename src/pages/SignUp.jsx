@@ -1,5 +1,5 @@
 // src/pages/SignUp.jsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import SEO from '../components/SEO';
@@ -7,12 +7,18 @@ import { FaGoogle } from 'react-icons/fa';
 import './Login.css';
 
 const SignUp = () => {
-    const { signUp, loginWithGoogle } = useAuth();
+    const { signUp, loginWithGoogle, currentUser } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (currentUser) {
+            navigate('/');
+        }
+    }, [currentUser, navigate]);
 
     const handleEmailSignUp = async (e) => {
         e.preventDefault();

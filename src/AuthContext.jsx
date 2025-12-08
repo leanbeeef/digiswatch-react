@@ -1,16 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
-  getAuth,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signInWithPopup,
   signInWithRedirect,
   GoogleAuthProvider,
   signOut,
+  getRedirectResult,
 } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore'; // Firestore imports
-import { db } from './firebase'; // Import Firestore configuration
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from './firebase';
 
 export const AuthContext = createContext();
 
@@ -19,7 +18,6 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true); // Tracks if Firebase auth is still initializing
-  const auth = getAuth();
 
   // Fetch additional user data from Firestore
   const fetchUserData = async (user) => {
@@ -39,7 +37,9 @@ export const AuthProvider = ({ children }) => {
 
   // Track authentication state changes
   useEffect(() => {
+    let resolved = false;
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      resolved = true;
       if (user) {
         const enrichedUser = await fetchUserData(user);
         setCurrentUser(enrichedUser);
@@ -48,7 +48,34 @@ export const AuthProvider = ({ children }) => {
       }
       setLoading(false); // Authentication state initialized
     });
-    return unsubscribe; // Cleanup the listener on component unmount
+
+    // safety: if the listener never resolves (misconfig), unblock the UI after a short delay
+    const failSafe = setTimeout(() => {
+      if (!resolved) {
+        setLoading(false);
+      }
+    }, 3000);
+
+    return () => {
+      clearTimeout(failSafe);
+      unsubscribe();
+    };
+  }, [auth]);
+
+  // Handle users returning from Google redirect
+  useEffect(() => {
+    const resolveRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          const enrichedUser = await fetchUserData(result.user);
+          setCurrentUser(enrichedUser);
+        }
+      } catch (error) {
+        console.error('Google redirect error:', error);
+      }
+    };
+    resolveRedirect();
   }, [auth]);
 
   const login = async (email, password) => {
@@ -78,17 +105,9 @@ export const AuthProvider = ({ children }) => {
   const loginWithGoogle = async () => {
     try {
       const provider = new GoogleAuthProvider();
-      try {
-        const result = await signInWithPopup(auth, provider);
-        const enrichedUser = await fetchUserData(result.user);
-        setCurrentUser(enrichedUser);
-        return enrichedUser;
-      } catch (popupError) {
-        // Fallback to redirect for environments blocking popups
-        await signInWithRedirect(auth, provider);
-      }
+      await signInWithRedirect(auth, provider);
     } catch (error) {
-      console.error('Google Sign In Error:', error);
+      console.error('Google Sign In Error (redirect):', error);
       throw error;
     }
   };
@@ -113,7 +132,7 @@ export const AuthProvider = ({ children }) => {
         logout,
       }}
     >
-      {!loading && children}
+      {loading ? <div>Loading...</div> : children}
     </AuthContext.Provider>
   );
 };

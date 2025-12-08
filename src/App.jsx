@@ -21,17 +21,35 @@ import './index.css';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    try {
+      return !localStorage.getItem('pwaSplashSeen');
+    } catch {
+      return true;
+    }
+  });
 
   const openSidebar = () => setSidebarOpen(true);
   const closeSidebar = () => setSidebarOpen(false);
+
+  const handleSplashDone = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('pwaSplashSeen', '1');
+      } catch {
+        // ignore storage errors and just hide the splash
+      }
+    }
+    setShowSplash(false);
+  };
 
   return (
     <ColorProvider> {/* Wrap the entire app in ColorProvider */}
       <AuthProvider>
         <Router>
           <div className="full-page">
-            <PwaSplash show={showSplash} onDone={() => setShowSplash(false)} />
+            <PwaSplash show={showSplash} onDone={handleSplashDone} />
             <Header onOpenSidebar={openSidebar} />
             <Sidebar show={sidebarOpen} onClose={closeSidebar} />
             <main className="main-content full-height-minus-header overflow-hidden">

@@ -399,20 +399,17 @@ const PaletteGenerator = () => {
     const timeoutId = setTimeout(() => controller.abort(), AI_TIMEOUT_MS);
 
     try {
-      const response = await fetch(
-        `${API_BASE || ""}/api/generate-palette-from-prompt`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ prompt: sanitizedPrompt }),
-          signal: controller.signal,
-        }
-      );
+      const response = await fetch(`${API_BASE || ""}/api/generate-palette-from-prompt`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: sanitizedPrompt }),
+        signal: controller.signal,
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to generate palette");
+        const errorBody = await response.text().catch(() => "");
+        console.error("AI prompt response error", response.status, errorBody);
+        throw new Error(errorBody || "Failed to generate palette");
       }
 
       const data = await response.json();
@@ -426,9 +423,17 @@ const PaletteGenerator = () => {
       if (error.name === "AbortError") {
         showAiError("Request timed out. Please try again in a moment.");
       } else {
-        showAiError(
-          "Could not generate palette from prompt. Please try again shortly."
-        );
+        let friendly = "Could not generate palette from prompt. Please try again shortly.";
+        const msg = (error?.message || "").trim();
+        if (msg) {
+          try {
+            const parsed = JSON.parse(msg);
+            friendly = parsed?.error || friendly;
+          } catch {
+            friendly = msg;
+          }
+        }
+        showAiError(friendly);
       }
     } finally {
       clearTimeout(timeoutId);

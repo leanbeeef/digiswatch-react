@@ -97,9 +97,9 @@ const SignUp = () => {
                     <p>or</p>
                     <span></span>
                 </div>
-                <button className="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2" onClick={handleGoogleSignUp} disabled={loading}>
+                {/* <button className="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2" onClick={handleGoogleSignUp} disabled={loading}>
                     <FaGoogle /> Continue with Google
-                </button>
+                </button> */}
                 <div className="auth-footer">
                     <p className="mb-1">Already have an account?</p>
                     <Link to="/login" className="auth-link">Sign in</Link>

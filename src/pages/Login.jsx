@@ -83,9 +83,9 @@ const Login = () => {
                     <p>or</p>
                     <span></span>
                 </div>
-                <button className="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2" onClick={handleGoogleLogin} disabled={loading}>
+                {/* <button className="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2" onClick={handleGoogleLogin} disabled={loading}>
                     <FaGoogle /> Continue with Google
-                </button>
+                </button> */}
                 <div className="auth-footer">
                     <p className="mb-1">Don’t have an account?</p>
                     <Link to="/signup" className="auth-link">Sign up for free</Link>

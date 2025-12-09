@@ -7,6 +7,7 @@ import {
   collection,
   collectionGroup,
   doc,
+  getDoc,
   getDocs,
   limit,
   orderBy,
@@ -14,15 +15,20 @@ import {
   where,
   writeBatch,
   increment,
-  setDoc,
 } from "firebase/firestore";
 import "../PopularPalettes.css";
 
-const formatName = (item) =>
-  item?.ownerName ||
-  item?.ownerEmail ||
-  item?.ownerId?.slice?.(0, 6) ||
-  "Creator";
+const formatName = (item, owners) => {
+  if (item?.ownerId && owners[item.ownerId]?.username) {
+    return owners[item.ownerId].username;
+  }
+  return (
+    item?.ownerName ||
+    item?.ownerEmail ||
+    item?.ownerId?.slice?.(0, 6) ||
+    "Creator"
+  );
+};
 
 const CommunityFeed = () => {
   const { currentUser } = useAuth();
@@ -32,6 +38,7 @@ const CommunityFeed = () => {
   const [following, setFollowing] = useState(new Set());
   const [busyFollow, setBusyFollow] = useState(false);
   const [error, setError] = useState("");
+  const [ownerInfo, setOwnerInfo] = useState({});
   const [likes, setLikes] = useState({});
   const [likedPalettes, setLikedPalettes] = useState(() => {
     try {
@@ -43,6 +50,34 @@ const CommunityFeed = () => {
   });
 
   const canFollow = !!currentUser;
+
+  const fetchOwnerProfiles = async (ownerIds) => {
+    if (!ownerIds.length) return;
+    const newOwners = {};
+    await Promise.all(
+      ownerIds.map(async (id) => {
+        if (!id || ownerInfo[id]) return;
+        try {
+          const profileRef = doc(db, "users", id);
+          const profileSnap = await getDoc(profileRef);
+          if (profileSnap.exists()) {
+            newOwners[id] = {
+              username:
+                profileSnap.data().username ||
+                profileSnap.data().email?.split("@")[0] ||
+                id.slice(0, 6),
+              avatar: profileSnap.data().avatar || "",
+            };
+          }
+        } catch (err) {
+          console.warn("Failed to fetch owner profile", err);
+        }
+      })
+    );
+    if (Object.keys(newOwners).length) {
+      setOwnerInfo((prev) => ({ ...prev, ...newOwners }));
+    }
+  };
 
   useEffect(() => {
     const loadFeed = async () => {
@@ -77,6 +112,10 @@ const CommunityFeed = () => {
           };
         });
         setItems(data);
+        const ownerIds = Array.from(
+          new Set(data.map((entry) => entry.ownerId).filter(Boolean))
+        );
+        fetchOwnerProfiles(ownerIds);
       } catch (err) {
         console.error("Feed load failed", err);
         const requiresIndex =
@@ -291,75 +330,70 @@ const CommunityFeed = () => {
               key={`${item.ownerId || "anon"}-${item.id}`}
             >
               <div className="pp-card h-100">
-                <div className="pp-card-body">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div>
-                      <div className="pp-palette-name mb-0">
+                  <div className="pp-card-body">
+                    <div className="d-flex justify-content-between align-items-start mb-2">
+                      <div>
+                      <div className="pp-palette-name mb-1">
                         {item.name || "Untitled palette"}
                       </div>
-                      <div className="d-flex align-items-center gap-2 text-muted small">
+                      <div className="small text-muted">
+                        By{" "}
                         <span
                           className={`d-inline-flex align-items-center gap-1 ${
                             item.ownerId ? "link-like" : ""
                           }`}
                           role={item.ownerId ? "button" : undefined}
+                          tabIndex={item.ownerId ? 0 : undefined}
                           onClick={() =>
                             item.ownerId && navigate(`/u/${item.ownerId}`)
                           }
+                          onKeyPress={(event) => {
+                            if (item.ownerId && (event.key === "Enter" || event.key === " ")) {
+                              navigate(`/u/${item.ownerId}`);
+                            }
+                          }}
                         >
                           <i className="bi bi-person-circle"></i>
-                          {formatName(item)}
+                          {formatName(item, ownerInfo)}
                         </span>
                       </div>
-                    </div>
-                    <div className="d-flex gap-2 align-items-center">
-                      <button
-                        className="pp-open-generator"
-                        onClick={() => handleOpen(item)}
-                        title="Open in Palette Generator"
-                      >
-                        <img
-                          src="/favicon.ico"
-                          alt="Open"
-                          width="18"
-                          height="18"
-                        />
-                      </button>
-                      <button
-                        className={`pp-like-inline ${
-                          likedPalettes[likeKeyFor(item)] ? "is-active" : ""
-                        }`}
-                        onClick={() => handleLike(item)}
-                        title="Like"
-                      >
-                        <i className="bi bi-heart-fill"></i>
-                        <span className="pp-like-count-inline">
-                          {likes[likeKeyFor(item)] || 0}
-                        </span>
-                      </button>
-                      {canFollow &&
-                      item.ownerId &&
-                      item.ownerId !== currentUser?.uid ? (
-                        <Button
-                          size="sm"
-                          variant={
-                            following.has(item.ownerId)
-                              ? "outline-secondary"
-                              : "primary"
-                          }
-                          disabled={busyFollow}
-                          onClick={() =>
-                            handleToggleFollow(item.ownerId, {
-                              ownerName: formatName(item),
-                              ownerAvatar: item.ownerAvatar,
-                            })
-                          }
+                      </div>
+                      <div className="d-flex gap-2 align-items-center">
+                        <button
+                          className={`pp-like-inline ${
+                            likedPalettes[likeKeyFor(item)] ? "is-active" : ""
+                          }`}
+                          onClick={() => handleLike(item)}
+                          title="Like"
                         >
-                          {following.has(item.ownerId) ? "Following" : "Follow"}
-                        </Button>
-                      ) : null}
+                          <i className="bi bi-heart-fill"></i>
+                          <span className="pp-like-count-inline">
+                            {likes[likeKeyFor(item)] || 0}
+                          </span>
+                        </button>
+                        {canFollow &&
+                        item.ownerId &&
+                        item.ownerId !== currentUser?.uid ? (
+                          <Button
+                            size="sm"
+                            variant={
+                              following.has(item.ownerId)
+                                ? "outline-secondary"
+                                : "primary"
+                            }
+                            disabled={busyFollow}
+                            onClick={() =>
+                              handleToggleFollow(item.ownerId, {
+                              ownerName: formatName(item, ownerInfo),
+                                ownerAvatar: item.ownerAvatar,
+                              })
+                            }
+                          >
+                            {following.has(item.ownerId) ? "Unfollow" : "Follow"}
+                          </Button>
+                        ) : null}
+                      </div>
                     </div>
-                  </div>
 
                   <div
                     className="pp-color-strip"

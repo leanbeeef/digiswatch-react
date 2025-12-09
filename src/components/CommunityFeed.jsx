@@ -662,47 +662,49 @@ const CommunityFeed = () => {
                     />
                   </div>
                   <div className="feed-author">
-                    <span
-                      className={`feed-name ${item.ownerId ? "link-like" : ""}`}
-                      role={item.ownerId ? "button" : undefined}
-                      tabIndex={item.ownerId ? 0 : undefined}
-                      onClick={() =>
-                        item.ownerId && navigate(`/u/${item.ownerId}`)
-                      }
-                      onKeyDown={(event) => {
-                        if (
-                          item.ownerId &&
-                          (event.key === "Enter" || event.key === " ")
-                        ) {
-                          navigate(`/u/${item.ownerId}`);
+                    <div className="d-flex align-items-center flex-wrap">
+                      <span
+                        className={`feed-name ${item.ownerId ? "link-like" : ""}`}
+                        role={item.ownerId ? "button" : undefined}
+                        tabIndex={item.ownerId ? 0 : undefined}
+                        onClick={() =>
+                          item.ownerId && navigate(`/u/${item.ownerId}`)
                         }
-                      }}
-                    >
-                      {formatName(item, ownerInfo)}
-                    </span>
-                    {item.ownerId && item.ownerId !== currentUser?.uid ? (
-                      <button
-                        className={`btn btn-link btn-sm p-0 ms-2 text-decoration-none ${following.has(item.ownerId)
-                            ? "text-muted"
-                            : "text-primary fw-bold"
-                          }`}
-                        style={{ fontSize: "0.85rem", verticalAlign: "baseline" }}
-                        disabled={busyFollow}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (!currentUser) {
-                            alert("Please log in to follow creators.");
-                            return;
+                        onKeyDown={(event) => {
+                          if (
+                            item.ownerId &&
+                            (event.key === "Enter" || event.key === " ")
+                          ) {
+                            navigate(`/u/${item.ownerId}`);
                           }
-                          handleToggleFollow(item.ownerId, {
-                            ownerName: formatName(item, ownerInfo),
-                            ownerAvatar: item.ownerAvatar,
-                          });
                         }}
                       >
-                        {following.has(item.ownerId) ? "Unfollow" : "Follow"}
-                      </button>
-                    ) : null}
+                        {formatName(item, ownerInfo)}
+                      </span>
+                      {item.ownerId && item.ownerId !== currentUser?.uid ? (
+                        <button
+                          className={`btn btn-link btn-sm p-0 ms-2 text-decoration-none ${following.has(item.ownerId)
+                              ? "text-muted"
+                              : "text-primary fw-bold"
+                            }`}
+                          style={{ fontSize: "0.85rem", verticalAlign: "baseline" }}
+                          disabled={busyFollow}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!currentUser) {
+                              alert("Please log in to follow creators.");
+                              return;
+                            }
+                            handleToggleFollow(item.ownerId, {
+                              ownerName: formatName(item, ownerInfo),
+                              ownerAvatar: item.ownerAvatar,
+                            });
+                          }}
+                        >
+                          {following.has(item.ownerId) ? "Unfollow" : "Follow"}
+                        </button>
+                      ) : null}
+                    </div>
                     <span className="feed-time text-muted">
                       {timeAgo(item.createdAt)}
                     </span>

@@ -585,6 +585,11 @@ const PaletteGenerator = () => {
       return;
     }
     try {
+      console.log("handleSave: start", {
+        uid: currentUser.uid,
+        paletteName,
+        colors: palette.map((c) => c.hex),
+      });
       await setDoc(
         doc(collection(db, "users", currentUser.uid, "createdPalettes")),
         {
@@ -605,7 +610,11 @@ const PaletteGenerator = () => {
       setPaletteName("");
       setShowSaveModal(false);
     } catch (error) {
-      setToast({ show: true, message: "Failed to save palette" });
+      console.error("handleSave: failed", error);
+      setToast({
+        show: true,
+        message: `Failed to save palette: ${error?.message || "unknown error"}`,
+      });
     }
   };
 

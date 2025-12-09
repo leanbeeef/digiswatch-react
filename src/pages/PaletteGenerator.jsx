@@ -162,6 +162,7 @@ const PaletteGenerator = () => {
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiStatus, setAiStatus] = useState("idle"); // idle | loading | success | error
   const [aiError, setAiError] = useState("");
+  const [paletteDescription, setPaletteDescription] = useState("");
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const [aiUsesLeft, setAiUsesLeft] = useState(10);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -589,6 +590,7 @@ const PaletteGenerator = () => {
         uid: currentUser.uid,
         paletteName,
         colors: palette.map((c) => c.hex),
+        description: paletteDescription,
       });
       await setDoc(
         doc(collection(db, "users", currentUser.uid, "createdPalettes")),
@@ -597,17 +599,19 @@ const PaletteGenerator = () => {
           colors: palette.map((c) => c.hex),
           createdAt: new Date().toISOString(),
           visibility: "public", // default to public so community can see it
+          description: paletteDescription || "",
           ownerId: currentUser.uid,
           ownerName:
             currentUser.displayName ||
             currentUser.email?.split("@")[0] ||
             "Creator",
-          ownerAvatar: currentUser.photoURL || "",
+          ownerAvatar: currentUser.avatar || currentUser.photoURL || "",
           ownerEmail: currentUser.email || "",
         }
       );
       setToast({ show: true, message: "Palette saved successfully!" });
       setPaletteName("");
+      setPaletteDescription("");
       setShowSaveModal(false);
     } catch (error) {
       console.error("handleSave: failed", error);
@@ -1133,6 +1137,13 @@ const PaletteGenerator = () => {
               value={paletteName}
               onChange={(e) => setPaletteName(e.target.value)}
               placeholder="Enter palette name"
+            />
+            <textarea
+              className="form-control mt-3"
+              value={paletteDescription}
+              onChange={(e) => setPaletteDescription(e.target.value)}
+              placeholder="Add a short description (optional)"
+              rows={3}
             />
           </Modal.Body>
           <Modal.Footer>

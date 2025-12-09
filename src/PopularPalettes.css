@@ -171,6 +171,185 @@
     text-decoration: underline;
 }
 
+/* Feed */
+.feed-shell {
+    background: #f5f7fb;
+    width: 100%;
+    padding: 2rem;
+}
+
+.feed-header .eyebrow {
+    letter-spacing: 0.08em;
+    font-size: 0.72rem;
+}
+
+.feed-stream {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.feed-card {
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 16px;
+    padding: 14px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+.feed-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: space-between;
+}
+
+.feed-avatar img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.feed-author {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.feed-name {
+    font-weight: 700;
+}
+
+.feed-time {
+    font-size: 0.85rem;
+}
+
+.feed-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.feed-title {
+    font-weight: 700;
+    margin-top: 8px;
+}
+
+.feed-desc {
+    margin-top: 4px;
+}
+
+.feed-strip {
+    margin-top: 10px;
+}
+
+.feed-footer {
+    margin-top: 10px;
+}
+
+.feed-comments {
+    margin-top: 10px;
+    background: #f8fafc;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+    padding: 10px;
+}
+
+.feed-comment {
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.feed-comment:last-child {
+    border-bottom: none;
+}
+
+.feed-comment-input {
+    margin-bottom: 8px;
+}
+
+.feed-comment-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.feed-comment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.feed-comment-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.feed-comment-body {
+    background: #fff;
+    border-radius: 10px;
+    padding: 6px 10px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    flex: 1;
+}
+
+.feed-comment-meta {
+    font-size: 0.85rem;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.feed-comment-text {
+    font-size: 0.95rem;
+    margin-top: 2px;
+}
+
+.feed-comment-preview {
+    margin-top: 10px;
+}
+
+.feed-comment-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.feed-comment-like-btn {
+    border: none;
+    background: transparent;
+    color: #6c757d;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    font-weight: 600;
+}
+
+.feed-comment-like-btn.is-active {
+    color: #e63946;
+}
+
+.feed-comment-delete-btn {
+    border: none;
+    background: transparent;
+    color: #6c757d;
+    font-size: 0.85rem;
+    padding: 0;
+}
+
+.feed-comment-delete-btn:hover {
+    color: #d00000;
+}
+
 /* Color Strip Animation */
 .pp-color-strip {
     display: flex;

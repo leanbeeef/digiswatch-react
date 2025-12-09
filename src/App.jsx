@@ -13,6 +13,7 @@ import SignUp from "./pages/SignUp";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile"
 import PublicProfile from "./pages/PublicProfile"
+import LiveFeed from "./pages/LiveFeed"
 import Home from "./pages/Home"
 import ContrastChecker from "./pages/ContrastChecker"
 import ImageColorExtractor from './pages/ImageExtractor';
@@ -64,6 +65,7 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/u/:userId" element={<PublicProfile />} />
+                <Route path="/feed" element={<LiveFeed />} />
                 <Route path="/contrastchecker" element={<ContrastChecker />} />
                 <Route path="/imagecolorextractor" element={<ImageColorExtractor />} />
                 <Route path="/color-season" element={<ColorSeason />} />

@@ -132,7 +132,7 @@ const Sidebar = ({ show, onClose }) => {
             AI Palette Generator
           </a>
         </li> */}
-        <li>
+      <li>
         <button
           type="button"
           className="nav-link link-dark text-start w-100"
@@ -182,6 +182,16 @@ const Sidebar = ({ show, onClose }) => {
           Color Season
         </button>
       </li>
+      <li>
+        <button
+          type="button"
+          className="nav-link link-dark text-start w-100"
+          onClick={() => handleNavigate('/feed')}
+        >
+          <i className="bi bi-people me-2"></i>
+          Live Feed
+        </button>
+      </li>
         {/* <li>
           <a
             href="#"
@@ -205,7 +215,16 @@ const Sidebar = ({ show, onClose }) => {
               aria-expanded="false"
             >
               <img
-                src={currentUser.avatar || 'https://via.placeholder.com/32'}
+                src={(currentUser.avatar || currentUser.photoURL || (() => {
+                  const name = currentUser.username || currentUser.email || "User";
+                  const initials = name.slice(0, 2).toUpperCase();
+                  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'>
+                    <rect width='64' height='64' rx='12' fill='%230D6EFD'/>
+                    <text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle'
+                      fill='%23fff' font-family='Inter,Arial' font-size='24' font-weight='700'>${initials}</text>
+                  </svg>`;
+                  return `data:image/svg+xml;base64,${btoa(svg)}`;
+                })())}
                 alt="User Avatar"
                 width="32"
                 height="32"

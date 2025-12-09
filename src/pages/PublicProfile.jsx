@@ -175,50 +175,85 @@ const PublicProfile = () => {
 
   return (
     <Container className="py-5">
-      <div className="d-flex align-items-center gap-3 mb-4 justify-content-between">
-        <img
-          src={profile?.avatar || "/favicon.ico"}
-          alt={profile?.username || "User"}
-          className="rounded-circle border"
-          style={{ width: 72, height: 72, objectFit: "cover" }}
-          />
-        <div>
-          <h2 className="h4 mb-1">{profile?.username || "Creator"}</h2>
-          <div className="text-muted small d-flex gap-3 flex-wrap">
-            <span>{profile?.followersCount || 0} followers</span>
-            <span>{profile?.followingCount || 0} following</span>
+      {/* Profile Header Card */}
+      <div className="profile-header-card bg-white rounded-4 shadow-sm p-4 mb-5 text-center position-relative overflow-hidden">
+        <div
+          className="position-absolute top-0 start-0 w-100"
+          style={{ height: "6px", background: "linear-gradient(90deg, #0d6efd, #6610f2)" }}
+        ></div>
+
+        <div className="d-flex flex-column align-items-center">
+          <div className="mb-3 position-relative">
+            <img
+              src={profile?.avatar || "/favicon.ico"}
+              alt={profile?.username || "User"}
+              className="rounded-circle border border-3 border-white shadow-sm"
+              style={{ width: 120, height: 120, objectFit: "cover" }}
+            />
           </div>
-        </div>
-        {currentUser && currentUser.uid !== userId && (
-          <div className="ms-auto">
+
+          <h1 className="h3 fw-bold mb-1">{profile?.username || "Creator"}</h1>
+          <p className="text-muted mb-3 small">
+            Digital Creator • Joined {new Date(profile?.createdAt || Date.now()).toLocaleDateString()}
+          </p>
+
+          <div className="d-flex gap-4 justify-content-center mb-4">
+            <div className="text-center">
+              <div className="fw-bold h5 mb-0">{profile?.followersCount || 0}</div>
+              <div className="text-muted small text-uppercase">Followers</div>
+            </div>
+            <div className="border-end"></div>
+            <div className="text-center">
+              <div className="fw-bold h5 mb-0">{profile?.followingCount || 0}</div>
+              <div className="text-muted small text-uppercase">Following</div>
+            </div>
+          </div>
+
+          {currentUser?.uid !== userId && (
             <Button
-              variant={isFollowing ? "outline-danger" : "primary"}
-              onClick={toggleFollow}
+              variant={isFollowing ? "outline-secondary" : "dark"}
+              className="px-4 rounded-pill fw-bold d-flex align-items-center gap-2"
+              onClick={() => {
+                if (!currentUser) {
+                  alert("Please log in to follow creators.");
+                  return;
+                }
+                toggleFollow();
+              }}
               disabled={followLoading}
             >
-              {isFollowing ? "Unfollow" : "Follow"}
+              {isFollowing ? (
+                <>
+                  <i className="bi bi-person-check-fill"></i> Following
+                </>
+              ) : (
+                <>
+                  <i className="bi bi-person-plus-fill"></i> Follow
+                </>
+              )}
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      <h3 className="h5 mb-3">Visible palettes</h3>
+      <h3 className="h5 mb-3 fw-bold ps-2 border-start border-4 border-primary">Visible palettes</h3>
       {palettes.length === 0 ? (
-        <Alert variant="light">No public palettes yet.</Alert>
+        <div className="text-center py-5 bg-light rounded-4">
+          <i className="bi bi-palette display-4 text-muted mb-3 d-block"></i>
+          <p className="text-muted lead mb-0">No public palettes yet.</p>
+          <p className="small text-muted">Check back later or follow this creator to get notified.</p>
+        </div>
       ) : (
         <Row className="g-3">
           {palettes.map((palette) => (
             <Col xs={12} md={6} lg={4} key={palette.id}>
-              <div className="pp-card h-100">
+              <div className="pp-card h-100 shadow-sm border-0">
                 <div className="pp-card-body">
                   <div className="pp-card-head">
-                    <div className="pp-palette-name mb-0">{palette.name || "Palette"}</div>
+                    <div className="pp-palette-name mb-0 fw-bold">{palette.name || "Palette"}</div>
                     <div className="d-flex gap-1 align-items-center">
-                      <Badge bg="light" text="dark">
-                        Public
-                      </Badge>
                       <button
-                        className="pp-open-generator"
+                        className="pp-open-generator border-0 bg-transparent p-1 bg-hover-light rounded"
                         onClick={() => handleOpen(palette)}
                         title="Open in Palette Generator"
                       >
@@ -227,7 +262,7 @@ const PublicProfile = () => {
                     </div>
                   </div>
 
-                  <div className="pp-color-strip">
+                  <div className="pp-color-strip rounded mb-3 flow-hidden">
                     {(palette.colors || []).map((color, idx) => (
                       <div
                         key={idx}
@@ -239,9 +274,9 @@ const PublicProfile = () => {
                     ))}
                   </div>
 
-                  <div className="pp-actions">
+                  <div className="pp-actions border-top pt-2 mt-auto">
                     <button
-                      className="pp-action-ghost"
+                      className="pp-action-ghost w-50 justify-content-center"
                       onClick={() => {
                         setSelectedPalette({
                           name: palette.name || "Palette",
@@ -253,7 +288,7 @@ const PublicProfile = () => {
                       <i className="bi bi-share-fill"></i>
                       <span>Share</span>
                     </button>
-                    <button className="pp-action-ghost" onClick={() => handleOpen(palette)}>
+                    <button className="pp-action-ghost w-50 justify-content-center" onClick={() => handleOpen(palette)}>
                       <i className="bi bi-rocket-takeoff-fill"></i>
                       <span>Open</span>
                     </button>

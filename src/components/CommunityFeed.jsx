@@ -680,6 +680,29 @@ const CommunityFeed = () => {
                     >
                       {formatName(item, ownerInfo)}
                     </span>
+                    {item.ownerId && item.ownerId !== currentUser?.uid ? (
+                      <button
+                        className={`btn btn-link btn-sm p-0 ms-2 text-decoration-none ${following.has(item.ownerId)
+                            ? "text-muted"
+                            : "text-primary fw-bold"
+                          }`}
+                        style={{ fontSize: "0.85rem", verticalAlign: "baseline" }}
+                        disabled={busyFollow}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!currentUser) {
+                            alert("Please log in to follow creators.");
+                            return;
+                          }
+                          handleToggleFollow(item.ownerId, {
+                            ownerName: formatName(item, ownerInfo),
+                            ownerAvatar: item.ownerAvatar,
+                          });
+                        }}
+                      >
+                        {following.has(item.ownerId) ? "Unfollow" : "Follow"}
+                      </button>
+                    ) : null}
                     <span className="feed-time text-muted">
                       {timeAgo(item.createdAt)}
                     </span>
@@ -687,7 +710,7 @@ const CommunityFeed = () => {
                   <div className="feed-actions">
                     <button
                       className="pp-open-generator"
-                      onClick={() => handleOpenInGenerator(palette)}
+                      onClick={() => handleOpenInGenerator(item)}
                       title="Open in Palette Generator"
                     >
                       <img
@@ -698,9 +721,8 @@ const CommunityFeed = () => {
                       />
                     </button>
                     <button
-                      className={`pp-like-inline ${
-                        likedPalettes[likeKeyFor(item)] ? "is-active" : ""
-                      }`}
+                      className={`pp-like-inline ${likedPalettes[likeKeyFor(item)] ? "is-active" : ""
+                        }`}
                       onClick={() => handleLike(item)}
                       title="Like"
                     >
@@ -709,27 +731,7 @@ const CommunityFeed = () => {
                         {likes[likeKeyFor(item)] || 0}
                       </span>
                     </button>
-                    {canFollow &&
-                    item.ownerId &&
-                    item.ownerId !== currentUser?.uid ? (
-                      <Button
-                        size="sm"
-                        variant={
-                          following.has(item.ownerId)
-                            ? "outline-secondary"
-                            : "primary"
-                        }
-                        disabled={busyFollow}
-                        onClick={() =>
-                          handleToggleFollow(item.ownerId, {
-                            ownerName: formatName(item, ownerInfo),
-                            ownerAvatar: item.ownerAvatar,
-                          })
-                        }
-                      >
-                        {following.has(item.ownerId) ? "Unfollow" : "Follow"}
-                      </Button>
-                    ) : null}
+
                   </div>
                 </div>
 
@@ -799,9 +801,9 @@ const CommunityFeed = () => {
                           <div>
                             <strong className="me-2">
                               {commentPreviews[key].authorId &&
-                              ownerInfo[commentPreviews[key].authorId]?.username
+                                ownerInfo[commentPreviews[key].authorId]?.username
                                 ? ownerInfo[commentPreviews[key].authorId]
-                                    .username
+                                  .username
                                 : commentPreviews[key].authorName || "User"}
                             </strong>
                             <span className="text-muted">
@@ -810,11 +812,10 @@ const CommunityFeed = () => {
                           </div>
                           <div className="feed-comment-actions">
                             <button
-                              className={`feed-comment-like-btn ${
-                                commentLiked[commentPreviews[key].id]
-                                  ? "is-active"
-                                  : ""
-                              }`}
+                              className={`feed-comment-like-btn ${commentLiked[commentPreviews[key].id]
+                                ? "is-active"
+                                : ""
+                                }`}
                               onClick={() =>
                                 toggleCommentLike(item, commentPreviews[key])
                               }
@@ -922,9 +923,8 @@ const CommunityFeed = () => {
                               </div>
                               <div className="feed-comment-actions">
                                 <button
-                                  className={`feed-comment-like-btn ${
-                                    commentLiked[c.id] ? "is-active" : ""
-                                  }`}
+                                  className={`feed-comment-like-btn ${commentLiked[c.id] ? "is-active" : ""
+                                    }`}
                                   onClick={() => toggleCommentLike(item, c)}
                                 >
                                   <i className="bi bi-heart-fill"></i>
@@ -932,14 +932,14 @@ const CommunityFeed = () => {
                                 </button>
                                 {(currentUser?.uid === c.authorId ||
                                   currentUser?.uid === item.ownerId) && (
-                                  <button
-                                    className="feed-comment-delete-btn"
-                                    onClick={() => deleteComment(item, c)}
-                                    aria-label="Delete comment"
-                                  >
-                                    <i className="bi bi-trash"></i>
-                                  </button>
-                                )}
+                                    <button
+                                      className="feed-comment-delete-btn"
+                                      onClick={() => deleteComment(item, c)}
+                                      aria-label="Delete comment"
+                                    >
+                                      <i className="bi bi-trash"></i>
+                                    </button>
+                                  )}
                               </div>
                             </div>
 
@@ -970,10 +970,10 @@ const CommunityFeed = () => {
                             <div className="feed-comment-meta">
                               <strong className="me-2">
                                 {commentPreviews[key].authorId &&
-                                ownerInfo[commentPreviews[key].authorId]
-                                  ?.username
+                                  ownerInfo[commentPreviews[key].authorId]
+                                    ?.username
                                   ? ownerInfo[commentPreviews[key].authorId]
-                                      .username
+                                    .username
                                   : commentPreviews[key].authorName || "User"}
                               </strong>
                               <span className="text-muted">

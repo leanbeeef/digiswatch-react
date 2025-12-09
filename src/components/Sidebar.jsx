@@ -116,22 +116,22 @@ const Sidebar = ({ show, onClose }) => {
         <button
           type="button"
           className="nav-link link-dark text-start w-100"
+          onClick={() => handleNavigate('/feed')}
+        >
+          <i className="bi bi-people me-2"></i>
+          Live Feed
+        </button>
+      </li>
+      <li>
+        <button
+          type="button"
+          className="nav-link link-dark text-start w-100"
           onClick={() => handleNavigate('/palette-generator')}
         >
           <i className="bi bi-speedometer2 me-2"></i>
           Palette Generator
         </button>
       </li>
-        {/* <li>
-          <a
-            href="#"
-            className="nav-link link-dark"
-            onClick={() => handleNavigate('/ai-palette-generator')}
-          >
-            <i className="bi bi-stars me-2"></i>
-            AI Palette Generator
-          </a>
-        </li> */}
       <li>
         <button
           type="button"
@@ -180,16 +180,6 @@ const Sidebar = ({ show, onClose }) => {
         >
           <i className="bi bi-brush me-2"></i>
           Color Season
-        </button>
-      </li>
-      <li>
-        <button
-          type="button"
-          className="nav-link link-dark text-start w-100"
-          onClick={() => handleNavigate('/feed')}
-        >
-          <i className="bi bi-people me-2"></i>
-          Live Feed
         </button>
       </li>
         {/* <li>

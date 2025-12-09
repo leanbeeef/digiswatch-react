@@ -98,6 +98,7 @@ const PopularPalettes = () => {
 
   const fetchSavedPalettes = async () => {
     try {
+      console.log("Saving palette", palette.name, currentUser.uid);
       const palettesCollectionRef = collection(db, "users", currentUser.uid, "palettes");
       const querySnapshot = await getDocs(palettesCollectionRef);
       const saved = {};

@@ -162,6 +162,15 @@
     background: #f8fafc;
 }
 
+.link-like {
+    cursor: pointer;
+    color: #0d6efd;
+}
+
+.link-like:hover {
+    text-decoration: underline;
+}
+
 /* Color Strip Animation */
 .pp-color-strip {
     display: flex;

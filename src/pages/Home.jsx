@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import '../PopularPalettes.css';
+import CommunityFeed from '../components/CommunityFeed';
 import SEO from '../components/SEO';
 import popularPalettes from '../utils/paletteData';
 import heroSectionBg from '../assets/hero_section_bg.svg';
@@ -305,6 +306,13 @@ const Home = () => {
                 </Col>
               ))}
             </Row>
+          </Container>
+        </section>
+
+        {/* COMMUNITY FEED */}
+        <section className="py-5 bg-light">
+          <Container>
+            <CommunityFeed />
           </Container>
         </section>
 

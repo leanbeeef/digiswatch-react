@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { useAuth } from '../AuthContext';
 import { db } from '../firebase';
-import { doc, collection, getDocs, getDoc, updateDoc, setDoc, deleteDoc } from 'firebase/firestore';
+import { doc, collection, getDocs, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import SharePalette from '../components/SharePalette';
 import avatars from '../utils/avatarImages';
 import OnboardingModal from '../components/OnboardingModal';
@@ -83,7 +83,11 @@ const Profile = () => {
 
       if (docSnap.exists()) {
         const data = docSnap.data();
-        setProfileData(data);
+        setProfileData({
+          followersCount: data.followersCount || 0,
+          followingCount: data.followingCount || 0,
+          ...data,
+        });
         setNewUsername(data.username || '');
         setNewEmail(currentUser.email || '');
         setAvatar(data.avatar || avatars[0].src);
@@ -96,6 +100,8 @@ const Profile = () => {
           avatar: avatars[0].src,
           onboardingComplete: false,
           usageGoal: '',
+          followersCount: 0,
+          followingCount: 0,
         };
         await setDoc(profileDoc, seed, { merge: true });
         setProfileData(seed);
@@ -171,11 +177,16 @@ const Profile = () => {
   const handleUpdateProfile = async () => {
     try {
       const profileDocRef = doc(db, 'users', currentUser.uid);
-      await updateDoc(profileDocRef, {
-        username: newUsername,
-        email: newEmail,
-        avatar,
-      });
+      await setDoc(
+        profileDocRef,
+        {
+          username: newUsername,
+          email: newEmail,
+          avatar,
+          updatedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      );
 
       setToastMessage('Profile updated successfully!');
       setShowToast(true);
@@ -315,6 +326,10 @@ const Profile = () => {
                 />
                 <h5 className="my-3">{profileData.username || 'Your Name'}</h5>
                 <p className="text-muted my-3">{profileData.email}</p>
+                <div className="d-flex justify-content-center gap-3 text-muted mb-2 small">
+                  <span><strong>{profileData.followersCount || 0}</strong> followers</span>
+                  <span><strong>{profileData.followingCount || 0}</strong> following</span>
+                </div>
                 <Button variant="primary my-3" onClick={() => setEditingProfile(true)}>
                   Edit Profile
                 </Button>

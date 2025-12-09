@@ -12,6 +12,7 @@ import ColorProvider from './ColorContext';
 import SignUp from "./pages/SignUp";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile"
+import PublicProfile from "./pages/PublicProfile"
 import Home from "./pages/Home"
 import ContrastChecker from "./pages/ContrastChecker"
 import ImageColorExtractor from './pages/ImageExtractor';
@@ -62,6 +63,7 @@ function App() {
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/u/:userId" element={<PublicProfile />} />
                 <Route path="/contrastchecker" element={<ContrastChecker />} />
                 <Route path="/imagecolorextractor" element={<ImageColorExtractor />} />
                 <Route path="/color-season" element={<ColorSeason />} />

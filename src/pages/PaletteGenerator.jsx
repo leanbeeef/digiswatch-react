@@ -15,6 +15,7 @@ import ColorScalesCard from "../components/ColorScalesCard"; // ADD THIS
 import ColorVisualizerCard from "../components/ColorVisualizerCard"; // ADD THIS
 import AccessibilityCard from "../components/AccessibilityCard";
 import DashboardSettings from "../components/DashboardSettings"; // ADD THIS
+import ColorEditorDrawer from "../components/ColorEditorDrawer";
 import { getColorContext } from "../utils/getColorContext";
 import {
   CARD_TYPES,
@@ -97,6 +98,8 @@ const PaletteGenerator = () => {
   const [palette, setPalette] = useState([]);
   // dashboardActive is no longer needed as it's always visible, but we'll keep the logic simple
   const [selectedColor, setSelectedColor] = useState(null);
+  const [showColorEditor, setShowColorEditor] = useState(false);
+  const [editingColorIndex, setEditingColorIndex] = useState(null);
   const [colorInfo, setColorInfo] = useState(null);
   const [harmonies, setHarmonies] = useState(null);
   const [context, setContext] = useState(null);
@@ -457,6 +460,13 @@ const PaletteGenerator = () => {
     }
   }, [palette]);
 
+  useEffect(() => {
+    if (editingColorIndex !== null && !palette[editingColorIndex]) {
+      setShowColorEditor(false);
+      setEditingColorIndex(null);
+    }
+  }, [palette, editingColorIndex]);
+
   const handleColorClick = (color) => {
     setSelectedColor(color);
     setColorInfo(getColorInfo(color));
@@ -469,6 +479,34 @@ const PaletteGenerator = () => {
       tetradic: generateTetradic(color),
     });
     setContext(getColorContext(color));
+  };
+
+  const handlePaletteColorClick = (colorHex, index) => {
+    handleColorClick(colorHex);
+    setEditingColorIndex(index);
+    setShowColorEditor(true);
+  };
+
+  const updateColorAtIndex = (index, nextHex) => {
+    const normalizedHex = new TinyColor(nextHex).toHexString();
+    setPalette((prev) =>
+      prev.map((c, i) =>
+        i === index
+          ? {
+            ...c,
+            hex: normalizedHex,
+            name: namer(normalizedHex).ntc[0].name,
+            textColor: getTextColor(normalizedHex),
+          }
+          : c
+      )
+    );
+    handleColorClick(normalizedHex);
+  };
+
+  const handleColorEditorChange = (nextHex) => {
+    if (editingColorIndex === null) return;
+    updateColorAtIndex(editingColorIndex, nextHex);
   };
 
   const handleHarmonySelect = (harmonyColors) => {
@@ -554,6 +592,13 @@ const PaletteGenerator = () => {
           colors: palette.map((c) => c.hex),
           createdAt: new Date().toISOString(),
           visibility: "public", // default to public so community can see it
+          ownerId: currentUser.uid,
+          ownerName:
+            currentUser.displayName ||
+            currentUser.email?.split("@")[0] ||
+            "Creator",
+          ownerAvatar: currentUser.photoURL || "",
+          ownerEmail: currentUser.email || "",
         }
       );
       setToast({ show: true, message: "Palette saved successfully!" });
@@ -627,7 +672,7 @@ const PaletteGenerator = () => {
                 backgroundColor: color.hex,
                 color: color.textColor,
               }}
-              onClick={() => handleColorClick(color.hex)}
+              onClick={() => handlePaletteColorClick(color.hex, index)}
               draggable
               onDragStart={(e) => handlePaletteDragStart(e, index)}
               onDragOver={handlePaletteDragOver}
@@ -1326,6 +1371,16 @@ const PaletteGenerator = () => {
             }}
           />
         )}
+        <ColorEditorDrawer
+          show={showColorEditor}
+          color={
+            editingColorIndex !== null && palette[editingColorIndex]
+              ? palette[editingColorIndex].hex
+              : selectedColor || "#7b5bff"
+          }
+          onClose={() => setShowColorEditor(false)}
+          onChange={handleColorEditorChange}
+        />
       </Container>
     </DndProvider>
   );

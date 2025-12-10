@@ -96,7 +96,7 @@ const SignUp = () => {
                     />
                     <div className="d-flex justify-content-center my-3">
                         <ReCAPTCHA
-                            sitekey="6Lc4SicsAAAAAA43mQ8KgW9QuKVAdqGGMKihBISQ"
+                            sitekey="6Lc3TScsAAAAAIhFxSLw2LK1qhu7SyhIlBLdfQ6V"
                             onChange={(token) => setCaptchaToken(token)}
                             theme="light"
                         />

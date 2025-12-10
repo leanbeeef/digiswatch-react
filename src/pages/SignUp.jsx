@@ -4,6 +4,7 @@ import { useAuth } from '../AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { FaGoogle } from 'react-icons/fa';
+import ReCAPTCHA from 'react-google-recaptcha';
 import './Login.css';
 
 const SignUp = () => {
@@ -12,6 +13,7 @@ const SignUp = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [captchaToken, setCaptchaToken] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -23,6 +25,10 @@ const SignUp = () => {
     const handleEmailSignUp = async (e) => {
         e.preventDefault();
         try {
+            if (!captchaToken) {
+                setError('Please verify you are not a robot.');
+                return;
+            }
             setLoading(true);
             setError('');
             await signUp(email, password);
@@ -88,7 +94,14 @@ const SignUp = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                     />
-                    <button type="submit" className="btn btn-primary w-100 mt-4" disabled={loading}>
+                    <div className="d-flex justify-content-center my-3">
+                        <ReCAPTCHA
+                            sitekey="6Lc4SicsAAAAAA43mQ8KgW9QuKVAdqGGMKihBISQ"
+                            onChange={(token) => setCaptchaToken(token)}
+                            theme="light"
+                        />
+                    </div>
+                    <button type="submit" className="btn btn-primary w-100 mt-2" disabled={loading}>
                         {loading ? 'Creating account...' : 'Sign up'}
                     </button>
                 </form>

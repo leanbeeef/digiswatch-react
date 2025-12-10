@@ -146,7 +146,7 @@ export const AuthProvider = ({ children }) => {
         logout,
       }}
     >
-      {loading ? <div>Loading...</div> : children}
+      {loading ? <div></div> : children}
     </AuthContext.Provider>
   );
 };

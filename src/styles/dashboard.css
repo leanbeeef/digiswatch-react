@@ -59,6 +59,7 @@
 /* Card Base Styles */
 .dashboard-card {
   background: var(--card-bg);
+  border: 1px solid var(--dashboard-border);
   border-radius: var(--card-border-radius);
   box-shadow: var(--card-shadow-sm);
   padding: var(--card-padding);

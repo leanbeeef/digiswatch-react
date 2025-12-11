@@ -666,6 +666,18 @@ const PaletteGenerator = () => {
     return visibleCards.includes(cardType);
   };
 
+  const handleExpandAll = () => {
+    const allExpanded = {};
+    visibleCards.forEach((cardId) => {
+      allExpanded[cardId] = true;
+    });
+    setExpandedCards(allExpanded);
+  };
+
+  const handleCollapseAll = () => {
+    setExpandedCards({});
+  };
+
   return (
     <DndProvider backend={HTML5Backend}>
       <SEO
@@ -848,6 +860,32 @@ const PaletteGenerator = () => {
                       className="dashboard-icon-btn"
                     >
                       <i className="bi bi-sliders"></i>
+                    </Button>
+                    <div className="vr mx-1"></div>
+                    <Button
+                      variant="outline-secondary"
+                      size="sm"
+                      onClick={
+                        visibleCards.length > 0 &&
+                          visibleCards.every((id) => expandedCards[id])
+                          ? handleCollapseAll
+                          : handleExpandAll
+                      }
+                      title={
+                        visibleCards.length > 0 &&
+                          visibleCards.every((id) => expandedCards[id])
+                          ? "Collapse All"
+                          : "Expand All"
+                      }
+                      className="dashboard-icon-btn"
+                    >
+                      <i
+                        className={`bi ${visibleCards.length > 0 &&
+                          visibleCards.every((id) => expandedCards[id])
+                          ? "bi-arrows-angle-contract"
+                          : "bi-arrows-angle-expand"
+                          }`}
+                      ></i>
                     </Button>
                     <Button
                       variant={

@@ -7,65 +7,19 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import '../PopularPalettes.css';
+import '../styles/Home.css'; // New styles
 import CommunityFeed from '../components/CommunityFeed';
 import SEO from '../components/SEO';
 import popularPalettes from '../utils/paletteData';
-import heroSectionBg from '../assets/hero_section_bg.svg';
+import dsGeneratorImg from '../assets/DS_generator.png';
+import dsContrastImg from '../assets/DS_contrast.png';
+import dsExtractorImg from '../assets/DS_extractor.png';
+import dsPopularImg from '../assets/DS_popular.png'; // Using for Color Season
 
 const Home = () => {
   const navigate = useNavigate();
-  const heroPalettes = useMemo(
-    () => [
-      { name: 'Studio Sunset', colors: ['#0f172a', '#1f3b73', '#2563eb', '#22c55e', '#fbbf24', '#f8fafc'] },
-      { name: 'Neon Signal', colors: ['#0b1021', '#ff3d71', '#ffb700', '#7c3aed', '#0ea5e9', '#fef9c3'] },
-      { name: 'Desert Bloom', colors: ['#1b1f3b', '#f97316', '#fcd34d', '#34d399', '#a5b4fc', '#f3f4f6'] },
-      { name: 'Nordic Air', colors: ['#0f172a', '#1d4ed8', '#38bdf8', '#22d3ee', '#a7f3d0', '#f1f5f9'] },
-    ],
-    []
-  );
-  const [demoIndex, setDemoIndex] = useState(0);
-  const activeDemo = heroPalettes[demoIndex];
 
-  const toolCards = [
-    {
-      title: 'AI Palette Generator',
-      description: 'Describe a vibe and get a curated palette with 10 daily AI runs for signed-in users.',
-      badge: 'AI',
-      cta: () => navigate('/palette-generator'),
-      chips: ['Text-to-palette', '10/day for members', 'Save & export'],
-    },
-    {
-      title: 'Palette Generator',
-      description: 'Lock favorite colors, shuffle the rest, and export to every format we use in the course.',
-      badge: 'Core tool',
-      cta: () => navigate('/palette-generator'),
-      chips: ['Lock & shuffle', 'Export PNG/SVG/JSON', 'Keyboard friendly'],
-    },
-    {
-      title: 'Contrast Checker',
-      description: 'Validate AA/AAA contrast without leaving your flow. Great for the accessibility module.',
-      badge: 'Accessibility',
-      cta: () => navigate('/contrastchecker'),
-      chips: ['WCAG AA/AAA', 'Live previews', 'Copy-safe pairs'],
-    },
-    {
-      title: 'Image Extractor',
-      description: 'Pull palettes from your inspiration shots and send them straight to the generator.',
-      badge: 'Inspiration',
-      cta: () => navigate('/imagecolorextractor'),
-      chips: ['Smart sampling', 'One-click export', 'Course presets'],
-    },
-  ];
-
-  const generatorFeatures = [
-    { icon: 'bi-magic', title: 'Smart shuffle', copy: 'Shuffle unlocked swatches while keeping locks intact.' },
-    { icon: 'bi-sliders2', title: 'Harmony presets', copy: 'Analogous, triadic, split-complimentary, tetradic in one tap.' },
-    { icon: 'bi-eye', title: 'Contrast view', copy: 'Inline WCAG checks so you catch issues before export.' },
-    { icon: 'bi-bezier', title: 'Gradient builder', copy: 'Craft smooth ramps and copy CSS instantly.' },
-    { icon: 'bi-diagram-3', title: 'OKLCH explorer', copy: 'Tweak perceptual lightness/chroma for stable palettes.' },
-    { icon: 'bi-box-arrow-up', title: 'Export kits', copy: 'Hand off as CSS, SVG, PNG, JSON, or text tokens.' },
-  ];
-
+  // Logic for the Popular Palettes cards (preserved)
   const handleOpenInGenerator = (palette) => {
     navigate('/palette-generator', { state: { palette } });
   };
@@ -74,195 +28,211 @@ const Home = () => {
     try {
       await navigator.clipboard.writeText(value);
     } catch {
-      // noop if clipboard not available
+      // noop
     }
   };
 
-  const shuffleDemo = () => {
-    setDemoIndex((prev) => (prev + 1) % heroPalettes.length);
-  };
+  const [oklch, setOklch] = useState({ l: 0.95, c: 0.05, h: 240 });
 
   useEffect(() => {
-    const id = setInterval(() => {
-      setDemoIndex((prev) => (prev + 1) % heroPalettes.length);
-    }, 6000);
-    return () => clearInterval(id);
+    // Randomize on mount
+    setOklch({
+      l: 0.90 + Math.random() * 0.08, // Keep it very light (90-98%) for contrast
+      c: 0.05 + Math.random() * 0.1,  // Subtle to Vibrant (0.05-0.15)
+      h: Math.floor(Math.random() * 360)
+    });
   }, []);
 
   return (
     <>
       <SEO
-        title="Free Color Palette Generator & Popular Color Schemes"
-        description="DigiSwatch is your digital color palette playground. Generate custom color schemes, explore trending palettes, check contrast ratios, and create accessible designs."
+        title="DigiSwatch - Modern Color Tools for Creators"
+        description="DigiSwatch is your digital color palette playground. Generate custom color schemes, explore trending palettes, check contrast, and more."
         keywords="color palette generator, popular color palettes, design colors, contrast checker, accessible color schemes, DigiSwatch"
         url="/"
       />
 
-      <section className="home-shell">
-        {/* HERO */}
-        <header
-          className="home-hero simple-hero position-relative overflow-hidden"
-          role="banner"
-          style={{ '--hero-bg': `url(${heroSectionBg})` }}
+      <div className="home-modern-wrapper">
+        {/* MODERN HERO */}
+        <section
+          className="hero-modern"
+          style={{
+            backgroundColor: `oklch(${oklch.l} ${oklch.c} ${oklch.h})`,
+            transition: 'background-color 0.1s ease', // Smooth transition while dragging
+            '--hero-bg': 'none' // Override previous bg 
+          }}
         >
           <Container>
-            <Row className="align-items-center gy-5">
-              <Col lg={6}>
-                {/* <Badge bg="light" text="dark" className="mb-3 fw-semibold rounded-pill ds-hero-badge-soft">
-                  Calmer workspace · Course-built
-                </Badge> */}
-                <motion.h1
-                  className="display-4 fw-bold lh-tight mb-3 hero-heading"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  Design bold palettes without the busywork
-                </motion.h1>
-                <p className="lead hero-subtext mb-4">
-                  A focused hero for the generator, contrast checker, and palette library. Less clutter, clearer calls to action, and everything ready for handoff.
-                </p>
-                <nav aria-label="Primary actions">
-                  <div className="d-flex gap-3 flex-wrap hero-actions">
-                    <Button size="lg" className="btn-neo" onClick={() => navigate('/palette-generator')}>
-                      Launch the generator
-                    </Button>
-                    <Button size="lg" className="btn-ghost inverse" onClick={() => navigate('/popular-palettes')}>
-                      Browse palettes
-                    </Button>
-                  </div>
-                </nav>
-                <div className="hero-inline-stats d-flex flex-wrap gap-3 mt-4">
-                  {[
-                    { label: 'Generator', value: 'Lock, shuffle, export' },
-                    { label: 'Contrast', value: 'AA / AAA ready' },
-                    { label: 'Handoff', value: 'CSS, SVG, JSON' },
-                  ].map((item) => (
-                    <div key={item.label} className="hero-stat">
-                      <div className="hero-stat-label">{item.label}</div>
-                      <div className="hero-stat-value">{item.value}</div>
-                    </div>
-                  ))}
-                </div>
-              </Col>
-              <Col lg={5} className="ms-lg-auto">
-                <motion.div
-                  className="hero-demo-card card-floating shadow-sm"
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.1 }}
-                >
-                  <div className="d-flex align-items-center justify-content-between mb-2">
-                    <p className="text-uppercase small hero-subtext mb-0">Palette of the moment</p>
-                    <span className="pill-chip muted small-pill">Try it Now!</span>
-                  </div>
-                  <h3 className="h4 fw-bold mb-3">{activeDemo?.name}</h3>
-                  <div className="hero-strip rounded-4 overflow-hidden mb-3" role="img" aria-label={`Live palette ${activeDemo?.name}`}>
-                    <AnimatePresence initial={false} mode="wait">
-                      <motion.div
-                        key={activeDemo?.name}
-                        className="d-flex w-100 h-100"
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -12 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        {activeDemo?.colors.map((color) => (
-                          <div key={color} className="hero-strip-swatch" style={{ backgroundColor: color }} title={color}></div>
-                        ))}
-                      </motion.div>
-                    </AnimatePresence>
-                  </div>
-                  <div className="d-flex flex-wrap gap-2">
-                    <Button size="sm" className="btn-ghost inverse" onClick={shuffleDemo}>
-                      <i className="bi bi-shuffle me-1"></i>Shuffle
-                    </Button>
-                    <Button size="sm" className="btn-neo" onClick={() => handleOpenInGenerator(activeDemo)}>
-                      Open in generator
-                    </Button>
-                  </div>
-                </motion.div>
-              </Col>
-            </Row>
-          </Container>
-        </header>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <h1 className="hero-title">
+                Master Color <br /> Without the Chaos.
+              </h1>
+              <p className="hero-desc">
+                The all-in-one workspace for accessible, consistent, and beautiful color systems.
+                Built on OKLCH for the modern web.
+              </p>
 
-        {/* GENERATOR FEATURES */}
-        <Container className="py-4 py-md-5" as="section" aria-label="Palette generator highlights">
-            <div className="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
-              <div>
-                <h2 className="h3 fw-bold mb-1">What you can do in the generator</h2>
-                <p className="text-muted mb-0">Quick hits from the course exercises, front and center.</p>
+              {/* OKLCH Controls */}
+              <div className="oklch-hero-controls">
+                <div className="oklch-control-group">
+                  <label>L</label>
+                  <input
+                    type="range"
+                    min="0.85"
+                    max="0.99"
+                    step="0.01"
+                    value={oklch.l}
+                    className="oklch-slider"
+                    onChange={(e) => setOklch(p => ({ ...p, l: parseFloat(e.target.value) }))}
+                  />
+                  <span className="oklch-value">{Math.round(oklch.l * 100)}%</span>
+                </div>
+                <div className="oklch-control-group">
+                  <label>C</label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="0.3"
+                    step="0.01"
+                    value={oklch.c}
+                    className="oklch-slider"
+                    onChange={(e) => setOklch(p => ({ ...p, c: parseFloat(e.target.value) }))}
+                  />
+                  <span className="oklch-value">{oklch.c}</span>
+                </div>
+                <div className="oklch-control-group">
+                  <label>H</label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="360"
+                    step="1"
+                    value={oklch.h}
+                    className="oklch-slider"
+                    onChange={(e) => setOklch(p => ({ ...p, h: parseInt(e.target.value) }))}
+                  />
+                  <span className="oklch-value">{oklch.h}</span>
+                </div>
+                <div className="oklch-control-group ms-2 border-start ps-3" style={{ borderColor: 'rgba(0,0,0,0.1)' }}>
+                  <small className="font-monospace text-muted" style={{ fontSize: '0.75em' }}>
+                    oklch({Math.round(oklch.l * 100)}% {oklch.c} {oklch.h})
+                  </small>
+                </div>
               </div>
-              <Button className="btn-ghost" size="lg" onClick={() => navigate('/palette-generator')}>
-                Open generator
-              </Button>
-            </div>
-          <Row className="g-3 g-md-4">
-            {generatorFeatures.map((item) => (
-              <Col key={item.title} xs={12} sm={6} lg={4}>
-                <div className="tool-card-custom h-100" style={{ alignContent: 'center' }}>
-                  <div className="d-flex gap-3 align-items-start">
-                    <div className="icon-circle  d-flex">
-                      <i className={`bi ${item.icon}`} aria-hidden="true"></i>
-                    </div>
-                    <div>
-                      <h3 className="h6 fw-bold mb-1">{item.title}</h3>
-                      <p className="text-muted mb-0 small">{item.copy}</p>
-                    </div>
-                  </div>
-                </div>
-              </Col>
-            ))} 
-          </Row>
-        </Container>
 
-        {/* TOOL GRID */}
-        <Container className="py-5" as="section" aria-label="Course tools">
-          <Row className="g-4">
-            {toolCards.map((tool) => (
-              <Col key={tool.title} xs={12} md={3}>
-                <div className="tool-card-custom d-flex flex-column gap-3">
-                  <div className="d-flex align-items-center justify-content-between">
-                    <Badge bg="light" text="dark" className="border fw-semibold">
-                      {tool.badge}
-                    </Badge>
-                    <i className="bi bi-arrow-up-right-square text-muted" aria-hidden="true"></i>
+              <div className="hero-cta-group">
+                <button className="btn-modern-primary" onClick={() => navigate('/palette-generator')}>
+                  Open Generator
+                </button>
+                <button className="btn-modern-secondary" onClick={() => navigate('/popular-palettes')}>
+                  Browse Library
+                </button>
+              </div>
+            </motion.div>
+          </Container>
+        </section>
+
+        {/* BENTO GRID TOOLS */}
+        <section className="bento-section">
+          <Container>
+            <div className="bento-grid">
+              {/* Main Feature: Generator */}
+              <div className="bento-card span-8 row-2" onClick={() => navigate('/palette-generator')} style={{ cursor: 'pointer', minHeight: '380px' }}>
+                <img src={dsGeneratorImg} alt="" className="bento-bg-image" />
+                <div className="bento-content">
+                  <div className="d-flex justify-content-between w-100">
+                    <div className="bento-icon-wrapper">
+                      <i className="bi bi-palette"></i>
+                    </div>
+                    <div className="d-none d-md-block">
+                      <i className="bi bi-arrow-right fs-4 text-muted"></i>
+                    </div>
                   </div>
                   <div>
-                    <h3 className="h5 mb-1">{tool.title}</h3>
-                    <p className="text-muted mb-0 small">{tool.description}</p>
-                  </div>
-                  <div className="d-flex flex-wrap gap-2">
-                    {tool.chips.map((chip) => (
-                      <span key={chip} className="pill-chip muted">
-                        {chip}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="mt-auto">
-                    <Button className="btn-neo w-100" size="md" onClick={tool.cta}>
-                      Open {tool.title}
-                    </Button>
+                    <h3>Palette Generator</h3>
+                    <p className="mb-0" style={{ maxWidth: '80%' }}>Lock, shuffle, and fine-tune colors with our advanced editor. Export to CSS, JSON, and more in one click. The core tool for your workflow.</p>
                   </div>
                 </div>
-              </Col>
-            ))}
-          </Row>
-        </Container>
+              </div>
 
-        {/* POPULAR PALETTES */}
+              {/* Feature: AI */}
+              <div className="bento-card span-4" onClick={() => navigate('/palette-generator')} style={{ cursor: 'pointer', background: 'linear-gradient(135deg, #fff 0%, #f0f9ff 100%)' }}>
+                <div className="bento-content">
+                  <div>
+                    <div className="bento-icon-wrapper text-primary bg-primary bg-opacity-10">
+                      <i className="bi bi-stars"></i>
+                    </div>
+                    <h3>AI Gen</h3>
+                    <p className="mb-0">Describe a vibe, get a palette. <br /> <span className="text-muted small">Powered by You.</span></p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Feature: Contrast */}
+              <div className="bento-card span-4" onClick={() => navigate('/contrastchecker')} style={{ cursor: 'pointer' }}>
+                {/* <img src={dsContrastImg} alt="" className="bento-bg-image" /> */}
+                <div className="bento-content">
+                  <div>
+                    <div className="bento-icon-wrapper">
+                      <i className="bi bi-eye"></i>
+                    </div>
+                    <h3>Contrast Checker</h3>
+                    <p className="mb-0">Validate WCAG AA/AAA scores instantly.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Feature: Image Extractor */}
+              <div className="bento-card span-6" onClick={() => navigate('/imagecolorextractor')} style={{ cursor: 'pointer' }}>
+                {/* <img src={dsExtractorImg} alt="" className="bento-bg-image" /> */}
+                <div className="bento-content">
+                  <div className="d-flex align-items-center gap-4">
+                    <div className="bento-icon-wrapper mb-0">
+                      <i className="bi bi-image"></i>
+                    </div>
+                    <div>
+                      <h3 className="mb-1">Image Extractor</h3>
+                      <p className="mb-0">Pull precise colors from your inspiration.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Feature: Season */}
+              <div className="bento-card span-6" onClick={() => navigate('/color-season')} style={{ cursor: 'pointer' }}>
+                {/* <img src={dsPopularImg} alt="" className="bento-bg-image" /> */}
+                <div className="bento-content">
+                  <div className="d-flex align-items-center gap-4">
+                    <div className="bento-icon-wrapper mb-0">
+                      <i className="bi bi-person-bounding-box"></i>
+                    </div>
+                    <div>
+                      <h3 className="mb-1">Color Season</h3>
+                      <p className="mb-0">Find your personal palette match.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Container>
+        </section>
+
+        {/* POPULAR PALETTES (UNCHANGED STYLING) */}
         <section className="py-5" aria-labelledby="popular-palettes-heading">
           <Container>
-            <div className="d-flex align-items-end justify-content-between mb-3 flex-wrap gap-3">
+            <div className="d-flex align-items-end justify-content-between mb-4 flex-wrap gap-3">
               <div>
-                <h2 id="popular-palettes-heading" className="h1 fw-bold mb-1">
-                  Popular palettes
+                <h2 id="popular-palettes-heading" className="h2 fw-bold mb-1">
+                  Trending Now
                 </h2>
-                <p className="text-muted mb-0">Community picks that keep contrast and vibe in balance.</p>
+                <p className="text-muted mb-0">Community favorites, curated for you.</p>
               </div>
-              <Button variant="link" className="text-decoration-none px-0" onClick={() => navigate('/popular-palettes')}>
-                See all
+              <Button variant="link" className="text-decoration-none px-0 fw-semibold" onClick={() => navigate('/popular-palettes')}>
+                View All <i className="bi bi-arrow-right ms-1"></i>
               </Button>
             </div>
 
@@ -309,81 +279,45 @@ const Home = () => {
           </Container>
         </section>
 
+        {/* OKLCH MODERN */}
+        <Container>
+          <section className="oklch-section">
+            <Row className="align-items-center gy-5">
+              <Col lg={6}>
+                <h2 className="display-6 fw-bold mb-4">Built on OKLCH.</h2>
+                <p className="lead text-muted mb-5">
+                  The future of color on the web is here. Access a wider gamut, predictable contrast, and uniform brightness.
+                </p>
+                <div className="d-flex gap-4">
+                  <div className="d-flex flex-column">
+                    <span className="fw-bold fs-4">30%</span>
+                    <span className="text-muted small">More Colors</span>
+                  </div>
+                  <div className="d-flex flex-column">
+                    <span className="fw-bold fs-4">100%</span>
+                    <span className="text-muted small">Uniform</span>
+                  </div>
+                </div>
+              </Col>
+              <Col lg={6}>
+                <div className="rounded-4 overflow-hidden shadow-sm border">
+                  <div className="p-4 bg-white">
+                    <label className="text-muted small fw-bold text-uppercase mb-2">OKLCH Gradient Spectrum</label>
+                    <div style={{ height: '80px', borderRadius: '12px', background: 'linear-gradient(to right, oklch(60% 0.2 0), oklch(60% 0.2 120), oklch(60% 0.2 240))' }}></div>
+                  </div>
+                </div>
+              </Col>
+            </Row>
+          </section>
+        </Container>
+
         {/* COMMUNITY FEED */}
         <section className="py-5 bg-light">
           <Container>
             <CommunityFeed />
           </Container>
         </section>
-
-        {/* COLOR SEASON HIGHLIGHT */}
-        <section className="py-5">
-          <Container>
-            <div className="season-card d-lg-flex align-items-center gap-4 p-4 p-md-5">
-              <div className="flex-grow-1">
-                <h2 className="h2 fw-bold mb-2">Find your color season</h2>
-                <p className="lead text-dark-50 mb-3">
-                  Run the Color Season tool from the course to match palettes to personal tones, then jump straight into the generator with the picks.
-                </p>
-                <div className="d-flex flex-wrap gap-3 hero-actions">
-                  <Button size="lg" className="btn-neo" onClick={() => navigate('/color-season')}>
-                    Explore Color Season
-                  </Button>
-                  <Button size="lg" className="btn-ghost" onClick={() => navigate('/palette-generator')}>
-                    Open generator
-                  </Button>
-                </div>
-              </div>
-              <div className="season-chip-grid mt-4 mt-lg-0">
-                {[
-                  { name: 'Spring', swatch: '#f7b267' },
-                  { name: 'Summer', swatch: '#5fa8d3' },
-                  { name: 'Autumn', swatch: '#d97706' },
-                  { name: 'Winter', swatch: '#1e293b' },
-                ].map((item) => (
-                  <div key={item.name} className="season-chip">
-                    <span className="chip-dot" style={{ backgroundColor: item.swatch }}></span>
-                    {item.name}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Container>
-        </section>
-
-        {/* GENERATOR PROMO */}
-        <section className="generator-cta py-5 position-relative overflow-hidden" aria-labelledby="generator-heading">
-          <Container>
-            <Row className="align-items-center gy-4">
-              <Col lg={7}>
-                <h2 id="generator-heading" className="display-6 fw-bold mb-2">
-                  Create custom palettes effortlessly
-                </h2>
-                <p className="lead text-dark-50 mb-4">
-                  Lock hues, explore harmonies, and test accessibility--all in one fast, friendly interface.
-                </p>
-                <div className="d-flex flex-wrap gap-3 hero-actions">
-                  <Button size="lg" className="btn-neo" onClick={() => navigate('/palette-generator')}>
-                    Try the generator
-                  </Button>
-                  <Button size="lg" className="btn-ghost" onClick={() => navigate('/contrastchecker')}>
-                    Contrast checker
-                  </Button>
-                </div>
-              </Col>
-              <Col lg={5} className="text-center">
-                <img
-                  src="/palette-generator-preview.png"
-                  alt="Screenshot of the DigiSwatch generator tool"
-                  className="img-fluid rounded-4 shadow-sm"
-                  loading="lazy"
-                />
-              </Col>
-            </Row>
-          </Container>
-          <div className="grain"></div>
-        </section>
-      </section>
+      </div>
     </>
   );
 };

@@ -1,0 +1,311 @@
+/* src/styles/Home.css */
+
+:root {
+    --home-bg: oklch(100% 0 0);
+    /* #ffffff */
+    --home-text: oklch(17.7% 0 0);
+    /* #1a1a1a */
+    --home-text-muted: oklch(48% 0 0);
+    /* #666666 */
+    --home-accent: oklch(62.8% 0.17 257.6);
+    /* #3b82f6 */
+    /* Modern blue gradient */
+    --home-accent-gradient: linear-gradient(in oklch 135deg, oklch(62.8% 0.17 257.6) 0%, oklch(52.8% 0.18 261) 100%);
+    --bento-bg: oklch(96.1% 0.003 264);
+    /* #f3f4f6 */
+    --bento-card-bg: oklch(100% 0 0);
+    /* #ffffff */
+    --bento-border-radius: 24px;
+}
+
+body {
+    background-color: var(--home-bg);
+    color: var(--home-text);
+}
+
+/* Modern Hero */
+.hero-modern {
+    padding: 6rem 0 4rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--home-accent);
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-bottom: 1.5rem;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(to right, #111827, #4b5563);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero-desc {
+    font-size: 1.25rem;
+    color: var(--home-text-muted);
+    max-width: 600px;
+    margin: 0 auto 2.5rem;
+    line-height: 1.6;
+}
+
+.hero-cta-group {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 3rem;
+}
+
+.btn-modern-primary {
+    background: var(--home-text);
+    color: white;
+    padding: 0.875rem 2rem;
+    border-radius: 12px;
+    font-weight: 600;
+    border: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-modern-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+    color: white;
+}
+
+.btn-modern-secondary {
+    background: white;
+    color: var(--home-text);
+    padding: 0.875rem 2rem;
+    border-radius: 12px;
+    font-weight: 600;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s;
+}
+
+.btn-modern-secondary:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+}
+
+/* OKLCH Controls Widget */
+.oklch-hero-controls {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.5rem;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--home-text-muted);
+}
+
+.oklch-control-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.oklch-control-group label {
+    font-weight: 700;
+    color: var(--home-text);
+    min-width: 1.5ch;
+}
+
+.oklch-slider {
+    -webkit-appearance: none;
+    width: 80px;
+    height: 4px;
+    background: #e5e7eb;
+    border-radius: 2px;
+    outline: none;
+}
+
+.oklch-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--home-text);
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.oklch-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.oklch-value {
+    min-width: 3ch;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Bento Grid System */
+.bento-section {
+    padding: 4rem 0;
+}
+
+.bento-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-auto-rows: minmax(180px, auto);
+    gap: 1.5rem;
+}
+
+.bento-card {
+    background: var(--bento-card-bg);
+    border-radius: var(--bento-border-radius);
+    padding: 2rem;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01), 0 2px 4px -1px rgba(0, 0, 0, 0.01);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    position: relative;
+}
+
+.bento-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.01);
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+.bento-bg-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    opacity: 0.6;
+    z-index: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.5s ease;
+    mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+}
+
+.bento-card:hover .bento-bg-image {
+    opacity: 0.8;
+    transform: scale(1.03);
+}
+
+.bento-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
+.bento-card.span-4 {
+    grid-column: span 4;
+}
+
+.bento-card.span-6 {
+    grid-column: span 6;
+}
+
+.bento-card.span-8 {
+    grid-column: span 8;
+}
+
+.bento-card.span-12 {
+    grid-column: span 12;
+}
+
+.bento-card.row-2 {
+    grid-row: span 2;
+}
+
+@media (max-width: 991px) {
+
+    .bento-card.span-4,
+    .bento-card.span-6,
+    .bento-card.span-8 {
+        grid-column: span 12;
+    }
+}
+
+.bento-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: var(--home-text);
+    margin-bottom: 1.5rem;
+}
+
+.bento-card h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.bento-card p {
+    color: var(--home-text-muted);
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+}
+
+.bento-link {
+    font-weight: 600;
+    color: var(--home-text);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.bento-link:hover {
+    color: var(--home-accent);
+}
+
+/* OKLCH Modern Section */
+.oklch-section {
+    background: #fafafa;
+    border-radius: 32px;
+    margin: 4rem 0;
+    padding: 4rem 2rem;
+}
+
+.modern-stat {
+    text-align: center;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+}
+
+/* Keeping Popular Palettes Original Styles Wrapper */
+.pp-section-header {
+    margin-bottom: 2rem;
+}

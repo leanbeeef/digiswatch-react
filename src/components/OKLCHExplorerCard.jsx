@@ -8,7 +8,7 @@ const OKLCHExplorerCard = ({ color, colorInfo, index, moveCard, isExpanded, onTo
     const [l, setL] = useState(0.5);
     const [c, setC] = useState(0.1);
     const [h, setH] = useState(0);
-    const [adjustedColor, setAdjustedColor] = useState(color);
+    const oklchString = `oklch(${(l * 100).toFixed(1)}% ${c.toFixed(4)} ${h.toFixed(1)}deg)`;
     const [deltaE, setDeltaE] = useState(0);
     const [copied, setCopied] = useState(false);
 
@@ -21,7 +21,6 @@ const OKLCHExplorerCard = ({ color, colorInfo, index, moveCard, isExpanded, onTo
                 setL(lightness || 0.5);
                 setC(chromaVal || 0.1);
                 setH(hue || 0);
-                setAdjustedColor(chromaColor.hex());
             } catch (e) {
                 console.error('Error parsing color:', e);
             }
@@ -32,7 +31,6 @@ const OKLCHExplorerCard = ({ color, colorInfo, index, moveCard, isExpanded, onTo
     useEffect(() => {
         try {
             const newColor = chroma.oklch(l, c, h);
-            setAdjustedColor(newColor.hex());
 
             // Calculate Delta E (perceptual difference)
             if (color) {
@@ -46,10 +44,10 @@ const OKLCHExplorerCard = ({ color, colorInfo, index, moveCard, isExpanded, onTo
     }, [l, c, h, color]);
 
     const handleCopy = () => {
-        navigator.clipboard.writeText(adjustedColor);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
+    navigator.clipboard.writeText(oklchString);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+};
 
     const handleReset = () => {
         if (color) {
@@ -116,7 +114,7 @@ const OKLCHExplorerCard = ({ color, colorInfo, index, moveCard, isExpanded, onTo
                     <div style={{ flex: 1, textAlign: 'center' }}>
                         <div
                             style={{
-                                background: adjustedColor,
+                                background: oklchString,
                                 height: '80px',
                                 borderRadius: '8px',
                                 border: '2px solid var(--dashboard-accent)',
@@ -189,6 +187,7 @@ const OKLCHExplorerCard = ({ color, colorInfo, index, moveCard, isExpanded, onTo
                     <code style={{ fontSize: '0.85rem' }}>
                         oklch({(l * 100).toFixed(1)}% {c.toFixed(3)} {Math.round(h)})
                     </code>
+                    
                 </div>
 
                 {/* Copy Button */}
@@ -199,7 +198,7 @@ const OKLCHExplorerCard = ({ color, colorInfo, index, moveCard, isExpanded, onTo
                     className="w-100"
                 >
                     <i className={`bi ${copied ? 'bi-check-lg' : 'bi-clipboard'} me-1`}></i>
-                    {copied ? 'Copied!' : `Copy ${adjustedColor}`}
+                    {copied ? 'Copied!' : `Copy`}
                 </Button>
             </Card.Body>
         </DashboardCard>

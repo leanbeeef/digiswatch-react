@@ -1416,12 +1416,12 @@ const PaletteGenerator = () => {
             show={showShareModal}
             onClose={() => setShowShareModal(false)}
             palette={{
-              name: paletteName || "Shared Palette",
+              name: paletteName || "DigiSwatch Palette",
               colors: palette.map((c) => c.hex),
             }}
             shareUrl={() => {
               const payload = {
-                name: paletteName || "Shared Palette",
+                name: paletteName || "DigiSwatch Palette",
                 colors: palette.map((c) => c.hex),
               };
               const encoded = encodeURIComponent(btoa(JSON.stringify(payload)));

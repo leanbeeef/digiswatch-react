@@ -5,7 +5,7 @@ import { FaFacebookF, FaTwitter, FaLinkedinIn, FaPinterest, FaRedditAlien, FaWha
 import './SharePalette.css';
 
 const SharePalette = ({ show, onClose, palette, shareUrl }) => {
-    const paletteName = palette?.name || "Color Palette";
+    const paletteName = palette?.name || "DigiSwatch Palette";
     const paletteColors = (palette?.colors || []).map((c) => c.hex || c);
     const baseURL = window.location.origin;
     const defaultUrl = `${baseURL}/popular-palettes`;

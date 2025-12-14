@@ -37,8 +37,8 @@ const Home = () => {
   useEffect(() => {
     // Randomize on mount
     setOklch({
-      l: 0.90 + Math.random() * 0.08, // Keep it very light (90-98%) for contrast
-      c: 0.05 + Math.random() * 0.1,  // Subtle to Vibrant (0.05-0.15)
+      l: Number((0.90 + Math.random() * 0.08).toFixed(3)), // Keep it very light (90-98%) for contrast
+      c: Number((0.05 + Math.random() * 0.1).toFixed(2)),  // Subtle to Vibrant (0.05-0.15)
       h: Math.floor(Math.random() * 360)
     });
   }, []);
@@ -87,7 +87,7 @@ const Home = () => {
                     step="0.01"
                     value={oklch.l}
                     className="oklch-slider"
-                    onChange={(e) => setOklch(p => ({ ...p, l: parseFloat(e.target.value) }))}
+                    onChange={(e) => setOklch(p => ({ ...p, l: Number(parseFloat(e.target.value).toFixed(3)) }))}
                   />
                   <span className="oklch-value">{Math.round(oklch.l * 100)}%</span>
                 </div>
@@ -100,9 +100,12 @@ const Home = () => {
                     step="0.01"
                     value={oklch.c}
                     className="oklch-slider"
-                    onChange={(e) => setOklch(p => ({ ...p, c: parseFloat(e.target.value) }))}
+                    onChange={(e) => {
+                      const nextC = Number(parseFloat(e.target.value).toFixed(2));
+                      setOklch(p => ({ ...p, c: nextC }));
+                    }}
                   />
-                  <span className="oklch-value">{oklch.c}</span>
+                  <span className="oklch-value">{oklch.c.toFixed(2)}</span>
                 </div>
                 <div className="oklch-control-group">
                   <label>H</label>
@@ -113,13 +116,19 @@ const Home = () => {
                     step="1"
                     value={oklch.h}
                     className="oklch-slider"
-                    onChange={(e) => setOklch(p => ({ ...p, h: parseInt(e.target.value) }))}
+                    onChange={(e) => {
+                      const nextH = Math.round(parseFloat(e.target.value));
+                      setOklch(p => ({ ...p, h: nextH }));
+                    }}
                   />
                   <span className="oklch-value">{oklch.h}</span>
                 </div>
-                <div className="oklch-control-group ms-2 border-start ps-3" style={{ borderColor: 'rgba(0,0,0,0.1)' }}>
-                  <small className="font-monospace text-muted" style={{ fontSize: '0.75em' }}>
-                    oklch({Math.round(oklch.l * 100)}% {oklch.c} {oklch.h})
+                <div className="oklch-control-group oklch-code-group">
+                  <small
+                    className="font-monospace text-muted oklch-code"
+                    style={{ fontSize: '0.75em' }}
+                  >
+                    oklch({Math.round(oklch.l * 100)}% {oklch.c.toFixed(2)} {Math.round(oklch.h)})
                   </small>
                 </div>
               </div>

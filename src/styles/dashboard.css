@@ -511,6 +511,7 @@
   align-items: center;
   gap: 0.75rem;
   flex-wrap: nowrap;
+  flex-direction: row-reverse;
 }
 
 .dashboard-header-row h3 {
@@ -552,6 +553,74 @@
   width: 36px;
   height: 36px;
   padding: 0;
+}
+
+.tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 2100;
+}
+
+.tutorial-card {
+  background: var(--dashboard-surface, #ffffff);
+  color: var(--dashboard-text, #1f2933);
+  border: 1px solid var(--dashboard-border, #e5e7eb);
+  border-radius: 16px;
+  width: min(640px, 100%);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+  padding: 1.25rem 1.25rem 1rem;
+}
+
+.tutorial-step-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  background: var(--dashboard-accent, #0366d6);
+  color: #fff;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+.tutorial-tip-list {
+  padding-left: 1.1rem;
+  margin-bottom: 1rem;
+  color: var(--dashboard-text-muted, #6a737d);
+  font-size: 0.95rem;
+}
+
+.tutorial-tip-list li + li {
+  margin-top: 0.25rem;
+}
+
+.tutorial-progress {
+  height: 6px;
+  background: var(--dashboard-border, #e5e7eb);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.tutorial-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--dashboard-accent, #0366d6), var(--dashboard-accent-hover, #0256c7));
+  transition: width 200ms ease;
+}
+
+.tutorial-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
 }
 
 /* Mobile Toolbar Toggle */

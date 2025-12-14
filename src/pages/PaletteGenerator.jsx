@@ -87,6 +87,34 @@ const aiLockOverlayStyle = {
   zIndex: 2,
 };
 
+const TUTORIAL_STEPS = [
+  {
+    title: "Pick a swatch",
+    body: "Click any palette swatch on the left to load its data, harmonies, and context on the dashboard.",
+    tips: ["Drag swatches to reorder", "Tap the lock to keep a color while shuffling"],
+  },
+  {
+    title: "Generate colors",
+    body: "Use the AI prompt to request a vibe (10/day). Or click the shuffle button to spin up a random set.",
+    tips: ["Short prompts work best", "Locked colors stay put when shuffling"],
+  },
+  {
+    title: "Fine-tune quickly",
+    body: "Open the color drawer by clicking a swatch to tweak HSL/OKLCH, then drag cards to reorder your tools.",
+    tips: ["Expand/collapse cards to focus", "Switch Masonry/Stacked to suit your layout"],
+  },
+  {
+    title: "Check accessibility",
+    body: "Use Contrast & Accessibility cards to verify WCAG scores and see readable text pairs automatically.",
+    tips: ["Try dark/light modes in the visualizer", "Keep ratios ≥ 4.5 for body text"],
+  },
+  {
+    title: "Share or export",
+    body: "Save palettes to your account, share a link, or export as CSS, JSON, SVG, PNG, or Text.",
+    tips: ["Name the palette before saving", "Exports respect your current order"],
+  },
+];
+
 const getTextColor = (bg) => {
   return tinycolor.readability(bg, "#FFFFFF") >= 4.5 ? "#FFFFFF" : "#000000";
 };
@@ -166,6 +194,8 @@ const PaletteGenerator = () => {
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const [aiUsesLeft, setAiUsesLeft] = useState(10);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
   const aiCooldownTimerRef = useRef(null);
   const lastAiRequestRef = useRef(0);
   const showAiError = (message) => {
@@ -175,6 +205,16 @@ const PaletteGenerator = () => {
   const requireAuthToast = () => {
     setShowAuthModal(true);
   };
+  const startTutorial = () => {
+    setTutorialStep(0);
+    setShowTutorial(true);
+    setShowMobileToolbar(false);
+  };
+  const closeTutorial = () => setShowTutorial(false);
+  const nextTutorial = () =>
+    setTutorialStep((step) => Math.min(step + 1, TUTORIAL_STEPS.length - 1));
+  const prevTutorial = () =>
+    setTutorialStep((step) => Math.max(step - 1, 0));
 
   // Save visible cards to localStorage
   useEffect(() => {
@@ -467,6 +507,17 @@ const PaletteGenerator = () => {
       setEditingColorIndex(null);
     }
   }, [palette, editingColorIndex]);
+
+  // Show tutorial once per browser
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const key = "ds_seen_palette_tutorial_v1";
+    const seen = localStorage.getItem(key);
+    if (!seen) {
+      setShowTutorial(true);
+      localStorage.setItem(key, "true");
+    }
+  }, []);
 
   const handleColorClick = (color) => {
     setSelectedColor(color);
@@ -851,7 +902,6 @@ const PaletteGenerator = () => {
                   </div>
 
                   <div className="dashboard-action-bar">
-
                     <Button
                       variant="primary"
                       size="sm"
@@ -860,6 +910,15 @@ const PaletteGenerator = () => {
                       className="dashboard-icon-btn"
                     >
                       <i className="bi bi-sliders"></i>
+                    </Button>
+                    <Button
+                      variant="outline-secondary"
+                      size="sm"
+                      onClick={startTutorial}
+                      title="How to use the palette generator"
+                      className="dashboard-icon-btn"
+                    >
+                      <i className="bi bi-question-circle"></i>
                     </Button>
                     <div className="vr mx-1"></div>
                     <Button
@@ -973,6 +1032,14 @@ const PaletteGenerator = () => {
                 onClick={() => setShowMobileToolbar(false)}
               />
               <div className={`mobile-toolbar-popout ${showMobileToolbar ? 'is-open' : ''}`}>
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() => { startTutorial(); setShowMobileToolbar(false); }}
+                  title="How to use the palette generator"
+                >
+                  <i className="bi bi-question-circle me-2"></i>Tutorial
+                </Button>
                 <Button
                   variant="primary"
                   size="sm"
@@ -1439,6 +1506,72 @@ const PaletteGenerator = () => {
           onClose={() => setShowColorEditor(false)}
           onChange={handleColorEditorChange}
         />
+
+        {showTutorial && (
+          <div className="tutorial-overlay" role="dialog" aria-modal="true">
+            <div className="tutorial-card">
+              <div className="d-flex justify-content-between align-items-start">
+                <div>
+                  <div className="tutorial-step-badge">
+                    Step {tutorialStep + 1} of {TUTORIAL_STEPS.length}
+                  </div>
+                  <h5 className="mb-2">{TUTORIAL_STEPS[tutorialStep].title}</h5>
+                </div>
+                <Button
+                  variant="light"
+                  size="sm"
+                  onClick={closeTutorial}
+                  className="dashboard-icon-btn"
+                  aria-label="Close tutorial"
+                >
+                  <i className="bi bi-x-lg"></i>
+                </Button>
+              </div>
+
+              <p className="text-muted mb-3">{TUTORIAL_STEPS[tutorialStep].body}</p>
+
+              {TUTORIAL_STEPS[tutorialStep].tips && (
+                <ul className="tutorial-tip-list">
+                  {TUTORIAL_STEPS[tutorialStep].tips.map((tip, idx) => (
+                    <li key={idx}>{tip}</li>
+                  ))}
+                </ul>
+              )}
+
+              <div className="tutorial-progress mb-3" aria-hidden="true">
+                <div
+                  className="tutorial-progress-bar"
+                  style={{
+                    width: `${Math.round(
+                      ((tutorialStep + 1) / TUTORIAL_STEPS.length) * 100
+                    )}%`,
+                  }}
+                ></div>
+              </div>
+
+              <div className="tutorial-nav">
+                <Button
+                  variant="light"
+                  onClick={prevTutorial}
+                  disabled={tutorialStep === 0}
+                >
+                  <i className="bi bi-arrow-left-short me-1"></i> Back
+                </Button>
+                <div className="flex-grow-1" />
+                <Button
+                  variant="primary"
+                  onClick={
+                    tutorialStep === TUTORIAL_STEPS.length - 1
+                      ? closeTutorial
+                      : nextTutorial
+                  }
+                >
+                  {tutorialStep === TUTORIAL_STEPS.length - 1 ? "Done" : "Next"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </Container>
     </DndProvider>
   );

@@ -104,7 +104,9 @@ body {
     display: inline-flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 1.5rem;
+    gap: 2rem;
+    width: min(100%, 760px);
+    justify-content: center;
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -119,10 +121,18 @@ body {
     color: var(--home-text-muted);
 }
 
+@media (max-width: 576px) {
+    .oklch-hero-controls {
+        width: 100%;
+    }
+}
+
 .oklch-control-group {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex: 0 0 140px;
+    max-width: 140px;
 }
 
 .oklch-control-group label {
@@ -133,7 +143,7 @@ body {
 
 .oklch-slider {
     -webkit-appearance: none;
-    width: 80px;
+    width: 90px;
     height: 4px;
     background: #e5e7eb;
     border-radius: 2px;
@@ -156,8 +166,24 @@ body {
 }
 
 .oklch-value {
-    min-width: 3ch;
+    min-width: 4.5ch;
+    text-align: right;
     font-variant-numeric: tabular-nums;
+}
+
+.oklch-code-group {
+    border-left: 1px solid rgba(0, 0, 0, 0.1);
+    padding-left: 2rem;
+    flex: 0 0 190px;
+    /* max-width: 190px; */
+    justify-content: flex-start;
+}
+
+.oklch-code {
+    display: block;
+    white-space: nowrap;
+    min-width: 17ch;
+    text-align: left;
 }
 
 /* Bento Grid System */

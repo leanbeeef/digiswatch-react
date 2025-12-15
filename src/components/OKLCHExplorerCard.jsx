@@ -5,15 +5,11 @@ import DashboardCard from './DashboardCard';
 import chroma from 'chroma-js';
 
 export const OKLCHExplorerPreview = ({ color, l, c, h }) => {
-    // If internal state isn't available, we can derive it or just show simple info. 
-    // Here we might need passed in l,c,h or just color. 
-    // For simplicity, let's just use color to derive if needed or pass in formatted string if available
-    // Actually the Preview in `DashboardCard` context doesn't have the state of the Detail.
-    // So we should re-derive or accept props.
-
-    // Recalculate if not passed (Preview is standalone)
+    // Determine display values: use props if valid, otherwise derive from color
     let displayL = l, displayC = c, displayH = h;
-    if (color && (l === undefined)) {
+
+    // If props are undefined (initial load or detached), try to derive from color
+    if (color && (l === undefined || l === null)) {
         try {
             const [lightness, chromaVal, hue] = chroma(color).oklch();
             displayL = lightness;
@@ -21,6 +17,15 @@ export const OKLCHExplorerPreview = ({ color, l, c, h }) => {
             displayH = hue;
         } catch (e) { }
     }
+
+    const oklchString = displayL !== undefined
+        ? `oklch(${displayL.toFixed(2)} ${displayC.toFixed(3)} ${Math.round(displayH)})`
+        : 'Invalid Color';
+
+    // Contrast check for text color
+    const textColor = color && chroma.valid(color)
+        ? (chroma.contrast(color, 'white') > 4.5 ? 'white' : 'black')
+        : 'black';
 
     return (
         <div style={{
@@ -32,73 +37,29 @@ export const OKLCHExplorerPreview = ({ color, l, c, h }) => {
             alignItems: 'center',
             justifyContent: 'center',
             flexDirection: 'column',
-            color: chroma.contrast(color, 'white') > 4.5 ? 'white' : 'black',
+            color: textColor,
             textAlign: 'center'
         }}>
             <div style={{ fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
                 {color}
             </div>
             <div style={{ fontSize: '0.8rem', opacity: 0.8, fontFamily: 'monospace' }}>
-                {displayL !== undefined ? `oklch(${displayL.toFixed(2)} ${displayC.toFixed(3)} ${Math.round(displayH)})` : 'Invalid Color'}
+                {oklchString}
             </div>
         </div>
     );
 };
 
-export const OKLCHExplorerDetail = ({ color, onClose }) => {
-    const [l, setL] = useState(0.5);
-    const [c, setC] = useState(0.1);
-    const [h, setH] = useState(0);
-    const oklchString = `oklch(${(l * 100).toFixed(1)}% ${c.toFixed(4)} ${h.toFixed(1)}deg)`;
-    const [deltaE, setDeltaE] = useState(0);
-    const [copied, setCopied] = useState(false);
-
-    // Initialize from selected color
-    useEffect(() => {
-        if (color) {
-            try {
-                const chromaColor = chroma(color);
-                const [lightness, chromaVal, hue] = chromaColor.oklch();
-                setL(lightness || 0.5);
-                setC(chromaVal || 0.1);
-                setH(hue || 0);
-            } catch (e) {
-                console.error('Error parsing color:', e);
-            }
-        }
-    }, [color]);
-
-    // Update adjusted color when sliders change
-    useEffect(() => {
-        try {
-            const newColor = chroma.oklch(l, c, h);
-
-            // Calculate Delta E (perceptual difference)
-            if (color) {
-                const originalColor = chroma(color);
-                const delta = chroma.deltaE(originalColor, newColor);
-                setDeltaE(delta);
-            }
-        } catch (e) {
-            console.error('Error creating OKLCH color:', e);
-        }
-    }, [l, c, h, color]);
-
-    const handleCopy = () => {
-        navigator.clipboard.writeText(oklchString);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
-
-    const handleReset = () => {
-        if (color) {
-            const chromaColor = chroma(color);
-            const [lightness, chromaVal, hue] = chromaColor.oklch();
-            setL(lightness || 0.5);
-            setC(chromaVal || 0.1);
-            setH(hue || 0);
-        }
-    };
+export const OKLCHExplorerDetail = ({
+    color,
+    l, setL,
+    c, setC,
+    h, setH,
+    deltaE,
+    oklchString,
+    handleCopy,
+    copied
+}) => {
 
     const getDeltaEDescription = () => {
         if (deltaE < 1) return 'Imperceptible';
@@ -110,17 +71,6 @@ export const OKLCHExplorerDetail = ({ color, onClose }) => {
 
     return (
         <div>
-            <div className="d-flex justify-content-end mb-3">
-                <Button
-                    variant="outline-secondary"
-                    size="sm"
-                    onClick={handleReset}
-                    title="Reset OKLCH sliders to selected color"
-                >
-                    <i className="bi bi-arrow-counterclockwise"></i> Reset
-                </Button>
-            </div>
-
             <Card.Body>
                 {/* Color Comparison */}
                 <div className="d-flex gap-2 mb-3">
@@ -129,8 +79,8 @@ export const OKLCHExplorerDetail = ({ color, onClose }) => {
                             style={{
                                 background: color,
                                 height: '80px',
-                                borderRadius: '8px',
-                                border: '2px solid var(--dashboard-border)',
+                                borderRadius: '0',
+                                border: '1px solid var(--dashboard-border)',
                                 marginBottom: '0.5rem'
                             }}
                         ></div>
@@ -141,7 +91,7 @@ export const OKLCHExplorerDetail = ({ color, onClose }) => {
                             style={{
                                 background: oklchString,
                                 height: '80px',
-                                borderRadius: '8px',
+                                borderRadius: '0',
                                 border: '2px solid var(--dashboard-accent)',
                                 marginBottom: '0.5rem'
                             }}
@@ -151,7 +101,7 @@ export const OKLCHExplorerDetail = ({ color, onClose }) => {
                 </div>
 
                 {/* Delta E Display */}
-                <div className="mb-3 p-2 bg-light rounded text-center">
+                <div className="mb-3 p-2 bg-light rounded-0 text-center">
                     <small className="text-muted d-block">Perceptual Difference (ΔE)</small>
                     <strong style={{ fontSize: '1.25rem', color: 'var(--dashboard-accent)' }}>
                         {deltaE.toFixed(2)}
@@ -207,30 +157,95 @@ export const OKLCHExplorerDetail = ({ color, onClose }) => {
                     />
                 </div>
 
-                {/* OKLCH Values Display */}
-                <div className="mb-3 p-2 bg-light rounded">
-                    <code style={{ fontSize: '0.85rem' }}>
-                        oklch({(l * 100).toFixed(1)}% {c.toFixed(3)} {Math.round(h)})
-                    </code>
-
+                {/* Value & Copy Row */}
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'stretch' }}>
+                    <div className="p-2 bg-light rounded-0 d-flex align-items-center" style={{ flex: 1, border: '1px solid var(--dashboard-border)' }}>
+                        <code style={{ fontSize: '0.85rem', color: 'var(--dashboard-text)' }}>
+                            oklch({(l * 100).toFixed(1)}% {c.toFixed(3)} {Math.round(h)})
+                        </code>
+                    </div>
+                    <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={handleCopy}
+                        style={{ borderRadius: 0, minWidth: '80px' }}
+                    >
+                        <i className={`bi ${copied ? 'bi-check-lg' : 'bi-clipboard'} me-1`}></i>
+                        {copied ? 'Copied' : `Copy`}
+                    </Button>
                 </div>
-
-                {/* Copy Button */}
-                <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={handleCopy}
-                    className="w-100"
-                >
-                    <i className={`bi ${copied ? 'bi-check-lg' : 'bi-clipboard'} me-1`}></i>
-                    {copied ? 'Copied!' : `Copy`}
-                </Button>
             </Card.Body>
         </div>
     );
 };
 
 const OKLCHExplorerCard = ({ color, colorInfo, index, moveCard, isExpanded, onToggleExpand, onClose, isDraggable }) => {
+    const [l, setL] = useState(0.5);
+    const [c, setC] = useState(0.1);
+    const [h, setH] = useState(0);
+    const [deltaE, setDeltaE] = useState(0);
+    const [copied, setCopied] = useState(false);
+
+    const oklchString = `oklch(${(l * 100).toFixed(1)}% ${c.toFixed(4)} ${h.toFixed(1)}deg)`;
+
+    // Initialize from selected color
+    useEffect(() => {
+        if (color) {
+            try {
+                const chromaColor = chroma(color);
+                const [lightness, chromaVal, hue] = chromaColor.oklch();
+                setL(lightness || 0.5);
+                setC(chromaVal || 0.1);
+                setH(hue || 0);
+            } catch (e) {
+                console.error('Error parsing color:', e);
+            }
+        }
+    }, [color]);
+
+    // Update adjusted color when sliders change (Delta E calculation)
+    useEffect(() => {
+        try {
+            const newColor = chroma.oklch(l, c, h);
+
+            // Calculate Delta E (perceptual difference)
+            if (color) {
+                const originalColor = chroma(color);
+                const delta = chroma.deltaE(originalColor, newColor);
+                setDeltaE(delta);
+            }
+        } catch (e) {
+            // console.error('Error creating OKLCH color:', e);
+        }
+    }, [l, c, h, color]);
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(oklchString);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    const handleReset = () => {
+        if (color) {
+            const chromaColor = chroma(color);
+            const [lightness, chromaVal, hue] = chromaColor.oklch();
+            setL(lightness || 0.5);
+            setC(chromaVal || 0.1);
+            setH(hue || 0);
+        }
+    };
+
+    const resetAction = (
+        <button
+            className="dashboard-card-action-btn"
+            onClick={handleReset}
+            title="Reset to original color"
+            style={{ borderRadius: 0, fontSize: '0.9rem', padding: '4px 8px' }}
+        >
+            <i className="bi bi-arrow-counterclockwise"></i>
+        </button>
+    );
+
     return (
         <DashboardCard
             index={index}
@@ -240,9 +255,19 @@ const OKLCHExplorerCard = ({ color, colorInfo, index, moveCard, isExpanded, onTo
             onToggle={onToggleExpand}
             onClose={onClose}
             isDraggable={isDraggable}
-            previewContent={<OKLCHExplorerPreview color={color} />}
+            previewContent={<OKLCHExplorerPreview color={color} l={l} c={c} h={h} />}
+            extraHeaderActions={resetAction}
         >
-            <OKLCHExplorerDetail color={color} onClose={onClose} />
+            <OKLCHExplorerDetail
+                color={color}
+                l={l} setL={setL}
+                c={c} setC={setC}
+                h={h} setH={setH}
+                deltaE={deltaE}
+                oklchString={oklchString}
+                handleCopy={handleCopy}
+                copied={copied}
+            />
         </DashboardCard>
     );
 };

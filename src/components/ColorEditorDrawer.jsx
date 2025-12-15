@@ -82,15 +82,17 @@ const buildDisplayValues = (color) => {
   return {
     hex: parsed.hex().toUpperCase(),
     rgb: `${rgb[0]}, ${rgb[1]}, ${rgb[2]}`,
-    hsl: `${Math.round(hsl[0] || 0)}°, ${Math.round((hsl[1] || 0) * 100)}%, ${Math.round(
-      (hsl[2] || 0) * 100
-    )}%`,
-    hsv: `${Math.round(hsv[0] || 0)}°, ${Math.round((hsv[1] || 0) * 100)}%, ${Math.round(
-      (hsv[2] || 0) * 100
-    )}%`,
+    hsl: `${Math.round(hsl[0] || 0)}°, ${Math.round(
+      (hsl[1] || 0) * 100
+    )}%, ${Math.round((hsl[2] || 0) * 100)}%`,
+    hsv: `${Math.round(hsv[0] || 0)}°, ${Math.round(
+      (hsv[1] || 0) * 100
+    )}%, ${Math.round((hsv[2] || 0) * 100)}%`,
     cmyk: `${cmyk[0]}%, ${cmyk[1]}%, ${cmyk[2]}%, ${cmyk[3]}%`,
     lab: `${lab[0].toFixed(1)}, ${lab[1].toFixed(2)}, ${lab[2].toFixed(2)}`,
-    lch: `${lch[0].toFixed(1)}, ${lch[1].toFixed(2)}, ${Math.round((lch[2] || 0) % 360)}°`,
+    lch: `${lch[0].toFixed(1)}, ${lch[1].toFixed(2)}, ${Math.round(
+      (lch[2] || 0) % 360
+    )}°`,
     oklch: `${(oklch[0] * 100).toFixed(1)}%, ${oklch[1].toFixed(
       3
     )}, ${Math.round((oklch[2] || 0) % 360)}°`,
@@ -222,29 +224,26 @@ const ColorEditorDrawer = ({ color, show, onClose, onChange }) => {
       <div className="color-editor-panel">
         <div className="color-editor-header">
           <div className="color-editor-title">
-            <div className="color-editor-dot" style={{ background: workingHex }} />
+            <div
+              className="color-editor-dot"
+              style={{ background: workingHex }}
+            />
             <div>
               <p className="eyebrow">Swatch studio</p>
               <h4>Edit & copy values</h4>
             </div>
           </div>
-          <button className="icon-btn" onClick={onClose} aria-label="Close color editor">
+          <button
+            className="icon-btn"
+            onClick={onClose}
+            aria-label="Close color editor"
+          >
             <i className="bi bi-x-lg"></i>
           </button>
         </div>
 
         <div className="color-editor-grid">
           <div className="picker-stack">
-            <div className="color-preview">
-              <div className="color-preview-swatch" style={{ background: workingHex }} />
-              <div>
-                <div className="color-preview-hex">{display.hex}</div>
-                <div className="color-preview-meta">
-                  Live updates feed the palette, harmonies, and cards.
-                </div>
-              </div>
-            </div>
-
             <div className="color-picker-card">
               <HexColorPicker color={workingHex} onChange={commit} />
               <div className="color-picker-inputs">
@@ -252,7 +251,9 @@ const ColorEditorDrawer = ({ color, show, onClose, onChange }) => {
                   <span>#</span>
                   <HexColorInput
                     color={workingHex}
-                    onChange={(val) => commit(val.startsWith("#") ? val : `#${val}`)}
+                    onChange={(val) =>
+                      commit(val.startsWith("#") ? val : `#${val}`)
+                    }
                     prefixed
                   />
                 </div>
@@ -302,17 +303,58 @@ const ColorEditorDrawer = ({ color, show, onClose, onChange }) => {
 
           <div className="models-stack">
             <div className="models-grid">
-              <Field label="HEX" hint="Hex code" value={display.hex} onSubmit={commit} />
-              <Field label="RGB" hint="0-255" value={display.rgb} onSubmit={parseRgb} />
-              <Field label="HSL" hint="deg, %, %" value={display.hsl} onSubmit={parseHsl} />
-              <Field label="HSV" hint="deg, %, %" value={display.hsv} onSubmit={parseHsv} />
-              <Field label="CMYK" hint="%, %, %, %" value={display.cmyk} onSubmit={parseCmyk} />
-              <Field label="LAB" hint="L, a, b" value={display.lab} onSubmit={parseLab} />
-              <Field label="LCH" hint="L, C, h°" value={display.lch} onSubmit={parseLch} />
-              <Field label="OKLCH" hint="L%, C, h°" value={display.oklch} onSubmit={parseOklch} />
+              <Field
+                label="HEX"
+                hint="Hex code"
+                value={display.hex}
+                onSubmit={commit}
+              />
+              <Field
+                label="RGB"
+                hint="0-255"
+                value={display.rgb}
+                onSubmit={parseRgb}
+              />
+              <Field
+                label="HSL"
+                hint="deg, %, %"
+                value={display.hsl}
+                onSubmit={parseHsl}
+              />
+              <Field
+                label="HSV"
+                hint="deg, %, %"
+                value={display.hsv}
+                onSubmit={parseHsv}
+              />
+              <Field
+                label="CMYK"
+                hint="%, %, %, %"
+                value={display.cmyk}
+                onSubmit={parseCmyk}
+              />
+              <Field
+                label="LAB"
+                hint="L, a, b"
+                value={display.lab}
+                onSubmit={parseLab}
+              />
+              <Field
+                label="LCH"
+                hint="L, C, h°"
+                value={display.lch}
+                onSubmit={parseLch}
+              />
+              <Field
+                label="OKLCH"
+                hint="L%, C, h°"
+                value={display.oklch}
+                onSubmit={parseOklch}
+              />
             </div>
             <div className="model-footnote">
-              Press Enter or blur to commit. Use Copy on any row to grab the current value.
+              Press Enter or blur to commit. Use Copy on any row to grab the
+              current value.
             </div>
           </div>
         </div>

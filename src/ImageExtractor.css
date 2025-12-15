@@ -689,3 +689,88 @@
 }
 
 
+.ie-insights {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.75rem;
+}
+
+.ie-insight-card {
+    background: #f8fafc;
+    border: 1px solid rgba(12, 25, 48, 0.08);
+    border-radius: 10px;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.ie-insight-label {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: #6b7280;
+}
+
+.ie-insight-value {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #0f172a;
+}
+
+.ie-insight-bar {
+    width: 100%;
+    height: 6px;
+    background: #e5e7eb;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.ie-insight-bar-fill {
+    height: 100%;
+    background: linear-gradient(135deg, #60a5fa, #2563eb);
+}
+
+.ie-insight-pills {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.ie-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.3rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: 1px solid transparent;
+}
+
+.ie-pill.warm {
+    background: #fff7ed;
+    color: #c2410c;
+    border-color: rgba(194, 65, 12, 0.15);
+}
+
+.ie-pill.cool {
+    background: #ecfeff;
+    color: #0e7490;
+    border-color: rgba(14, 116, 144, 0.15);
+}
+
+.ie-pair-card .ie-pair-swatches {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.ie-pair-swatch {
+    padding: 0.35rem 0.6rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.82rem;
+    border: 1px solid rgba(12, 25, 48, 0.12);
+}

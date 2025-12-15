@@ -78,7 +78,7 @@ export const generateTetradic = (hex) => {
 };
 
 
-export const generateRandomPalette = () => {
+export const generateRandomPalette = (count = 6) => {
   const generateRandomColor = () => 
     `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`;
   
@@ -90,7 +90,9 @@ export const generateRandomPalette = () => {
   };
 
   const palette = [];
-  while (palette.length < 6) {
+  const target = Math.max(1, Math.min(10, count));
+
+  while (palette.length < target) {
     const randomColor = generateRandomColor();
     const complementaryColor = getComplementaryColor(randomColor);
 
@@ -99,8 +101,7 @@ export const generateRandomPalette = () => {
     }
   }
   
-  // Ensure palette has exactly 6 colors
-  return palette.slice(0, 6);
+  return palette.slice(0, target);
 };
 
 // Exporting all palette types for easy access

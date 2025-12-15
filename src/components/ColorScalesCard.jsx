@@ -117,7 +117,7 @@ export const ColorScalesDetail = ({ color }) => {
 
     return (
         <Card.Body>
-            {/* Scale Type */}
+            {/* Scale Type - Full Width */}
             <div className="mb-3">
                 <label className="form-label text-muted small">Scale Type</label>
                 <ButtonGroup size="sm" className="w-100">
@@ -138,89 +138,99 @@ export const ColorScalesDetail = ({ color }) => {
                 </ButtonGroup>
             </div>
 
-            {/* Number of Steps */}
-            <div className="mb-3">
-                <label className="form-label text-muted small">
-                    Steps: {steps}
-                </label>
-                <Form.Range
-                    min="5"
-                    max="11"
-                    value={steps}
-                    onChange={(e) => setSteps(parseInt(e.target.value))}
-                    onMouseDown={(e) => e.stopPropagation()}
-                />
-            </div>
-
-            {/* Color Scale Preview */}
-            <div className="mb-3">
-                {scale.map((c, i) => (
-                    <div
-                        key={i}
-                        className="d-flex align-items-center mb-1"
-                        style={{ gap: '0.5rem' }}
-                    >
-                        <div
-                            style={{
-                                width: '40px',
-                                height: '32px',
-                                background: c,
-                                borderRadius: '4px',
-                                border: '1px solid var(--dashboard-border)',
-                                flexShrink: 0
-                            }}
-                        ></div>
-                        <small className="text-muted" style={{ width: '50px' }}>
-                            {scaleNumbers[i]}
-                        </small>
-                        <code style={{ fontSize: '0.75rem', flex: 1 }}>{c}</code>
+            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+                {/* Left Column: Steps & Preview */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    {/* Number of Steps */}
+                    <div className="mb-3">
+                        <label className="form-label text-muted small">
+                            Steps: {steps}
+                        </label>
+                        <Form.Range
+                            min="5"
+                            max="10"
+                            value={steps}
+                            onChange={(e) => setSteps(parseInt(e.target.value))}
+                            onMouseDown={(e) => e.stopPropagation()}
+                        />
                     </div>
-                ))}
-            </div>
 
-            {/* Export Format */}
-            <div className="mb-3">
-                <label className="form-label text-muted small">Export Format</label>
-                <Form.Select
-                    size="sm"
-                    value={exportFormat}
-                    onChange={(e) => setExportFormat(e.target.value)}
-                    onMouseDown={(e) => e.stopPropagation()}
-                >
-                    <option value="tailwind">Tailwind Config</option>
-                    <option value="css">CSS Variables</option>
-                    <option value="json">JSON Tokens</option>
-                </Form.Select>
-            </div>
+                    {/* Color Scale Preview */}
+                    <div className="mb-3">
+                        {scale.map((c, i) => (
+                            <div
+                                key={i}
+                                className="d-flex align-items-center mb-1"
+                                style={{ gap: '0.5rem' }}
+                            >
+                                <div
+                                    style={{
+                                        width: '40px',
+                                        height: '24px',
+                                        background: c,
+                                        borderRadius: '0',
+                                        border: '1px solid var(--dashboard-border)',
+                                        flexShrink: 0
+                                    }}
+                                ></div>
+                                <small className="text-muted" style={{ width: '40px', fontSize: '0.75rem' }}>
+                                    {scaleNumbers[i]}
+                                </small>
+                                <code style={{ fontSize: '0.75rem', flex: 1 }}>{c}</code>
+                            </div>
+                        ))}
+                    </div>
+                </div>
 
-            {/* Export Code Preview */}
-            <div className="mb-3">
-                <pre style={{
-                    fontSize: '0.7rem',
-                    background: 'var(--dashboard-bg)',
-                    padding: '0.75rem',
-                    borderRadius: '4px',
-                    maxHeight: '120px',
-                    overflow: 'auto',
-                    margin: 0
-                }}
-                    onMouseDown={(e) => e.stopPropagation()}
-                >
-                    <code>{generateExportCode()}</code>
-                </pre>
-            </div>
+                {/* Right Column: Export Tools */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    {/* Export Format */}
+                    <div className="mb-3">
+                        <label className="form-label text-muted small">Export Format</label>
+                        <Form.Select
+                            size="sm"
+                            value={exportFormat}
+                            onChange={(e) => setExportFormat(e.target.value)}
+                            onMouseDown={(e) => e.stopPropagation()}
+                        >
+                            <option value="tailwind">Tailwind Config</option>
+                            <option value="css">CSS Variables</option>
+                            <option value="json">JSON Tokens</option>
+                        </Form.Select>
+                    </div>
 
-            {/* Copy Button */}
-            <Button
-                variant="primary"
-                size="sm"
-                onClick={handleCopyCode}
-                className="w-100"
-                onMouseDown={(e) => e.stopPropagation()}
-            >
-                <i className={`bi ${copied ? 'bi-check-lg' : 'bi-clipboard'} me-1`}></i>
-                {copied ? 'Copied!' : 'Copy Code'}
-            </Button>
+                    {/* Export Code Preview */}
+                    <div className="mb-3">
+                        <pre style={{
+                            fontSize: '0.7rem',
+                            background: 'var(--dashboard-bg)',
+                            padding: '0.75rem',
+                            borderRadius: '0',
+                            border: '1px solid var(--dashboard-border)',
+                            height: '260px',
+                            overflow: 'auto',
+                            margin: 0
+                        }}
+                            onMouseDown={(e) => e.stopPropagation()}
+                        >
+                            <code>{generateExportCode()}</code>
+                        </pre>
+                    </div>
+
+                    {/* Copy Button */}
+                    <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={handleCopyCode}
+                        className="w-100"
+                        onMouseDown={(e) => e.stopPropagation()}
+                        style={{ borderRadius: 0 }}
+                    >
+                        <i className={`bi ${copied ? 'bi-check-lg' : 'bi-clipboard'} me-1`}></i>
+                        {copied ? 'Copied!' : 'Copy Code'}
+                    </Button>
+                </div>
+            </div>
         </Card.Body>
     );
 };

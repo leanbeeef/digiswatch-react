@@ -99,7 +99,7 @@ h6,
 }
 
 button {
-  border-radius: 0;
+  /* border-radius: 0; */
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
   font-size: 1em;
@@ -531,6 +531,10 @@ body,
 
 .immersive-main {
   height: calc(100vh - 58px);
+}
+
+.has-global-tray .immersive-main {
+  height: calc(100vh - 58px - 120px);
 }
 
 .command-palette-backdrop {
@@ -1559,6 +1563,18 @@ body,
   .hero-visual {
     min-height: 360px;
   }
+}
+
+/* Global palette tray wrapper */
+.global-palette-tray {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1500;
+  box-shadow: 0 -6px 18px rgba(15, 32, 63, 0.08);
+  border-top: 1px solid rgba(12, 25, 48, 0.08);
+  background: #ffffff;
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Montserrat:wght@500;700&family=Playfair+Display:wght@500;700&family=Roboto+Mono:wght@400;600&display=swap');

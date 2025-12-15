@@ -83,7 +83,7 @@ const DashboardCard = ({
                             <i className={`bi bi-${isExpanded ? 'arrows-angle-contract' : 'arrows-angle-expand'}`}></i>
                         </button>
                     )}
-                    {isDraggable && (
+                    {isDraggable && moveCard && (
                         <div
                             ref={drag}
                             className="dashboard-card-action-btn dashboard-card-drag-handle"

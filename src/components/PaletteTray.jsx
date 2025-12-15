@@ -16,7 +16,9 @@ const PaletteTray = ({
     onDragOver,
     onDrop,
     onDragEnd,
-    draggingIndex = null
+    draggingIndex = null,
+    onAddColor,
+    onRemoveColor
 }) => {
     const [collapsed, setCollapsed] = useState(() => {
         if (typeof window !== 'undefined') {
@@ -103,12 +105,12 @@ const PaletteTray = ({
                                         <div className="swatch-hex">{color.hex}</div>
                                         <div className="swatch-name">{color.name}</div>
                                     </div>
-                                    <div className="swatch-actions">
-                                        <button
-                                            className="swatch-action-btn"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                onColorClick && onColorClick(color.hex, index);
+                                <div className="swatch-actions">
+                                    <button
+                                        className="swatch-action-btn"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onColorClick && onColorClick(color.hex, index);
                                             }}
                                             style={{ color: color.textColor }}
                                             title="Open Swatch Studio"
@@ -125,6 +127,18 @@ const PaletteTray = ({
                                             title={color.locked ? 'Unlock color' : 'Lock color'}
                                         >
                                             <i className={`bi bi-${color.locked ? 'lock-fill' : 'unlock'}`}></i>
+                                        </button>
+                                        <button
+                                            className="swatch-action-btn"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onRemoveColor && onRemoveColor(index);
+                                            }}
+                                            style={{ color: color.textColor }}
+                                            title="Remove color"
+                                            disabled={palette.length <= 2}
+                                        >
+                                            <i className="bi bi-trash"></i>
                                         </button>
                                     </div>
                                 </div>
@@ -143,6 +157,27 @@ const PaletteTray = ({
                         )}
                     </div>
                 ))}
+              
+
+                {/* Add Color Button - Only if < 10 colors */}
+                {palette.length < 10 && (
+                    <button
+                        className="palette-swatch palette-add-btn"
+                        onClick={onAddColor}
+                        title="Add color"
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'var(--dashboard-surface)',
+                            border: '2px dashed var(--dashboard-border)',
+                            color: 'var(--dashboard-text-muted)',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        <i className="bi bi-plus-lg" style={{ fontSize: '1.5rem' }}></i>
+                    </button>
+                )}
             </div>
         </div>
     );

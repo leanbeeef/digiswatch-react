@@ -14,13 +14,7 @@ export const useDensity = () => {
 };
 
 export const DensityProvider = ({ children }) => {
-    const [density, setDensity] = useState(() => {
-        if (typeof window !== 'undefined') {
-            const stored = localStorage.getItem('densityMode');
-            return stored === 'compact' ? 'compact' : 'comfortable';
-        }
-        return 'comfortable';
-    });
+    const [density, setDensity] = useState('compact'); // Enforce comfortable mode as standard
 
     useEffect(() => {
         if (typeof window !== 'undefined') {

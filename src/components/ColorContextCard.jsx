@@ -10,7 +10,7 @@ export const ColorContextPreview = ({ color, contextData }) => {
         return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: color || '#ccc' }}></div>
+                    <div style={{ width: '16px', height: '16px', borderRadius: '0', background: color || '#ccc' }}></div>
                     <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#999' }}>No Context Data</span>
                 </div>
             </div>
@@ -20,7 +20,7 @@ export const ColorContextPreview = ({ color, contextData }) => {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', height: '100%', justifyContent: 'center' }}>
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: color, flexShrink: 0 }}></div>
+                <div style={{ width: '48px', height: '48px', borderRadius: '0', background: color, flexShrink: 0 }}></div>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <span style={{ fontSize: '1.1rem', fontWeight: 700, lineHeight: 1.2 }}>{emotional?.description?.split('.')[0] || 'Context'}</span>
                     <span style={{ fontSize: '0.85rem', color: '#6b7280' }}>Based on psychological associations</span>
@@ -40,72 +40,90 @@ export const ColorContextDetail = ({ contextData }) => {
 
     const { emotional, cultural, industry, moods } = contextData;
 
+    const cardStyle = {
+        border: '1px solid var(--dashboard-border)',
+        padding: '1rem',
+        background: 'var(--dashboard-surface)',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between'
+    };
+
+    const titleStyle = {
+        fontSize: '0.95rem',
+        fontWeight: 700,
+        marginBottom: '0.5rem',
+        color: 'var(--dashboard-text)'
+    };
+
+    const textStyle = {
+        fontSize: '0.9rem',
+        lineHeight: 1.5,
+        color: 'var(--dashboard-text-muted)'
+    };
+
     return (
-        <React.Fragment>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.7rem', height: '100%' }}>
             {/* Emotional Context */}
             {emotional && (
-                <div className="context-section">
-                    <h4 className="context-section-title">Emotional Meaning</h4>
-                    <p className="context-section-content">{emotional.description}</p>
-                    <div className="context-tags" style={{ marginTop: '0.5rem' }}>
-                        <span className="context-tag">{emotional.temperature}</span>
-                        <span className="context-tag">{emotional.energy}</span>
+                <div style={cardStyle}>
+                    <div>
+                        <h4 style={titleStyle}>Emotional</h4>
+                        <p style={textStyle}>{emotional.description}</p>
+                    </div>
+
+                </div>
+            )}
+
+            {/* Mood Descriptors */}
+            {moods && moods.length > 0 && (
+                <div style={cardStyle}>
+                    <div>
+                        <h4 style={titleStyle}>Mood</h4>
+                        <div className="context-tags" style={{ gap: '6px' }}>
+                            {moods.slice(0, 8).map((mood, idx) => (
+                                <span key={idx} className="context-tag" style={{ padding: '4px 10px', fontSize: '0.8rem' }}>{mood}</span>
+                            ))}
+                        </div>
                     </div>
                 </div>
             )}
 
             {/* Cultural Symbolism */}
             {cultural && (
-                <div className="context-section">
-                    <h4 className="context-section-title">Cultural Symbolism</h4>
-                    <div style={{ marginBottom: '0.5rem' }}>
-                        <strong style={{ fontSize: '0.85rem', color: 'var(--dashboard-text)' }}>
-                            Western:
-                        </strong>
-                        <p className="context-section-content" style={{ marginTop: '0.25rem', marginBottom: '0.5rem' }}>
-                            {cultural.western}
-                        </p>
-                    </div>
-                    <div>
-                        <strong style={{ fontSize: '0.85rem', color: 'var(--dashboard-text)' }}>
-                            Eastern:
-                        </strong>
-                        <p className="context-section-content" style={{ marginTop: '0.25rem' }}>
-                            {cultural.eastern}
-                        </p>
+                <div style={{ ...cardStyle, gridColumn: 'span 2' }}>
+                    <h4 style={titleStyle}>Cultural Symbolism</h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                        <div>
+                            <strong style={{ fontSize: '0.85rem', color: 'var(--dashboard-text)', display: 'block', marginBottom: '4px' }}>Western</strong>
+                            <p style={textStyle}>{cultural.western}</p>
+                        </div>
+                        <div>
+                            <strong style={{ fontSize: '0.85rem', color: 'var(--dashboard-text)', display: 'block', marginBottom: '4px' }}>Eastern</strong>
+                            <p style={textStyle}>{cultural.eastern}</p>
+                        </div>
                     </div>
                 </div>
             )}
 
             {/* Industry Usage */}
             {industry && (
-                <div className="context-section">
-                    <h4 className="context-section-title">Industry Usage</h4>
-                    <div className="context-tags">
-                        {industry.examples.map((example, idx) => (
-                            <span key={idx} className="context-tag">{example}</span>
-                        ))}
+                <div style={{ ...cardStyle, gridColumn: 'span 2' }}>
+                    <div>
+                        <h4 style={titleStyle}>Industry Usage</h4>
+                        <div className="context-tags" style={{ gap: '6px' }}>
+                            {industry.examples.map((example, idx) => (
+                                <span key={idx} className="context-tag" style={{ padding: '4px 10px', fontSize: '0.8rem' }}>{example}</span>
+                            ))}
+                        </div>
                     </div>
                     {industry.note && (
-                        <p className="context-section-content" style={{ marginTop: '0.5rem' }}>
-                            {industry.note}
-                        </p>
+                        <p style={{ ...textStyle, marginTop: '0.75rem', fontStyle: 'italic', fontSize: '0.85rem' }}>Note: {industry.note}</p>
                     )}
                 </div>
             )}
-
-            {/* Mood Descriptors */}
-            {moods && moods.length > 0 && (
-                <div className="context-section">
-                    <h4 className="context-section-title">Mood</h4>
-                    <div className="context-tags">
-                        {moods.map((mood, idx) => (
-                            <span key={idx} className="context-tag">{mood}</span>
-                        ))}
-                    </div>
-                </div>
-            )}
-        </React.Fragment>
+        </div>
     );
 };
 

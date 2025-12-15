@@ -1,7 +1,7 @@
 // src/App.jsx
 
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './AuthContext';
 import Footer from './components/Footer';
 import PaletteGenerator from './pages/PaletteGenerator';
@@ -21,9 +21,12 @@ import PwaSplash from './components/PwaSplash';
 import AppTopBar from './components/AppTopBar';
 import AppRail from './components/AppRail';
 import AppCommandPalette from './components/AppCommandPalette';
+import GlobalPaletteTray from './components/GlobalPaletteTray';
+import { PaletteWorkspaceProvider } from './contexts/PaletteWorkspaceContext';
 import './index.css';
 
 const AppShell = () => {
+  const location = useLocation();
   const [showSplash, setShowSplash] = useState(() => {
     if (typeof window === 'undefined') return true;
     try {
@@ -64,8 +67,17 @@ const AppShell = () => {
     return () => window.removeEventListener('keydown', handleKey);
   }, []);
 
+  const hideGlobalTray =
+    location.pathname.startsWith('/home') ||
+    location.pathname.startsWith('/feed') ||
+    location.pathname.startsWith('/popular-palettes') ||
+    location.pathname.startsWith('/color-season') ||
+    location.pathname.startsWith('/palette-generator');
+
+  const shellClass = hideGlobalTray ? 'app-shell immersive-shell' : 'app-shell immersive-shell has-global-tray';
+
   return (
-    <div className="app-shell immersive-shell">
+    <div className={shellClass}>
       <PwaSplash show={showSplash} onDone={handleSplashDone} />
       <AppTopBar onCommand={handleCommand} />
       <div className="app-shell__body">
@@ -90,6 +102,7 @@ const AppShell = () => {
         </main>
         <AppCommandPalette open={showCommand} onClose={() => setShowCommand(false)} />
       </div>
+      {!hideGlobalTray && <GlobalPaletteTray />}
       {shouldShowFooter && <Footer />}
     </div>
   );
@@ -99,9 +112,11 @@ function App() {
   return (
     <ColorProvider>
       <AuthProvider>
-        <Router>
-          <AppShell />
-        </Router>
+        <PaletteWorkspaceProvider>
+          <Router>
+            <AppShell />
+          </Router>
+        </PaletteWorkspaceProvider>
       </AuthProvider>
     </ColorProvider>
   );

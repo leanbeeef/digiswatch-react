@@ -1,6 +1,6 @@
 // src/pages/PaletteGenerator.jsx
 import { useEffect, useRef, useState } from "react";
-import { Button, Toast, Modal } from "react-bootstrap";
+import { Button, Toast, Modal, Nav } from "react-bootstrap";
 import { useLocation } from "react-router-dom";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -14,6 +14,7 @@ import CardDetailModal from "../components/CardDetailModal";
 import { CARD_REGISTRY, DEFAULT_SLOTS } from "../components/CardRegistry";
 import { DensityProvider, useDensity } from "../contexts/DensityContext";
 import { getColorContext } from "../utils/getColorContext";
+import ContextPanel from "../components/ContextPanel";
 import "../styles/dashboard.css";
 import "../styles/exportModal.css";
 import "../styles/layout.css";
@@ -45,6 +46,7 @@ import { db } from "../firebase";
 import { useAuth } from "../AuthContext";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import SEO from "../components/SEO";
+import { usePaletteWorkspace } from "../contexts/PaletteWorkspaceContext";
 
 // Prefer explicit Worker URL to avoid 405s from the static host; env override for local/dev.
 const deriveApiBase = () => {
@@ -87,7 +89,10 @@ const TUTORIAL_STEPS = [
   {
     title: "Pick a swatch",
     body: "Click any palette swatch on the left to load its data, harmonies, and context on the dashboard.",
-    tips: ["Drag swatches to reorder", "Tap the lock to keep a color while shuffling"],
+    tips: [
+      "Drag swatches to reorder",
+      "Tap the lock to keep a color while shuffling",
+    ],
   },
   {
     title: "Generate colors",
@@ -97,19 +102,50 @@ const TUTORIAL_STEPS = [
   {
     title: "Fine-tune quickly",
     body: "Open the color drawer by clicking a swatch to tweak HSL/OKLCH, then drag cards to reorder your tools.",
-    tips: ["Expand/collapse cards to focus", "Switch Masonry/Stacked to suit your layout"],
+    tips: [
+      "Expand/collapse cards to focus",
+      "Switch Masonry/Stacked to suit your layout",
+    ],
   },
   {
     title: "Check accessibility",
     body: "Use Contrast & Accessibility cards to verify WCAG scores and see readable text pairs automatically.",
-    tips: ["Try dark/light modes in the visualizer", "Keep ratios ≥ 4.5 for body text"],
+    tips: [
+      "Try dark/light modes in the visualizer",
+      "Keep ratios ≥ 4.5 for body text",
+    ],
   },
   {
     title: "Share or export",
     body: "Save palettes to your account, share a link, or export as CSS, JSON, SVG, PNG, or Text.",
-    tips: ["Name the palette before saving", "Exports respect your current order"],
+    tips: [
+      "Name the palette before saving",
+      "Exports respect your current order",
+    ],
   },
 ];
+
+// Component to toggle density mode
+const DensityToggle = () => {
+  const { density, toggleDensity } = useDensity();
+  return (
+    <Button
+      variant="outline-secondary"
+      size="sm"
+      onClick={toggleDensity}
+      title={`Density: ${density === "compact" ? "Compact" : "Comfortable"}`}
+      className="dashboard-icon-btn"
+    >
+      <i
+        className={`bi ${
+          density === "compact"
+            ? "bi-arrows-angle-contract"
+            : "bi-arrows-angle-expand"
+        }`}
+      ></i>
+    </Button>
+  );
+};
 
 const getTextColor = (bg) => {
   return tinycolor.readability(bg, "#FFFFFF") >= 4.5 ? "#FFFFFF" : "#000000";
@@ -118,6 +154,8 @@ const getTextColor = (bg) => {
 const PaletteGenerator = () => {
   const location = useLocation();
   const { currentUser } = useAuth();
+  const { palette, setPalette, selectedColor, setSelectedColor, removeColor: removeColorFromWorkspace } =
+    usePaletteWorkspace();
   const { density, toggleDensity } = useDensity();
   const isOwner = currentUser?.email === OWNER_EMAIL;
   // Dashboard Card Handlers
@@ -141,21 +179,30 @@ const PaletteGenerator = () => {
 
   const getCardProps = (cardId) => {
     switch (cardId) {
-      case 'color-info': return { color: selectedColor, colorInfo };
-      case 'harmony': return { harmonies, onHarmonySelect: handleHarmonySelect };
-      case 'accessibility': return { color: selectedColor };
-      case 'scale': return { color: selectedColor };
-      case 'oklch': return { color: selectedColor };
-      case 'gradient': return { color: selectedColor };
-      case 'visualizer': return { palette };
-      case 'color-context': return { color: selectedColor, contextData: context };
-      case 'brand-analytics': return { color: selectedColor };
-      default: return { color: selectedColor };
+      case "color-info":
+        return { color: selectedColor, colorInfo };
+      case "harmony":
+        return { harmonies, onHarmonySelect: handleHarmonySelect };
+      case "accessibility":
+        return { color: selectedColor };
+      case "scale":
+        return { color: selectedColor };
+      case "oklch":
+        return { color: selectedColor };
+      case "gradient":
+        return { color: selectedColor };
+      case "visualizer":
+        return { palette };
+      case "color-context":
+        return { color: selectedColor, contextData: context };
+      case "brand-analytics":
+        return { color: selectedColor };
+      default:
+        return { color: selectedColor };
     }
   };
 
-  const [palette, setPalette] = useState([]);
-  const [selectedColor, setSelectedColor] = useState(null);
+  const [contextTab, setContextTab] = useState("evaluate");
   const [showColorEditor, setShowColorEditor] = useState(false);
   const [editingColorIndex, setEditingColorIndex] = useState(null);
   const [colorInfo, setColorInfo] = useState(null);
@@ -181,7 +228,7 @@ const PaletteGenerator = () => {
 
   // Dashboard State
   const [cardSlots, setCardSlots] = useState(() => {
-    const saved = localStorage.getItem('dashboardSlots');
+    const saved = localStorage.getItem("dashboardSlots");
     let slots = saved ? JSON.parse(saved) : DEFAULT_SLOTS;
     // Migration: Ensure we have enough slots for the new layout (7 items)
     if (slots.length < DEFAULT_SLOTS.length) {
@@ -196,7 +243,7 @@ const PaletteGenerator = () => {
 
   // Persist slots
   useEffect(() => {
-    localStorage.setItem('dashboardSlots', JSON.stringify(cardSlots));
+    localStorage.setItem("dashboardSlots", JSON.stringify(cardSlots));
   }, [cardSlots]);
   const aiCooldownTimerRef = useRef(null);
   const lastAiRequestRef = useRef(0);
@@ -214,8 +261,7 @@ const PaletteGenerator = () => {
   const closeTutorial = () => setShowTutorial(false);
   const nextTutorial = () =>
     setTutorialStep((step) => Math.min(step + 1, TUTORIAL_STEPS.length - 1));
-  const prevTutorial = () =>
-    setTutorialStep((step) => Math.max(step - 1, 0));
+  const prevTutorial = () => setTutorialStep((step) => Math.max(step - 1, 0));
 
   const handleToggleCard = (cardId) => {
     setVisibleCards((prev) =>
@@ -287,8 +333,9 @@ const PaletteGenerator = () => {
     setPalette((prevPalette) => {
       let newPaletteData;
       // If no previous palette, generate fresh
+      const desiredCount = Math.max(6, prevPalette.length || 6);
       if (prevPalette.length === 0) {
-        const newPalette = generateRandomPalette();
+        const newPalette = generateRandomPalette(desiredCount);
         newPaletteData = newPalette.map((hex) => ({
           hex,
           name: namer(hex).ntc[0].name,
@@ -297,16 +344,16 @@ const PaletteGenerator = () => {
         }));
       } else {
         // Keep locked colors, regenerate unlocked ones
-        const newPalette = generateRandomPalette();
+        const newPalette = generateRandomPalette(desiredCount);
         newPaletteData = prevPalette.map((color, index) =>
           color.locked
             ? color
             : {
               hex: newPalette[index],
-              name: namer(newPalette[index]).ntc[0].name,
-              textColor: getTextColor(newPalette[index]),
-              locked: false,
-            }
+                name: namer(newPalette[index]).ntc[0].name,
+                textColor: getTextColor(newPalette[index]),
+                locked: false,
+              }
         );
       }
 
@@ -395,7 +442,27 @@ const PaletteGenerator = () => {
       throw new Error("No usable colors returned from AI prompt");
     }
     setPalette(normalized);
+    setPalette(normalized);
     setTimeout(() => handleColorClick(normalized[0].hex), 0);
+  };
+
+  const handleAddColor = () => {
+    if (palette.length >= 10) return;
+
+    const generateRandomHex = () =>
+      `#${Math.floor(Math.random() * 16777215)
+        .toString(16)
+        .padStart(6, "0")}`;
+
+    const newHex = generateRandomHex();
+    const newColor = {
+      hex: newHex,
+      name: namer(newHex).ntc[0].name,
+      textColor: getTextColor(newHex),
+      locked: false,
+    };
+
+    setPalette([...palette, newColor]);
   };
 
   const handleGenerateWithPrompt = async (event) => {
@@ -437,12 +504,15 @@ const PaletteGenerator = () => {
     const timeoutId = setTimeout(() => controller.abort(), AI_TIMEOUT_MS);
 
     try {
-      const response = await fetch(`${API_BASE || ""}/api/generate-palette-from-prompt`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: sanitizedPrompt }),
-        signal: controller.signal,
-      });
+      const response = await fetch(
+        `${API_BASE || ""}/api/generate-palette-from-prompt`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: sanitizedPrompt }),
+          signal: controller.signal,
+        }
+      );
 
       if (!response.ok) {
         const errorBody = await response.text().catch(() => "");
@@ -461,7 +531,8 @@ const PaletteGenerator = () => {
       if (error.name === "AbortError") {
         showAiError("Request timed out. Please try again in a moment.");
       } else {
-        let friendly = "Could not generate palette from prompt. Please try again shortly.";
+        let friendly =
+          "Could not generate palette from prompt. Please try again shortly.";
         const msg = (error?.message || "").trim();
         if (msg) {
           try {
@@ -480,20 +551,16 @@ const PaletteGenerator = () => {
     }
   };
 
-  // Effect to select the first color when palette changes if no selection or invalid
+  // Ensure a selection and hydrate color context whenever palette changes
   useEffect(() => {
-    if (palette.length > 0) {
-      // If currently selected color is not in the new palette (by hex), or nothing selected
-      // For simplicity in this "always on" dashboard, let's just select the first color if nothing is selected
-      // or if we just generated a fresh palette.
-      // Actually, let's just always select the first color on generation if we want to be simple,
-      // but users might want to keep their selection if locked.
-      // For now, let's just ensure *something* is selected.
-      if (!selectedColor || !palette.find((c) => c.hex === selectedColor)) {
-        handleColorClick(palette[0].hex);
-      }
-    }
-  }, [palette]);
+    if (!palette.length) return;
+    const hasSelection =
+      selectedColor && palette.find((c) => c.hex === selectedColor);
+    const target = hasSelection ? selectedColor : palette[0].hex;
+    const normalizedTarget = new TinyColor(target).toHexString().toUpperCase();
+    if (colorInfo?.hex === normalizedTarget) return;
+    handleColorClick(target);
+  }, [palette, selectedColor, colorInfo]);
 
   useEffect(() => {
     if (editingColorIndex !== null && !palette[editingColorIndex]) {
@@ -539,11 +606,11 @@ const PaletteGenerator = () => {
       prev.map((c, i) =>
         i === index
           ? {
-            ...c,
-            hex: normalizedHex,
-            name: namer(normalizedHex).ntc[0].name,
-            textColor: getTextColor(normalizedHex),
-          }
+              ...c,
+              hex: normalizedHex,
+              name: namer(normalizedHex).ntc[0].name,
+              textColor: getTextColor(normalizedHex),
+            }
           : c
       )
     );
@@ -571,6 +638,15 @@ const PaletteGenerator = () => {
     setPalette((prev) =>
       prev.map((c, i) => (i === index ? { ...c, locked: !c.locked } : c))
     );
+  };
+
+  const removeColor = (index) => {
+    if (palette.length <= 2) return;
+    removeColorFromWorkspace(index);
+    if (editingColorIndex !== null && index === editingColorIndex) {
+      setShowColorEditor(false);
+      setEditingColorIndex(null);
+    }
   };
 
   const movePaletteColor = (from, to) => {
@@ -699,26 +775,36 @@ const PaletteGenerator = () => {
       />
       <LayoutContainer
         headerContent={
-          <div className="d-flex justify-content-between align-items-center w-100 gap-3">
+          <div className="d-flex align-items-center w-100 gap-3 flex-wrap generator-toolbar">
             {/* AI Prompt */}
-            <div className="flex-grow-1" style={{ maxWidth: '600px', position: 'relative' }}>
+            <div
+              className="flex-grow-1"
+              style={{ minWidth: 260, maxWidth: 440, position: "relative" }}
+            >
               {!currentUser && (
                 <div
                   style={{
                     ...aiLockOverlayStyle,
-                    borderRadius: '6px',
+                    borderRadius: "6px",
                   }}
                   onClick={() => setShowAuthModal(true)}
                   role="button"
                   aria-label="Sign in to use AI generation"
                 >
-                  <i className="bi bi-lock-fill" style={{ fontSize: '0.9rem' }}></i>
-                  <span style={{ fontSize: '0.8rem' }}>Sign in</span>
+                  <i
+                    className="bi bi-lock-fill"
+                    style={{ fontSize: "0.9rem" }}
+                  ></i>
+                  <span style={{ fontSize: "0.8rem" }}>Sign in</span>
                 </div>
               )}
               <form
                 onSubmit={handleGenerateWithPrompt}
-                style={{ filter: !currentUser ? 'blur(2px)' : 'none', display: 'flex', gap: '0.5rem' }}
+                style={{
+                  filter: !currentUser ? "blur(2px)" : "none",
+                  display: "flex",
+                  gap: "0.5rem",
+                }}
               >
                 <input
                   type="text"
@@ -728,9 +814,9 @@ const PaletteGenerator = () => {
                   maxLength={MAX_PROMPT_LENGTH}
                   onChange={(e) => {
                     setAiPrompt(e.target.value);
-                    if (aiError) setAiError('');
+                    if (aiError) setAiError("");
                   }}
-                  disabled={aiStatus === 'loading' || !currentUser}
+                  disabled={aiStatus === "loading" || !currentUser}
                   aria-label="Describe a palette to generate with AI"
                 />
                 <Button
@@ -740,21 +826,21 @@ const PaletteGenerator = () => {
                   disabled={
                     !currentUser ||
                     !aiPrompt.trim() ||
-                    aiStatus === 'loading' ||
+                    aiStatus === "loading" ||
                     cooldownSeconds > 0 ||
                     aiUsesLeft <= 0
                   }
                   title={
                     !currentUser
-                      ? 'Sign in to use AI (10/day)'
+                      ? "Sign in to use AI (10/day)"
                       : aiUsesLeft <= 0
-                        ? 'Limit reached'
-                        : cooldownSeconds > 0
-                          ? 'Cooling down...'
-                          : 'Generate'
+                      ? "Limit reached"
+                      : cooldownSeconds > 0
+                      ? "Cooling down..."
+                      : "Generate"
                   }
                 >
-                  {aiStatus === 'loading' ? (
+                  {aiStatus === "loading" ? (
                     <i className="bi bi-hourglass-split"></i>
                   ) : (
                     <i className="bi bi-stars"></i>
@@ -763,121 +849,108 @@ const PaletteGenerator = () => {
               </form>
             </div>
 
-            {/* Action buttons */}
-            <div className="d-flex gap-2 align-items-center">
+            <div className="toolbar-divider" aria-hidden="true"></div>
+
+            {/* Tabs */}
+            <div className="flex-grow-1 d-flex justify-content-center">
+              <Nav
+                variant="tabs"
+                activeKey={contextTab}
+                onSelect={setContextTab}
+                className="context-tab-nav"
+              >
+                <Nav.Item>
+                  <Nav.Link eventKey="evaluate">
+                    <i className="bi bi-shield-check"></i>
+                    <span>Evaluate</span>
+                  </Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link eventKey="generate">
+                    <i className="bi bi-palette"></i>
+                    <span>Generate</span>
+                  </Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link eventKey="output">
+                    <i className="bi bi-download"></i>
+                    <span>Output</span>
+                  </Nav.Link>
+                </Nav.Item>
+              </Nav>
+            </div>
+
+              <div className="toolbar-divider" aria-hidden="true"></div>
+
+              {/* Action buttons */}
+              <div className="d-flex gap-2 align-items-center">
               <Button
                 variant="outline-secondary"
                 size="sm"
                 onClick={generatePalette}
-                title="Generate New Palette"
+                title={`Generate ${palette.length} colors`}
               >
                 <i className="bi bi-arrow-clockwise"></i>
               </Button>
-              <Button
-                variant="outline-secondary"
-                size="sm"
-                onClick={openSaveModal}
-                title="Save Palette"
-              >
-                <i className="bi bi-floppy"></i>
-              </Button>
-              <Button
-                variant="outline-secondary"
-                size="sm"
-                onClick={() => setShowShareModal(true)}
-                title="Share Palette"
-                disabled={palette.length === 0}
-              >
-                <i className="bi bi-share"></i>
-              </Button>
-              <Button
-                variant="outline-secondary"
-                size="sm"
-                onClick={() => setShowExportModal(true)}
-                title="Export Palette"
-              >
-                <i className="bi bi-download"></i>
-              </Button>
-              <Button
-                variant="outline-secondary"
-                size="sm"
-                onClick={startTutorial}
-                title="Tutorial"
-              >
-                <i className="bi bi-question-circle"></i>
-              </Button>
-              <Button
-                variant="outline-secondary"
-                size="sm"
-                onClick={toggleDensity}
-                title={`Density: ${density === 'comfortable' ? 'Comfortable' : 'Compact'}`}
-                aria-label="Toggle density mode"
-              >
-                <i className={`bi bi-${density === 'comfortable' ? 'layout-text-window-reverse' : 'layout-text-window'}`}></i>
-              </Button>
-            </div>
+
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={openSaveModal}
+                  title="Save Palette"
+                >
+                  <i className="bi bi-floppy"></i>
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() => setShowShareModal(true)}
+                  title="Share Palette"
+                  disabled={palette.length === 0}
+                >
+                  <i className="bi bi-share"></i>
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() => setShowExportModal(true)}
+                  title="Export Palette"
+                >
+                  <i className="bi bi-download"></i>
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={startTutorial}
+                  title="Tutorial"
+                >
+                  <i className="bi bi-question-circle"></i>
+                </Button>
+              </div>
+
+            <div className="toolbar-divider" aria-hidden="true"></div>
           </div>
         }
         workbench={
-          <div className="dashboard-grid">
-            {palette.length > 0 && selectedColor ? (
-              cardSlots.map((cardId, index) => {
-                const cardDef = CARD_REGISTRY[cardId];
-                if (!cardDef) return null;
-
-                const Preview = cardDef.Preview;
-                const props = getCardProps(cardId);
-
-                // Asymmetric 6-column grid logic with Vertical Card:
-                // Row 1: Span 2, Span 2, Span 1, Vert Span 1 (Indices 0, 1, 2, 3)
-                // Row 2: Span 3, Span 2, (Vert continues) (Indices 4, 5)
-                // Row 3: Span 6 (Index 6)
-
-                let className = '';
-
-                if (index === 0 || index === 1) {
-                  className = 'col-span-2';
-                } else if (index === 2) {
-                  className = ''; // Span 1
-                } else if (index === 3) {
-                  className = 'row-span-2'; // Vertical card in col 6
-                } else if (index === 4) {
-                  className = 'col-span-3';
-                } else if (index === 5) {
-                  className = 'col-span-2';
-                } else if (index === 6) {
-                  className = 'col-span-6 only-visible-4k';
-                }
-
-                // Adaptive props
-                const isWide = [0, 1, 4, 5, 6].includes(index);
-                const isTall = index === 3;
-
-                return (
-                  <DashboardCardSlot
-                    key={`${cardId}-${index}`}
-                    cardType={cardId}
-                    title={cardDef.title}
-                    icon={cardDef.icon}
-                    isPremium={cardDef.isPremium}
-                    previewContent={<Preview {...props} isWide={isWide} isTall={isTall} />}
-                    onCardClick={() => handleCardClick(cardId)}
-                    onSwapClick={() => handleSwapClick(index)}
-                    className={className}
-                  />
-                );
-              })
-            ) : (
-              <div className="dashboard-empty-state">
-                <i className="bi bi-palette"></i>
-                <h4>Generate a palette to get started</h4>
-                <p>Click the shuffle button or describe a palette with AI</p>
-              </div>
-            )}
+          <div className="h-100 d-flex flex-column" style={{ minHeight: 0 }}>
+            <ContextPanel
+              activeTab={contextTab}
+              onTabChange={setContextTab}
+              selectedColor={selectedColor}
+              palette={palette}
+              colorInfo={colorInfo}
+              harmonies={harmonies}
+              context={context}
+              onHarmonySelect={handleHarmonySelect}
+              onToggle={null}
+              isOpen={true}
+              hideHeader={true}
+            />
           </div>
         }
+        contextPanel={null}
         paletteTray={
-          < PaletteTray
+          <PaletteTray
             palette={palette}
             onColorClick={handlePaletteColorClick}
             onSwatchSelect={handleColorClick}
@@ -888,6 +961,8 @@ const PaletteGenerator = () => {
             onDrop={handlePaletteDrop}
             onDragEnd={handlePaletteDragEnd}
             draggingIndex={draggingPaletteIndex}
+            onAddColor={handleAddColor}
+            onRemoveColor={removeColor}
           />
         }
       />
@@ -962,10 +1037,7 @@ const PaletteGenerator = () => {
           </div>
         </Modal.Body>
         <Modal.Footer className="border-0">
-          <Button
-            variant="secondary"
-            onClick={() => setShowExportModal(false)}
-          >
+          <Button variant="secondary" onClick={() => setShowExportModal(false)}>
             Close
           </Button>
         </Modal.Footer>
@@ -995,25 +1067,36 @@ const PaletteGenerator = () => {
       )}
 
       {/* Swap Modal */}
-      <Modal show={swapModalOpen} onHide={() => setSwapModalOpen(false)} centered>
+      <Modal
+        show={swapModalOpen}
+        onHide={() => setSwapModalOpen(false)}
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title>Customize Dashboard</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <div className="d-grid gap-2">
-            {Object.values(CARD_REGISTRY).map(card => (
+            {Object.values(CARD_REGISTRY).map((card) => (
               <Button
                 key={card.id}
                 variant="outline-light"
                 className="d-flex align-items-center gap-3 p-3 text-start border"
-                style={{ color: '#1f2937' }}
+                style={{ color: "#1f2937" }}
                 onClick={() => handleSwapConfirm(card.id)}
               >
                 <i className={`bi ${card.icon} fs-4 text-primary`}></i>
                 <div>
                   <div className="fw-bold d-flex align-items-center gap-2">
                     {card.title}
-                    {card.isPremium && <span className="badge bg-warning text-dark" style={{ fontSize: '0.6em' }}>PRO</span>}
+                    {card.isPremium && (
+                      <span
+                        className="badge bg-warning text-dark"
+                        style={{ fontSize: "0.6em" }}
+                      >
+                        PRO
+                      </span>
+                    )}
                   </div>
                   <div className="small text-muted">Click to select</div>
                 </div>
@@ -1161,10 +1244,7 @@ const PaletteGenerator = () => {
               justifyContent: "flex-end",
             }}
           >
-            <Button
-              variant="secondary"
-              onClick={() => setShowAuthModal(false)}
-            >
+            <Button variant="secondary" onClick={() => setShowAuthModal(false)}>
               Maybe later
             </Button>
             <Button
@@ -1188,26 +1268,24 @@ const PaletteGenerator = () => {
           </div>
         </div>
       </Modal>
-      {
-        showShareModal && (
-          <SharePalette
-            show={showShareModal}
-            onClose={() => setShowShareModal(false)}
-            palette={{
+      {showShareModal && (
+        <SharePalette
+          show={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          palette={{
+            name: paletteName || "DigiSwatch Palette",
+            colors: palette.map((c) => c.hex),
+          }}
+          shareUrl={() => {
+            const payload = {
               name: paletteName || "DigiSwatch Palette",
               colors: palette.map((c) => c.hex),
-            }}
-            shareUrl={() => {
-              const payload = {
-                name: paletteName || "DigiSwatch Palette",
-                colors: palette.map((c) => c.hex),
-              };
-              const encoded = encodeURIComponent(btoa(JSON.stringify(payload)));
-              return `${window.location.origin}/palette-generator?palette=${encoded}`;
-            }}
-          />
-        )
-      }
+            };
+            const encoded = encodeURIComponent(btoa(JSON.stringify(payload)));
+            return `${window.location.origin}/palette-generator?palette=${encoded}`;
+          }}
+        />
+      )}
       <ColorEditorDrawer
         show={showColorEditor}
         color={
@@ -1219,74 +1297,74 @@ const PaletteGenerator = () => {
         onChange={handleColorEditorChange}
       />
 
-      {
-        showTutorial && (
-          <div className="tutorial-overlay" role="dialog" aria-modal="true">
-            <div className="tutorial-card">
-              <div className="d-flex justify-content-between align-items-start">
-                <div>
-                  <div className="tutorial-step-badge">
-                    Step {tutorialStep + 1} of {TUTORIAL_STEPS.length}
-                  </div>
-                  <h5 className="mb-2">{TUTORIAL_STEPS[tutorialStep].title}</h5>
+      {showTutorial && (
+        <div className="tutorial-overlay" role="dialog" aria-modal="true">
+          <div className="tutorial-card">
+            <div className="d-flex justify-content-between align-items-start">
+              <div>
+                <div className="tutorial-step-badge">
+                  Step {tutorialStep + 1} of {TUTORIAL_STEPS.length}
                 </div>
-                <Button
-                  variant="light"
-                  size="sm"
-                  onClick={closeTutorial}
-                  className="dashboard-icon-btn"
-                  aria-label="Close tutorial"
-                >
-                  <i className="bi bi-x-lg"></i>
-                </Button>
+                <h5 className="mb-2">{TUTORIAL_STEPS[tutorialStep].title}</h5>
               </div>
+              <Button
+                variant="light"
+                size="sm"
+                onClick={closeTutorial}
+                className="dashboard-icon-btn"
+                aria-label="Close tutorial"
+              >
+                <i className="bi bi-x-lg"></i>
+              </Button>
+            </div>
 
-              <p className="text-muted mb-3">{TUTORIAL_STEPS[tutorialStep].body}</p>
+            <p className="text-muted mb-3">
+              {TUTORIAL_STEPS[tutorialStep].body}
+            </p>
 
-              {TUTORIAL_STEPS[tutorialStep].tips && (
-                <ul className="tutorial-tip-list">
-                  {TUTORIAL_STEPS[tutorialStep].tips.map((tip, idx) => (
-                    <li key={idx}>{tip}</li>
-                  ))}
-                </ul>
-              )}
+            {TUTORIAL_STEPS[tutorialStep].tips && (
+              <ul className="tutorial-tip-list">
+                {TUTORIAL_STEPS[tutorialStep].tips.map((tip, idx) => (
+                  <li key={idx}>{tip}</li>
+                ))}
+              </ul>
+            )}
 
-              <div className="tutorial-progress mb-3" aria-hidden="true">
-                <div
-                  className="tutorial-progress-bar"
-                  style={{
-                    width: `${Math.round(
-                      ((tutorialStep + 1) / TUTORIAL_STEPS.length) * 100
-                    )}%`,
-                  }}
-                ></div>
-              </div>
+            <div className="tutorial-progress mb-3" aria-hidden="true">
+              <div
+                className="tutorial-progress-bar"
+                style={{
+                  width: `${Math.round(
+                    ((tutorialStep + 1) / TUTORIAL_STEPS.length) * 100
+                  )}%`,
+                }}
+              ></div>
+            </div>
 
-              <div className="tutorial-nav">
-                <Button
-                  variant="light"
-                  onClick={prevTutorial}
-                  disabled={tutorialStep === 0}
-                >
-                  <i className="bi bi-arrow-left-short me-1"></i> Back
-                </Button>
-                <div className="flex-grow-1" />
-                <Button
-                  variant="primary"
-                  onClick={
-                    tutorialStep === TUTORIAL_STEPS.length - 1
-                      ? closeTutorial
-                      : nextTutorial
-                  }
-                >
-                  {tutorialStep === TUTORIAL_STEPS.length - 1 ? "Done" : "Next"}
-                </Button>
-              </div>
+            <div className="tutorial-nav">
+              <Button
+                variant="light"
+                onClick={prevTutorial}
+                disabled={tutorialStep === 0}
+              >
+                <i className="bi bi-arrow-left-short me-1"></i> Back
+              </Button>
+              <div className="flex-grow-1" />
+              <Button
+                variant="primary"
+                onClick={
+                  tutorialStep === TUTORIAL_STEPS.length - 1
+                    ? closeTutorial
+                    : nextTutorial
+                }
+              >
+                {tutorialStep === TUTORIAL_STEPS.length - 1 ? "Done" : "Next"}
+              </Button>
             </div>
           </div>
-        )
-      }
-    </DndProvider >
+        </div>
+      )}
+    </DndProvider>
   );
 };
 

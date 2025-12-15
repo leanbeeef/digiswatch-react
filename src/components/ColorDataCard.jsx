@@ -53,17 +53,24 @@ const ColorDataCard = ({ color, colorInfo, index, moveCard, isExpanded, onToggle
                 <div className="color-preview-overlay">{colorInfo.hex}</div>
             </div>
 
-            {/* Color Formats */}
-            <div style={{ marginBottom: '1rem' }}>
-                {colorFormats.map((format) => (
-                    <div key={format.label} className="data-row">
-                        <span className="data-label">{format.label}</span>
-                        <div className="data-value">
-                            <span>{format.value}</span>
+            {/* Color Formats - Vertical List */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                {[...colorFormats, { label: 'CSS', value: colorInfo.rgbString }].map((format, idx) => (
+                    <div key={format.label} className="data-row" style={{
+                        borderBottom: idx !== 7 ? '1px solid rgba(0,0,0,0.05)' : 'none',
+                        padding: '0.6rem 0.25rem',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                    }}>
+                        <span className="data-label" style={{ fontSize: '0.8rem', width: '60px' }}>{format.label}</span>
+                        <div className="data-value" style={{ fontSize: '0.85rem', flex: 1, justifyContent: 'flex-end' }}>
+                            <span style={{ fontFamily: 'monospace', marginRight: '0.5rem' }}>{format.value}</span>
                             <button
                                 className="copy-btn"
                                 onClick={() => copyToClipboard(format.value, format.label)}
                                 title={`Copy ${format.label}`}
+                                style={{ padding: '0.2rem 0.4rem', fontSize: '0.75rem', borderRadius: 0 }}
                             >
                                 {copiedFormat === format.label ? (
                                     <i className="bi bi-check"></i>

@@ -70,61 +70,39 @@ export const AccessibilityDetail = ({ color }) => {
     const whiteCompliance = checkCompliance(contrastWhite);
     const blackCompliance = checkCompliance(contrastBlack);
 
-    const getBadgeVariant = (passes) => passes ? 'success' : 'danger';
+    const getBadgeVariant = (passes) => passes ? 'success' : 'secondary'; // Use secondary for fail to be cleaner
 
-    const renderComplianceRow = (bgColor, bgLabel, ratio, compliance) => (
-        <div className="mb-3 p-3 border rounded" style={{ background: 'var(--dashboard-surface)' }}>
-            <div className="d-flex align-items-center justify-content-between mb-2">
-                <div className="d-flex align-items-center gap-2">
-                    <div
-                        style={{
-                            width: '32px',
-                            height: '32px',
-                            borderRadius: '6px',
-                            background: bgColor,
-                            border: '2px solid var(--dashboard-border)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: color,
-                            fontWeight: 'bold',
-                            fontSize: '0.85rem'
-                        }}
-                    >
-                        A
-                    </div>
-                    <div>
-                        <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>
-                            On {bgLabel}
-                        </div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--dashboard-text-muted)' }}>
-                            Ratio: {ratio.toFixed(2)}:1
-                        </div>
-                    </div>
-                </div>
+    const renderLargePreview = (bgColor, label, ratio, compliance) => (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', border: '1px solid var(--dashboard-border)' }}>
+            {/* Visual Preview */}
+            <div style={{
+                flex: 1,
+                background: bgColor,
+                color: color,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: '120px',
+                padding: '1rem'
+            }}>
+                <span style={{ fontSize: '3.5rem', fontWeight: 700, lineHeight: 1 }}>Aa</span>
+                <span style={{ fontSize: '1.2rem', fontWeight: 500, marginTop: '0.5rem' }}>Text Preview</span>
             </div>
 
-            <div className="d-flex flex-wrap gap-2">
-                <div style={{ flex: '1 1 45%' }}>
-                    <small className="text-muted d-block mb-1">Normal Text</small>
-                    <div className="d-flex gap-1">
-                        <Badge bg={getBadgeVariant(compliance.aaNormal)} style={{ fontSize: '0.7rem' }}>
-                            AA {compliance.aaNormal ? '✓' : '✗'}
-                        </Badge>
-                        <Badge bg={getBadgeVariant(compliance.aaaNormal)} style={{ fontSize: '0.7rem' }}>
-                            AAA {compliance.aaaNormal ? '✓' : '✗'}
-                        </Badge>
-                    </div>
+            {/* Data Footer */}
+            <div style={{ padding: '1rem', background: 'var(--dashboard-surface)', borderTop: '1px solid var(--dashboard-border)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.5rem' }}>
+                    <span style={{ fontWeight: 600, fontSize: '0.9rem', color: '#666' }}>On {label}</span>
+                    <span style={{ fontWeight: 800, fontSize: '1.4rem', fontFamily: 'monospace' }}>{ratio.toFixed(2)}</span>
                 </div>
-                <div style={{ flex: '1 1 45%' }}>
-                    <small className="text-muted d-block mb-1">Large Text</small>
-                    <div className="d-flex gap-1">
-                        <Badge bg={getBadgeVariant(compliance.aaLarge)} style={{ fontSize: '0.7rem' }}>
-                            AA {compliance.aaLarge ? '✓' : '✗'}
-                        </Badge>
-                        <Badge bg={getBadgeVariant(compliance.aaaLarge)} style={{ fontSize: '0.7rem' }}>
-                            AAA {compliance.aaaLarge ? '✓' : '✗'}
-                        </Badge>
+
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, textAlign: 'center', padding: '4px', background: compliance.aaNormal ? '#dcfce7' : '#fee2e2', color: compliance.aaNormal ? '#166534' : '#991b1b', fontSize: '0.8rem', fontWeight: 700, borderRadius: 0 }}>
+                        AA {compliance.aaNormal ? 'PASS' : 'FAIL'}
+                    </div>
+                    <div style={{ flex: 1, textAlign: 'center', padding: '4px', background: compliance.aaaNormal ? '#dcfce7' : '#fee2e2', color: compliance.aaaNormal ? '#166534' : '#991b1b', fontSize: '0.8rem', fontWeight: 700, borderRadius: 0 }}>
+                        AAA {compliance.aaaNormal ? 'PASS' : 'FAIL'}
                     </div>
                 </div>
             </div>
@@ -132,27 +110,12 @@ export const AccessibilityDetail = ({ color }) => {
     );
 
     return (
-        <Card.Body>
-            <div className="mb-3">
-                <small className="text-muted d-block mb-2">
-                    WCAG 2.1 Contrast Compliance
-                </small>
+        <div style={{ display: 'flex', gap: '0', height: '100%', alignItems: 'stretch' }}>
+            <div style={{ display: 'flex', gap: '1rem', width: '100%' }}>
+                {renderLargePreview('#ffffff', 'White', contrastWhite, whiteCompliance)}
+                {renderLargePreview('#000000', 'Black', contrastBlack, blackCompliance)}
             </div>
-
-            {renderComplianceRow('#ffffff', 'White', contrastWhite, whiteCompliance)}
-            {renderComplianceRow('#000000', 'Black', contrastBlack, blackCompliance)}
-
-            <div className="mt-3 p-2 rounded" style={{ background: '#f8f9fa', fontSize: '0.75rem' }}>
-                <div className="mb-2" style={{ fontWeight: 600 }}>
-                    <i className="bi bi-info-circle me-1"></i>
-                    WCAG Guidelines
-                </div>
-                <div style={{ color: 'var(--dashboard-text-muted)' }}>
-                    <div>• Normal text: AA requires 4.5:1, AAA requires 7:1</div>
-                    <div>• Large text (18pt+): AA requires 3:1, AAA requires 4.5:1</div>
-                </div>
-            </div>
-        </Card.Body>
+        </div>
     );
 };
 

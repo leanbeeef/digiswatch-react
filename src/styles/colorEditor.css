@@ -31,7 +31,7 @@
   max-height: calc(100vh - 60px);
   background: #ffffff;
   border: 1px solid #e5e5e5;
-  border-radius: 0;
+  border-radius: 14px;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 20px 50px rgba(0, 0, 0, 0.1);
   padding: 24px;
   color: #171717;
@@ -60,7 +60,7 @@
 .color-editor-dot {
   width: 48px;
   height: 48px;
-  border-radius: 0;
+  border-radius: 12px;
   border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
@@ -84,7 +84,7 @@
 .icon-btn {
   width: 40px;
   height: 40px;
-  border-radius: 0;
+  border-radius: 10px;
   border: 1px solid #e5e5e5;
   background: #ffffff;
   color: #525252;
@@ -110,24 +110,33 @@
 .picker-stack {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
 }
 
 .color-preview {
   display: flex;
-  gap: 16px;
+  gap: 14px;
   align-items: center;
-  padding: 16px;
-  border: 1px solid #e5e5e5;
-  background: #fafafa;
+  padding: 14px 16px;
+  border: 1px solid #dfe3ea;
+  background: linear-gradient(180deg, #f8fbff 0%, #f3f6fb 100%);
+  border-radius: 12px;
+  width: 100%;
+  margin-bottom: 12px;
 }
 
 .color-preview-swatch {
   width: 64px;
   height: 64px;
-  border-radius: 0;
+  border-radius: 12px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
+}
+
+.color-preview-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .color-preview-hex {
@@ -144,22 +153,18 @@
   line-height: 1.4;
 }
 
-.color-picker-card {
-  /* No background container, just the picker */
-}
-
 .react-colorful {
   width: 100% !important;
   height: 240px !important;
 }
 
 .react-colorful__saturation {
-  border-radius: 0 !important;
+  border-radius: 12px !important;
   border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .react-colorful__hue {
-  border-radius: 0 !important;
+  border-radius: 10px !important;
   height: 16px !important;
   margin-top: 12px;
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -168,7 +173,7 @@
 .react-colorful__pointer {
   width: 20px !important;
   height: 20px !important;
-  border-radius: 0 !important;
+  border-radius: 8px !important;
   border: 2px solid #fff !important;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2) !important;
 }
@@ -222,7 +227,7 @@
   background: #ffffff;
   color: #525252;
   padding: 8px;
-  border-radius: 0;
+  border-radius: 10px;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -259,7 +264,7 @@
 
 .ramp-bar {
   height: 8px;
-  border-radius: 0;
+  border-radius: 999px;
   border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
@@ -290,6 +295,8 @@
   background: #ffffff;
   padding: 0;
   transition: border-color 0.1s ease;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 .color-editor-field:focus-within {
@@ -356,9 +363,22 @@
 .model-footnote {
   font-size: 0.875rem;
   color: #737373;
-  background: #fafafa;
+  background: #f8fafc;
   padding: 12px;
   border: 1px solid #e5e5e5;
+  border-radius: 12px;
+}
+
+.color-picker-card {
+  border: 1px solid #e5e5e5;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
+}
+
+.color-picker-card .react-colorful__hue {
+  margin-top: 14px;
 }
 
 @media (max-width: 992px) {

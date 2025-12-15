@@ -28,7 +28,7 @@ const LayoutContainer = ({
     }, [contextWidth]);
 
     return (
-        <div className="palette-layout-container">
+        <div className="palette-layout-container" style={{ gridTemplateRows: paletteTray ? 'auto 1fr auto' : 'auto 1fr' }}>
             {/* Optional header for actions/toolbar */}
             {headerContent && (
                 <div className="palette-layout-header">
@@ -48,22 +48,24 @@ const LayoutContainer = ({
                     {workbench}
                 </div>
 
-                {/* Right context panel - Tabbed support tools
-                <div
-                    className="palette-layout-context"
-                    style={{
-                        width: `${contextWidth}px`,
-                        position: 'relative'
-                    }}
-                >
-                    <ResizeHandle
-                        onResize={setContextWidth}
-                        defaultWidth={380}
-                        minWidth={300}
-                        maxWidth={600}
-                    />
-                    {contextPanel}
-                </div> */}
+                {/* Right context panel - Conditional Render */}
+                {contextPanel && (
+                    <div
+                        className="palette-layout-context"
+                        style={{
+                            width: `${contextWidth}px`,
+                            position: 'relative'
+                        }}
+                    >
+                        <ResizeHandle
+                            onResize={setContextWidth}
+                            defaultWidth={380}
+                            minWidth={300}
+                            maxWidth={1600}
+                        />
+                        {contextPanel}
+                    </div>
+                )}
             </div>
 
             {/* Bottom palette tray - Collapsible palette strip */}

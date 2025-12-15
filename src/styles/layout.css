@@ -3,7 +3,7 @@
 .palette-layout-container {
     display: grid;
     grid-template-rows: auto 1fr auto;
-    height: calc(100vh - 58px);
+    height: 100%;
     background: var(--dashboard-bg, #f3f4f6);
     overflow: hidden;
 }
@@ -12,14 +12,14 @@
     grid-row: 1;
     background: rgba(255, 255, 255, 0.96);
     border-bottom: 1px solid rgba(12, 25, 48, 0.08);
-    padding: 0.75rem 1rem;
+    /* padding: 0.5rem 1rem 0; */
     z-index: 10;
 }
 
 .palette-layout-body {
     grid-row: 2;
     display: grid;
-    grid-template-columns: 1fr 380px;
+    grid-template-columns: 1fr;
     gap: 0;
     overflow: hidden;
     min-height: 0;
@@ -29,8 +29,26 @@
     grid-column: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 0rem 1rem 1rem 1rem;
+    padding: 0rem 1rem 0.75rem 1rem;
     background: var(--dashboard-bg, #f3f4f6);
+}
+
+/* Generator toolbar */
+.generator-toolbar {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    gap: 0.75rem;
+    align-items: center;
+    box-shadow: none;
+}
+
+.toolbar-divider {
+    width: 1px;
+    height: 28px;
+    background: rgba(12, 25, 48, 0.08);
+    border-radius: 999px;
 }
 
 .palette-layout-context {
@@ -46,55 +64,50 @@
     z-index: 5;
 }
 
-/* Responsive - Tablet */
+/* Responsive - Mobile/Tablet (Carousel Mode) */
 @media (max-width: 1199px) {
     .palette-layout-body {
         grid-template-columns: 1fr;
-    }
-
-    .palette-layout-context {
-        position: fixed;
-        right: -400px;
-        top: 58px;
-        width: 380px;
-        height: calc(100vh - 58px);
-        z-index: 1000;
-        transition: right 300ms ease;
-        box-shadow: none;
-        border-left: 1px solid rgba(12, 25, 48, 0.08);
-    }
-
-    .palette-layout-context.is-open {
-        right: 0;
-        box-shadow: -8px 0 24px rgba(0, 0, 0, 0.15);
-    }
-}
-
-/* Responsive - Mobile */
-@media (max-width: 767px) {
-    .palette-layout-context {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        top: auto;
-        width: 100%;
-        height: 70vh;
-        transform: translateY(100%);
-        transition: transform 300ms ease;
-        border-left: none;
-        border-top: 1px solid rgba(12, 25, 48, 0.08);
-        border-radius: 16px 16px 0 0;
-    }
-
-    .palette-layout-context.is-open {
-        transform: translateY(0);
-        box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15);
+        grid-template-rows: 1fr auto;
+        /* Workbench takes space, Context takes auto height */
     }
 
     .palette-layout-workbench {
+        grid-column: 1;
+        grid-row: 1;
         padding: 0.5rem;
     }
+
+    .palette-layout-context {
+        grid-column: 1;
+        grid-row: 2;
+        position: relative;
+        width: 100%;
+        height: auto;
+        max-height: 40vh;
+        /* Limit height so workbench is visible */
+        border-left: none;
+        border-top: 1px solid rgba(12, 25, 48, 0.08);
+        z-index: 5;
+        background: #ffffff;
+        right: auto;
+        top: auto;
+        transform: none !important;
+        /* Override potential drawer transform */
+        transition: none;
+        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .palette-layout-context.is-open {
+        transform: none;
+        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+        right: auto;
+    }
+}
+
+/* Mobile specific overrides */
+@media (max-width: 767px) {
+    /* Ensure tray sits below context */
 }
 
 /* Density mode support */

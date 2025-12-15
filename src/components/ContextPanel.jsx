@@ -23,7 +23,10 @@ const ContextPanel = ({
     onHarmonySelect,
     onColorChange,
     isOpen = true,
-    onToggle
+    onToggle,
+    hideHeader = false,
+    activeTab: controlledActiveTab,
+    onTabChange,
 }) => {
     const [activeTab, setActiveTab] = useState(() => {
         if (typeof window !== 'undefined') {
@@ -32,19 +35,36 @@ const ContextPanel = ({
         return 'evaluate';
     });
 
+    // Keep local state in sync with controlled prop
+    useEffect(() => {
+        if (controlledActiveTab && controlledActiveTab !== activeTab) {
+            setActiveTab(controlledActiveTab);
+        }
+    }, [controlledActiveTab]);
+
+    const currentTab = controlledActiveTab || activeTab;
+
+    const handleTabSelect = (key) => {
+        if (onTabChange) {
+            onTabChange(key);
+        } else {
+            setActiveTab(key);
+        }
+    };
+
     // Persist active tab
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('rightPanelActiveTab', activeTab);
+        if (typeof window !== 'undefined' && !controlledActiveTab) {
+            localStorage.setItem('rightPanelActiveTab', currentTab);
         }
-    }, [activeTab]);
+    }, [currentTab, controlledActiveTab]);
 
     // Auto-switch to Evaluate tab when color is selected
     useEffect(() => {
-        if (selectedColor && activeTab === 'evaluate') {
+        if (selectedColor && currentTab === 'evaluate') {
             // Already on evaluate, no change needed
         }
-    }, [selectedColor]);
+    }, [selectedColor, currentTab]);
 
     const renderAtAGlance = () => {
         const passCount = palette?.filter(c => {
@@ -93,19 +113,19 @@ const ContextPanel = ({
                     color={selectedColor}
                     colorInfo={colorInfo}
                     isExpanded={true}
-                    onToggleExpand={() => { }}
+
                 />
                 <AccessibilityCard
                     color={selectedColor}
                     colorInfo={colorInfo}
                     isExpanded={true}
-                    onToggleExpand={() => { }}
+
                 />
                 <ColorContextCard
                     color={selectedColor}
                     contextData={context}
                     isExpanded={true}
-                    onToggleExpand={() => { }}
+
                 />
             </div>
         );
@@ -123,19 +143,19 @@ const ContextPanel = ({
                     colorHarmonies={harmonies}
                     onHarmonySelect={onHarmonySelect}
                     isExpanded={true}
-                    onToggleExpand={() => { }}
+
                 />
                 <ColorScalesCard
                     color={selectedColor}
                     colorInfo={colorInfo}
                     isExpanded={true}
-                    onToggleExpand={() => { }}
+
                 />
                 <OKLCHExplorerCard
                     color={selectedColor}
                     colorInfo={colorInfo}
                     isExpanded={true}
-                    onToggleExpand={() => { }}
+
                 />
             </div>
         );
@@ -152,12 +172,12 @@ const ContextPanel = ({
                     color={selectedColor}
                     colorInfo={colorInfo}
                     isExpanded={true}
-                    onToggleExpand={() => { }}
+
                 />
                 <ColorVisualizerCard
                     palette={palette}
                     isExpanded={true}
-                    onToggleExpand={() => { }}
+
                 />
             </div>
         );
@@ -176,35 +196,57 @@ const ContextPanel = ({
                 </button>
             )}
 
-            {/* Tab navigation */}
-            <div className="context-panel-header">
-                <Nav variant="tabs" activeKey={activeTab} onSelect={setActiveTab}>
-                    <Nav.Item>
-                        <Nav.Link eventKey="evaluate">
-                            <i className="bi bi-shield-check"></i>
-                            <span>Evaluate</span>
-                        </Nav.Link>
-                    </Nav.Item>
-                    <Nav.Item>
-                        <Nav.Link eventKey="generate">
-                            <i className="bi bi-palette"></i>
-                            <span>Generate</span>
-                        </Nav.Link>
-                    </Nav.Item>
-                    <Nav.Item>
-                        <Nav.Link eventKey="output">
-                            <i className="bi bi-download"></i>
-                            <span>Output</span>
-                        </Nav.Link>
-                    </Nav.Item>
-                </Nav>
-            </div>
+            {/* Header with selected swatch + tabs */}
+            {!hideHeader && (
+                <div className="context-panel-header">
+                    <div className="context-panel-heading">
+                        <div className="context-selected-chip">
+                            <span
+                                className="chip-dot"
+                                style={{ backgroundColor: selectedColor || '#d7dbe3' }}
+                                aria-hidden="true"
+                            ></span>
+                            <div className="chip-text">
+                                <span className="chip-label">Selected</span>
+                                <span className="chip-value">
+                                    {selectedColor ? selectedColor.toUpperCase() : 'Pick a swatch'}
+                                </span>
+                            </div>
+                        </div>
+                        <Nav
+                            variant="tabs"
+                            activeKey={currentTab}
+                            onSelect={handleTabSelect}
+                            className="context-tab-nav"
+                        >
+                            <Nav.Item>
+                                <Nav.Link eventKey="evaluate">
+                                    <i className="bi bi-shield-check"></i>
+                                    <span>Evaluate</span>
+                                </Nav.Link>
+                            </Nav.Item>
+                            <Nav.Item>
+                                <Nav.Link eventKey="generate">
+                                    <i className="bi bi-palette"></i>
+                                    <span>Generate</span>
+                                </Nav.Link>
+                            </Nav.Item>
+                            <Nav.Item>
+                                <Nav.Link eventKey="output">
+                                    <i className="bi bi-download"></i>
+                                    <span>Output</span>
+                                </Nav.Link>
+                            </Nav.Item>
+                        </Nav>
+                    </div>
+                </div>
+            )}
 
             {/* Tab content */}
             <div className="context-panel-body">
-                {activeTab === 'evaluate' && renderEvaluateTab()}
-                {activeTab === 'generate' && renderGenerateTab()}
-                {activeTab === 'output' && renderOutputTab()}
+                {currentTab === 'evaluate' && renderEvaluateTab()}
+                {currentTab === 'generate' && renderGenerateTab()}
+                {currentTab === 'output' && renderOutputTab()}
             </div>
         </div>
     );

@@ -11,14 +11,26 @@
   --dashboard-accent-hover: #0256c7;
   --dashboard-font: "Inter", "SF Pro Text", "Segoe UI", system-ui, -apple-system, sans-serif;
 
+  /* Global Sharpness Override */
+  /* --bs-border-radius: 0 !important;
+  --bs-border-radius-sm: 0 !important;
+  --bs-border-radius-lg: 0 !important;
+  --bs-border-radius-xl: 0 !important;
+  --bs-border-radius-2xl: 0 !important; */
+
+
   /* Card System */
   --card-bg: #ffffff;
-  --card-border-radius: 10px;
-  --card-shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.06);
-  --card-shadow-md: 0 10px 24px rgba(15, 23, 42, 0.08);
-  --card-shadow-lg: 0 16px 42px rgba(15, 23, 42, 0.14);
-  --card-padding: 1.15rem;
-  --card-gap: 0.9rem;
+  --card-border-radius: 7px;
+  /* SHARP CORNERS */
+  --card-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  /* Subtle shadow */
+  --card-shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08);
+  --card-shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08);
+  --card-padding: 0.85rem;
+  /* Compact padding */
+  --card-gap: 0.5rem;
+  /* Compact gap */
 
   /* Transitions */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -90,7 +102,9 @@
   /* True Masonry Support */
   break-inside: avoid;
   margin-bottom: var(--card-gap);
-  display: block;
+  display: flex;
+  /* Changed from block for internal scrolling */
+  flex-direction: column;
   width: 100%;
 }
 
@@ -142,7 +156,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 0px;
 }
 
 .dashboard-card-action-btn:hover {
@@ -157,7 +171,7 @@
 .dashboard-card-drag-handle {
   width: 34px;
   height: 34px;
-  border-radius: 10px;
+  border-radius: 0px;
   border: 1px solid var(--dashboard-border);
   background: #f3f5f9;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
@@ -184,6 +198,11 @@
 .dashboard-card-body {
   color: #1f2937;
   font-size: 0.92rem;
+  flex: 1;
+  overflow-y: auto;
+  /* Internal scrolling */
+  min-height: 0;
+  /* Flexbox scrolling fix */
 }
 
 /* Palette Minimized State */
@@ -238,7 +257,7 @@
   background: transparent;
   border: 1px solid var(--dashboard-border);
   padding: 0.25rem 0.5rem;
-  border-radius: 6px;
+  border-radius: 0px;
   cursor: pointer;
   color: var(--dashboard-text-muted);
   font-size: 0.75rem;
@@ -253,7 +272,7 @@
 
 /* Harmony Swatches */
 .harmony-group {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .harmony-label {
@@ -267,7 +286,7 @@
 .harmony-swatches {
   display: flex;
   gap: 4px;
-  border-radius: 8px;
+  border-radius: 0px;
   overflow: hidden;
   cursor: pointer;
   box-shadow: var(--card-shadow-sm);
@@ -282,7 +301,7 @@
 
 .harmony-swatch {
   flex: 1;
-  height: 48px;
+  height: 32px;
   transition: flex var(--transition-base);
 }
 
@@ -302,7 +321,7 @@
   background: rgba(3, 102, 214, 0.1);
   color: var(--dashboard-accent);
   padding: 0.35rem 0.75rem;
-  border-radius: 999px;
+  border-radius: 0px;
   font-size: 0.8rem;
   font-weight: 500;
 }
@@ -332,7 +351,7 @@
 .color-preview-swatch {
   width: 100%;
   height: 80px;
-  border-radius: 8px;
+  border-radius: 0px;
   margin-bottom: 1rem;
   box-shadow: var(--card-shadow-sm);
   position: relative;
@@ -361,7 +380,7 @@
 .contrast-box {
   flex: 1;
   padding: 1rem;
-  border-radius: 8px;
+  border-radius: 0px;
   text-align: center;
   font-size: 0.85rem;
   font-weight: 600;
@@ -699,6 +718,7 @@
   margin-bottom: 6px;
   display: block;
 }
+
 /* Unified Dashboard Header - All on One Row */
 .dashboard-sticky {
   position: sticky;
@@ -846,7 +866,7 @@
   font-size: 0.95rem;
 }
 
-.tutorial-tip-list li + li {
+.tutorial-tip-list li+li {
   margin-top: 0.25rem;
 }
 

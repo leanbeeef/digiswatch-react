@@ -1,11 +1,15 @@
 ﻿import { useRef, useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Toast } from "react-bootstrap";
+import { Toast, Nav, Button } from "react-bootstrap";
 import namer from "color-namer";
 import tinycolor from "tinycolor2";
 import defaultImage from "../assets/example.jpeg";
 import "../ImageExtractor.css";
+import "../styles/dashboard.css";
+import "../styles/dashboard-grid.css";
+import "../styles/layout.css";
 import SEO from '../components/SEO';
+import LayoutContainer from "../components/LayoutContainer";
 
 /**
  * ImageColorExtractor — draggable eyedroppers + zoom lens
@@ -18,6 +22,8 @@ export default function ImageColorExtractor() {
   const lensCanvasRef = useRef(null); // magnifier canvas
   const imgRef = useRef(null);
   const navigate = useNavigate();
+  const extractRef = useRef(null);
+  const paletteRef = useRef(null);
 
   const [imageURL, setImageURL] = useState(defaultImage);
   const [droppers, setDroppers] = useState([]); // {id,x,y,color,name,locked}
@@ -25,6 +31,7 @@ export default function ImageColorExtractor() {
   const [count] = useState(6);
   const [lens, setLens] = useState({ visible: false, vx: 0, vy: 0 });
   const [toast, setToast] = useState({ show: false, message: "" });
+  const [toolbarTab, setToolbarTab] = useState("extract");
 
   // Keep a Set of hex colors to bias initial placement toward unique swatches
   const sampledInitColors = useMemo(() => new Set(), [imageURL]);
@@ -33,6 +40,35 @@ export default function ImageColorExtractor() {
     () => droppers.slice(0, 6).map(({ color, name, id }) => ({ color, name, id })),
     [droppers]
   );
+
+  const paletteStats = useMemo(() => {
+    if (!paletteColors.length) return null;
+    const lightnessValues = paletteColors.map((p) => tinycolor(p.color).toHsl().l * 100);
+    const avgLightness = Math.round(
+      lightnessValues.reduce((sum, l) => sum + l, 0) / lightnessValues.length
+    );
+    const warmCount = paletteColors.filter((p) => {
+      const h = tinycolor(p.color).toHsl().h;
+      return h >= 0 && h < 180;
+    }).length;
+    const coolCount = paletteColors.length - warmCount;
+
+    let bestPair = null;
+    let bestContrast = 0;
+    for (let i = 0; i < paletteColors.length; i++) {
+      for (let j = i + 1; j < paletteColors.length; j++) {
+        const c1 = paletteColors[i].color;
+        const c2 = paletteColors[j].color;
+        const readability = tinycolor.readability(c1, c2);
+        if (readability > bestContrast) {
+          bestContrast = readability;
+          bestPair = { a: paletteColors[i], b: paletteColors[j], ratio: readability.toFixed(2) };
+        }
+      }
+    }
+
+    return { avgLightness, warmCount, coolCount, bestPair };
+  }, [paletteColors]);
 
   const getReadableText = (bg) => {
     return tinycolor.readability(bg, "#0f172a") < 4 ? "#f8fafc" : "#0f172a";
@@ -72,11 +108,11 @@ export default function ImageColorExtractor() {
     vctx.clearRect(0, 0, vis.width, vis.height);
     vctx.drawImage(img, 0, 0, vis.width, vis.height);
 
-    // Hidden canvas: full-resolution for accurate sampling
-    hid.width = img.width;
-    hid.height = img.height;
+    // Hidden canvas: match visible size (trades a bit of sampling fidelity for speed/memory)
+    hid.width = vis.width;
+    hid.height = vis.height;
     hctx.clearRect(0, 0, hid.width, hid.height);
-    hctx.drawImage(img, 0, 0);
+    hctx.drawImage(img, 0, 0, vis.width, vis.height);
 
     // Lens canvas static size
     if (lensCanvas) {
@@ -178,7 +214,7 @@ export default function ImageColorExtractor() {
     const hctx = hid.getContext("2d");
     const rect = vis.getBoundingClientRect();
 
-    // Normalize to [0,1] then scale to hidden canvas pixels
+    // Normalize to [0,1] then scale to hidden canvas pixels (using scaled hidden canvas for speed)
     const nx = Math.min(Math.max(vx / rect.width, 0), 1);
     const ny = Math.min(Math.max(vy / rect.height, 0), 1);
     const hx = Math.min(Math.max(Math.floor(nx * hid.width), 0), hid.width - 1);
@@ -425,159 +461,200 @@ export default function ImageColorExtractor() {
   const toggleLock = (id) =>
     setDroppers((prev) => prev.map((d) => (d.id === id ? { ...d, locked: !d.locked } : d)));
 
+    const scrollToSection = (ref) => {
+    if (ref?.current) {
+      ref.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
-  // Derived list for right column (kept in same order as droppers)
   return (
-    <div className="ie-page w-100 d-flex flex-column" style={{ height: "calc(100vh - 82px)", overflow: "auto", background: "#f3f4f6" }}>
-      <SEO
-        title="Image to Color Palette Extractor"
-        description="Extract beautiful color palettes from any image. Upload your photo and automatically generate a color scheme based on its dominant colors."
-        keywords="image color picker, extract colors from image, photo palette generator, color finder, hex code extractor"
-        url="/image-extractor"
-      />
-
-      {/* Hero Section */}
-      <div className="ie-hero flex-shrink-0">
-        <div className="ie-hero-title">Image Color Extractor</div>
-        <div className="ie-hero-subtitle">
-          Drag the droppers to extract precise colors from your image.
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="container px-4 flex-grow-1 heightAdj" style={{ minHeight: 0 }}>
-        <div className="row g-4 h-100">
-
-          {/* Left: Canvas Panel */}
-          <div className="col-12 col-md-7">
-            <div className="ie-glass-panel">
-              <div className="ie-canvas-container">
-                <canvas ref={visibleCanvasRef} className="d-block rounded-3 shadow-sm" style={{ display: "block" }} />
-
-                {/* Hidden canvas for accurate sampling */}
-                <canvas ref={hiddenCanvasRef} className="d-none" aria-hidden="true" />
-
-                {/* Eyedropper overlay */}
-                <div ref={overlayRef} className="position-absolute" style={{ pointerEvents: "none" }}>
-                  {droppers.map((d, idx) => (
-                    <Dropper
-                      key={d.id}
-                      idx={idx}
-                      d={d}
-                      active={activeId === d.id}
-                      onPointerDown={() => setActiveId(d.id)}
-                      onToggleLock={() => toggleLock(d.id)}
-                    />
-                  ))}
-
-                  {/* Zoom lens canvas moved to root */}
-                </div>
+    <>
+      <LayoutContainer
+        headerContent={
+          <div className="d-flex align-items-center w-100 gap-3 flex-wrap generator-toolbar">
+            <div className="context-selected-chip">
+              <span className="chip-dot" style={{ backgroundColor: paletteColors[0]?.color || "#d7dbe3" }}></span>
+              <div className="chip-text">
+                <span className="chip-label">Palette</span>
+                <span className="chip-value">{paletteColors.length} colors</span>
               </div>
             </div>
+
+            <div className="toolbar-divider" aria-hidden="true"></div>
+
+            <div className="d-flex align-items-center gap-2 flex-wrap">
+              <input
+                type="file"
+                id="file-upload"
+                className="d-none"
+                onChange={handleUpload}
+                accept="image/*"
+              />
+              <label htmlFor="file-upload" className="ie-btn ie-btn-primary" style={{ cursor: 'pointer' }}>
+                <i className="bi bi-upload"></i> Upload
+              </label>
+              <Button className="ie-btn" variant="outline-secondary" onClick={randomizeDroppers}>
+                <i className="bi bi-shuffle me-1"></i>
+                Randomize
+              </Button>
+              <Button className="ie-btn" onClick={handleSendToGenerator} disabled={!paletteColors.length}>
+                <i className="bi bi-arrow-up-right-square me-1"></i>
+                Send to Generator
+              </Button>
+            </div>
+
+            <div className="toolbar-divider" aria-hidden="true"></div>
+
+            <div className="flex-grow-1 d-flex justify-content-center">
+              <Nav
+                variant="tabs"
+                activeKey={toolbarTab}
+                onSelect={(key) => {
+                  setToolbarTab(key);
+                  if (key === "extract") scrollToSection(extractRef);
+                  if (key === "palette") scrollToSection(paletteRef);
+                }}
+                className="context-tab-nav"
+              >
+                <Nav.Item>
+                  <Nav.Link eventKey="extract">
+                    <i className="bi bi-droplet"></i>
+                    <span>Extract</span>
+                  </Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link eventKey="palette">
+                    <i className="bi bi-collection"></i>
+                    <span>Palette</span>
+                  </Nav.Link>
+                </Nav.Item>
+              </Nav>
+            </div>
           </div>
+        }
+        workbench={
+          <div className="h-100 d-flex flex-column" style={{ minHeight: 0 }}>
+            <SEO
+              title="Image to Color Palette Extractor"
+              description="Extract beautiful color palettes from any image. Upload your photo and automatically generate a color scheme based on its dominant colors."
+              keywords="image color picker, extract colors from image, photo palette generator, color finder, hex code extractor"
+              url="/image-extractor"
+            />
 
-          {/* Right: Color Palette Panel */}
-          <div className="col-12 col-md-5">
-            <div className="ie-glass-panel ie-palette-panel">
-              <div className="ie-palette-card">
-                <div className="ie-palette-header">
-                  <div>
-                    <p className="ie-chip">Extracted palette</p>
-                    <h4 className="mb-1">Share, export, or edit</h4>
-                    <div className="text-muted small">Move the droppers on the photo to refine your six-color strip.</div>
-                  </div>
-                </div>
-
-                <div className="ie-palette-strip">
-                  {paletteColors.map((swatch, i) => (
-                    <div
-                      key={swatch.id || i}
-                      className="ie-palette-swatch"
-                      style={{ background: swatch.color, color: getReadableText(swatch.color) }}
-                      title={`${swatch.name} Â· ${swatch.color}`}
-                      onClick={() => handleCopyHex(swatch.color)}
-                    >
-                      <span className="fw-bold">#{i + 1}</span>
-                      <span className="font-monospace small">{swatch.color}</span>
+            <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(6, minmax(0, 1fr))' }}>
+              <div className="col-span-3" ref={extractRef}>
+                <div className="dashboard-card h-100">
+                  <div className="dashboard-card-header">
+                    <div>
+                      <p className="dashboard-card-kicker">Step 1</p>
+                      <h5 className="dashboard-card-title mb-0">Extract from image</h5>
+                      <div className="text-muted small">Drag the droppers to sample pixels.</div>
                     </div>
-                  ))}
+                  </div>
+                  <div className="ie-canvas-container" style={{ position: "relative", minHeight: 420 }}>
+                    <canvas ref={visibleCanvasRef} className="d-block rounded-3 shadow-sm" style={{ display: "block", background: "#fff" }} />
+                    <canvas ref={hiddenCanvasRef} className="d-none" aria-hidden="true" />
+                    <div ref={overlayRef} className="position-absolute" style={{ pointerEvents: "auto" }}>
+                      {droppers.map((d, idx) => (
+                        <Dropper
+                          key={d.id}
+                          idx={idx}
+                          d={d}
+                          active={activeId === d.id}
+                          onPointerDown={() => setActiveId(d.id)}
+                          onToggleLock={() => toggleLock(d.id)}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <div className="ie-strip-actions">
-                    <button className="ie-action-btn" onClick={handleSendToGenerator} title="Open in Palette Generator" disabled={!paletteColors.length}>
-                      <img src="/favicon.ico" alt="Open in generator" width="18" height="18" />
-                    </button>
-                    <button className="ie-action-btn" onClick={handleExportPalette} title="Export palette" disabled={!paletteColors.length}>
-                      <i className="bi bi-download"></i>
-                    </button>
-                    <button className="ie-action-btn" onClick={handleSharePalette} title="Share image + palette" disabled={!paletteColors.length}>
-                      <i className="bi bi-share"></i>
-                    </button>
+              </div>
+
+              <div className="col-span-3" ref={paletteRef}>
+                <div className="dashboard-card h-100">
+                  <div className="dashboard-card-header d-flex justify-content-between align-items-center">
+                    <div>
+                      <p className="dashboard-card-kicker">Step 2</p>
+                      <h5 className="dashboard-card-title mb-0">Palette preview</h5>
+                      <div className="text-muted small">Tap swatches to copy hex.</div>
+                    </div>
+                    <div className="d-flex align-items-center gap-2">
+                      <Button variant="outline-secondary" size="sm" onClick={handleExportPalette} disabled={!paletteColors.length}>
+                        <i className="bi bi-download"></i>
+                      </Button>
+                      <Button variant="outline-secondary" size="sm" onClick={handleSharePalette} disabled={!paletteColors.length}>
+                        <i className="bi bi-share"></i>
+                      </Button>
+                    </div>
                   </div>
 
-                <div className="ie-palette-list">
-                  {paletteColors.map((swatch, i) => (
-                    <div
-                      key={swatch.id || i}
-                      className="ie-palette-row"
-                      onClick={() => handleCopyHex(swatch.color)}
-                    >
+                  <div className="ie-palette-strip mb-3">
+                    {paletteColors.map((swatch, i) => (
                       <div
-                        className="ie-palette-row-chip"
+                        key={swatch.id || i}
+                        className="ie-palette-swatch"
                         style={{ background: swatch.color, color: getReadableText(swatch.color) }}
+                        title={`${swatch.name} · ${swatch.color}`}
+                        onClick={() => handleCopyHex(swatch.color)}
                       >
-                        #{i + 1}
+                        <span className="fw-bold">#{i + 1}</span>
+                        <span className="font-monospace small">{swatch.color}</span>
                       </div>
-                      
-                        <div className="fw-bold text-truncate">{swatch.name}</div>
-                        <div className="text-muted font-monospace small">{swatch.color}</div>
-                    
-                      <button
-                        className="ie-row-copy"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCopyHex(swatch.color);
-                        }}
-                        title="Copy hex"
-                      >
-                        <i className="bi bi-clipboard"></i>
-                      </button>
+                    ))}
+                  </div>
+
+                  {paletteStats && (
+                    <div className="ie-insights">
+                      <div className="ie-insight-card">
+                        <div className="ie-insight-label">Avg lightness</div>
+                        <div className="ie-insight-value">{paletteStats.avgLightness}%</div>
+                        <div className="ie-insight-bar">
+                          <div
+                            className="ie-insight-bar-fill"
+                            style={{ width: `${paletteStats.avgLightness}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      <div className="ie-insight-card">
+                        <div className="ie-insight-label">Warm / Cool</div>
+                        <div className="ie-insight-pills">
+                          <span className="ie-pill warm">Warm {paletteStats.warmCount}</span>
+                          <span className="ie-pill cool">Cool {paletteStats.coolCount}</span>
+                        </div>
+                      </div>
+
+                      {paletteStats.bestPair && (
+                        <div className="ie-insight-card ie-pair-card">
+                          <div className="ie-insight-label">Highest contrast pair</div>
+                          <div className="ie-pair-swatches">
+                            <span
+                              className="ie-pair-swatch"
+                              style={{ background: paletteStats.bestPair.a.color, color: getReadableText(paletteStats.bestPair.a.color) }}
+                            >
+                              {paletteStats.bestPair.a.color}
+                            </span>
+                            <i className="bi bi-arrow-left-right text-muted"></i>
+                            <span
+                              className="ie-pair-swatch"
+                              style={{ background: paletteStats.bestPair.b.color, color: getReadableText(paletteStats.bestPair.b.color) }}
+                            >
+                              {paletteStats.bestPair.b.color}
+                            </span>
+                          </div>
+                          <div className="text-muted small">WCAG ratio: {paletteStats.bestPair.ratio}:1</div>
+                        </div>
+                      )}
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Floating Controls Bar */}
-      <div className="ie-controls-bar">
-        <div className="ie-control-group">
-          <input
-            type="file"
-            id="file-upload"
-            className="d-none"
-            onChange={handleUpload}
-            accept="image/*"
-          />
-          <label htmlFor="file-upload" className="ie-btn ie-btn-primary" style={{ cursor: 'pointer' }}>
-            <i className="bi bi-upload"></i> Upload Image
-          </label>
-        </div>
-
-        <div className="ie-control-group">
-          <div className="ie-pill-solid">
-            <i className="bi bi-droplet me-1"></i> 6 fixed droppers
-          </div>
-          <span className="text-muted small">Move them anywhere on your image.</span>
-        </div>
-
-        <div className="ie-control-group">
-          <button className="ie-btn" onClick={randomizeDroppers}>
-            <i className="bi bi-shuffle"></i> Randomize
-          </button>
-        </div>
-      </div>
+        }
+        contextPanel={null}
+        paletteTray={null}
+      />
 
       <Toast
         show={toast.show}
@@ -598,7 +675,6 @@ export default function ImageColorExtractor() {
         <Toast.Body>{toast.message}</Toast.Body>
       </Toast>
 
-      {/* Zoom lens canvas - Fixed position to avoid clipping */}
       <canvas
         ref={lensCanvasRef}
         className={`position-fixed ${lens.visible ? "" : "d-none"}`}
@@ -615,7 +691,7 @@ export default function ImageColorExtractor() {
           border: "2px solid rgba(255,255,255,0.8)"
         }}
       />
-    </div>
+    </>
   );
 }
 
@@ -653,6 +729,3 @@ function Dropper({ d, idx, active, onPointerDown, onToggleLock }) {
     </div>
   );
 }
-
-
-

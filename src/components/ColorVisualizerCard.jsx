@@ -72,9 +72,49 @@ const applyPaletteToSvg = (svg, swatches, { respectProtected = true } = {}) => {
     });
 };
 
-const ColorVisualizerCard = ({ palette = [], index, moveCard, isExpanded, onToggleExpand }) => {
+export const ColorVisualizerPreview = ({ palette = [], isWide, isTall }) => {
+    // Basic preview showing just the swatches and "Palette mockups" label
+    const swatches = useMemo(() => {
+        const hexes = palette.map((c) => normalizeHex(c?.hex || c)).filter(Boolean);
+        return hexes.length ? hexes : fallbackPalette;
+    }, [palette]);
+
+    // Use raw SVGs for preview
+    // Logic: 1 col = 1 mockup. 2 col or 2 row = 2 mockups.
+    const showTwo = isWide || isTall;
+
+    // Generate colored SVGs for the preview
+    // We repurpose the baseMockups logic here, selecting just the first one
+    const previewMockups = useMemo(() => {
+        const mockups = [mockup1Raw]; // Always use just the first one (Hero style)
+
+        return mockups.map(raw =>
+            applyPaletteToSvg(raw, swatches, { respectProtected: false })
+        );
+    }, [swatches]);
+
+    return (
+        <div style={{ height: '100%', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0', overflow: 'hidden' }}>
+            {previewMockups.map((svgContent, index) => (
+                <div
+                    key={index}
+                    style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                    <div
+                        className="mockup-img"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
+                        role="img"
+                        aria-label="Palette preview mockup"
+                        dangerouslySetInnerHTML={{ __html: svgContent.replace('<svg ', '<svg preserveAspectRatio="xMidYMid slice" ') }}
+                    />
+                </div>
+            ))}
+        </div>
+    );
+};
+
+export const ColorVisualizerDetail = ({ palette = [] }) => {
     const [activeIndex, setActiveIndex] = useState(0);
-    const [showZoom, setShowZoom] = useState(false);
     const swatches = useMemo(() => {
         const hexes = palette.map((c) => normalizeHex(c?.hex || c)).filter(Boolean);
         return hexes.length ? hexes : fallbackPalette;
@@ -96,26 +136,62 @@ const ColorVisualizerCard = ({ palette = [], index, moveCard, isExpanded, onTogg
                 item.staticSrc
                     ? item
                     : {
-                          ...item,
-                          svg: applyPaletteToSvg(item.svgRaw, swatches, { respectProtected: false }),
-                      }
+                        ...item,
+                        svg: applyPaletteToSvg(item.svgRaw, swatches, { respectProtected: false }),
+                    }
             ),
         [baseMockups, swatches]
     );
 
     const selected = mockups[activeIndex % mockups.length];
 
-    const previewContent = (
-        <div className="visualizer-preview">
-            <div className="visualizer-dot-row">
-                {swatches.slice(0, 4).map((hex) => (
-                    <span key={hex} className="visualizer-dot" style={{ background: hex }} />
-                ))}
+    return (
+        <div className="palette-visualizer">
+            <div className="mockup-controls">
+                <div className="mockup-nav">
+                    <button
+                        type="button"
+                        className="mockup-nav-btn"
+                        onClick={() => setActiveIndex((prev) => (prev - 1 + mockups.length) % mockups.length)}
+                    >
+                        ‹
+                    </button>
+                    <button
+                        type="button"
+                        className="mockup-nav-btn"
+                        onClick={() => setActiveIndex((prev) => (prev + 1) % mockups.length)}
+                    >
+                        ›
+                    </button>
+                </div>
             </div>
-            <div className="visualizer-preview-label">Palette mockups</div>
+
+            <div className="mockup-grid single">
+                <div key={selected.label} className="mockup-frame">
+                    {selected.staticSrc ? (
+                        <div className="mockup-img" role="img" aria-label={`${selected.label} (unchanged)`}>
+                            <img src={selected.staticSrc} alt={`${selected.label} mockup`} loading="lazy" />
+                        </div>
+                    ) : (
+                        <div
+                            className="mockup-img"
+                            role="img"
+                            aria-label={`${selected.label} colored with current palette`}
+                            dangerouslySetInnerHTML={{ __html: selected.svg }}
+                        />
+                    )}
+                    <div className="mockup-caption">
+                        <span className="caption-dot" style={{ background: swatches[0] }} />
+                        {selected.label}
+                    </div>
+                </div>
+            </div>
+
         </div>
     );
+};
 
+const ColorVisualizerCard = ({ palette = [], index, moveCard, isExpanded, onToggleExpand }) => {
     return (
         <DashboardCard
             index={index}
@@ -123,64 +199,9 @@ const ColorVisualizerCard = ({ palette = [], index, moveCard, isExpanded, onTogg
             moveCard={moveCard}
             isExpanded={isExpanded}
             onToggle={onToggleExpand}
-            previewContent={previewContent}
-            
+            previewContent={<ColorVisualizerPreview palette={palette} />}
         >
-            <div className="palette-visualizer">
-                <div className="mockup-controls">
-                    <div className="mockup-nav">
-                        <button
-                            type="button"
-                            className="mockup-nav-btn"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveIndex((prev) => (prev - 1 + mockups.length) % mockups.length);
-                            }}
-                        >
-                            ‹
-                        </button>
-                        <button
-                            type="button"
-                            className="mockup-nav-btn"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveIndex((prev) => (prev + 1) % mockups.length);
-                            }}
-                        >
-                            ›
-                        </button>
-                    </div>
-                </div>
-
-                <div className="mockup-grid single">
-                    <div key={selected.label} className="mockup-frame">
-                        {selected.staticSrc ? (
-                            <div className="mockup-img" role="img" aria-label={`${selected.label} (unchanged)`}>
-                                <img src={selected.staticSrc} alt={`${selected.label} mockup`} loading="lazy" />
-                            </div>
-                        ) : (
-                            <div
-                                className="mockup-img"
-                                role="img"
-                                aria-label={`${selected.label} colored with current palette`}
-                                dangerouslySetInnerHTML={{ __html: selected.svg }}
-                            />
-                        )}
-                        <div className="mockup-caption">
-                            <span className="caption-dot" style={{ background: swatches[0] }} />
-                            {selected.label}
-                        </div>
-                    </div>
-                </div>
-                <div className="visualizer-swatches">
-                    {swatches.slice(0, 8).map((hex) => (
-                        <div key={hex} className="visualizer-swatch">
-                            <span className="visualizer-swatch-chip" style={{ background: hex }} />
-                            <code>{hex}</code>
-                        </div>
-                    ))}
-                </div>
-            </div>
+            <ColorVisualizerDetail palette={palette} />
         </DashboardCard>
     );
 };

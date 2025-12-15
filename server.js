@@ -106,6 +106,40 @@ app.post('/api/analyze-color-season', async (req, res) => {
     }
 });
 
+// Endpoint to fetch brand analytics from Brand.dev
+app.post('/api/brands', async (req, res) => {
+    try {
+        const { domain } = req.body;
+        const apiKey = process.env.BRAND_DEV_API_KEY;
+
+        if (!apiKey) {
+            return res.status(404).json({ error: 'BRAND_DEV_API_KEY not configured' });
+        }
+
+        if (!domain) {
+            return res.status(400).json({ error: "Domain is required" });
+        }
+
+        const response = await fetch(`https://api.brand.dev/v1/brand/retrieve?domain=${domain}`, {
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            return res.status(response.status).json({ error: 'Failed to fetch from Brand.dev' });
+        }
+
+        const data = await response.json();
+        res.json(data);
+
+    } catch (error) {
+        console.error('Error fetching brand data:', error);
+        res.status(500).json({ error: 'Failed to fetch brand data' });
+    }
+});
+
 // Get __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

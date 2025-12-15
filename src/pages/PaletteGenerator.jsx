@@ -4,26 +4,23 @@ import { Container, Button, Toast, Modal } from "react-bootstrap";
 import { useLocation } from "react-router-dom";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { motion, AnimatePresence } from "framer-motion"; // ADD THIS
 import SharePalette from "../components/SharePalette";
-import ColorDataCard from "../components/ColorDataCard";
-import ColorHarmonyCard from "../components/ColorHarmonyCard";
-import ColorContextCard from "../components/ColorContextCard";
-import GradientBuilderCard from "../components/GradientBuilderCard";
-import OKLCHExplorerCard from "../components/OKLCHExplorerCard"; // ADD THIS
-import ColorScalesCard from "../components/ColorScalesCard"; // ADD THIS
-import ColorVisualizerCard from "../components/ColorVisualizerCard"; // ADD THIS
-import AccessibilityCard from "../components/AccessibilityCard";
-import DashboardSettings from "../components/DashboardSettings"; // ADD THIS
+import LayoutContainer from "../components/LayoutContainer";
+import ContextPanel from "../components/ContextPanel";
+import PaletteTray from "../components/PaletteTray";
 import ColorEditorDrawer from "../components/ColorEditorDrawer";
+import DashboardSettings from "../components/DashboardSettings";
+import DashboardCardSlot from "../components/DashboardCardSlot";
+import CardDetailModal from "../components/CardDetailModal";
+import { CARD_REGISTRY, DEFAULT_SLOTS } from "../components/CardRegistry";
+import { DensityProvider, useDensity } from "../contexts/DensityContext";
 import { getColorContext } from "../utils/getColorContext";
-import {
-  CARD_TYPES,
-  getDefaultVisibleCards,
-  getImplementedCards,
-} from "../utils/cardRegistry"; // ADD THIS
 import "../styles/dashboard.css";
 import "../styles/exportModal.css";
+import "../styles/layout.css";
+import "../styles/context-panel.css";
+import "../styles/palette-tray.css";
+import "../styles/dashboard-grid.css";
 import {
   generateRandomPalette,
   generateMonochromatic,
@@ -70,6 +67,10 @@ const AI_TIMEOUT_MS = 12000;
 const MAX_PROMPT_LENGTH = 180;
 const MIN_PROMPT_LENGTH = 6;
 const OWNER_EMAIL = "jodrey48@gmail.com, heather@velsoft.com";
+const DEFAULT_PALETTE_HEIGHT = 180;
+const MIN_PALETTE_HEIGHT = 120;
+const MAX_PALETTE_HEIGHT = 320;
+const MIN_DASHBOARD_HEIGHT = 360;
 const aiLockOverlayStyle = {
   position: "absolute",
   inset: 0,
@@ -122,68 +123,53 @@ const getTextColor = (bg) => {
 const PaletteGenerator = () => {
   const location = useLocation();
   const { currentUser } = useAuth();
+  const { density, toggleDensity } = useDensity();
   const isOwner = currentUser?.email === OWNER_EMAIL;
+  // Dashboard Card Handlers
+  const handleCardClick = (cardId) => {
+    setSelectedCardId(cardId);
+    setDetailModalOpen(true);
+  };
+
+  const handleSwapClick = (index) => {
+    setSwappingSlotIndex(index);
+    setSwapModalOpen(true);
+  };
+
+  const handleSwapConfirm = (newCardId) => {
+    const newSlots = [...cardSlots];
+    newSlots[swappingSlotIndex] = newCardId;
+    setCardSlots(newSlots);
+    setSwapModalOpen(false);
+    setSwappingSlotIndex(null);
+  };
+
+  const getCardProps = (cardId) => {
+    switch (cardId) {
+      case 'color-info': return { color: selectedColor, colorInfo };
+      case 'harmony': return { harmonies, onHarmonySelect: handleHarmonySelect };
+      case 'accessibility': return { color: selectedColor };
+      case 'scale': return { color: selectedColor };
+      case 'oklch': return { color: selectedColor };
+      case 'gradient': return { color: selectedColor };
+      case 'visualizer': return { palette };
+      case 'color-context': return { color: selectedColor, contextData: context };
+      case 'brand-analytics': return { color: selectedColor };
+      default: return { color: selectedColor };
+    }
+  };
+
   const [palette, setPalette] = useState([]);
-  // dashboardActive is no longer needed as it's always visible, but we'll keep the logic simple
   const [selectedColor, setSelectedColor] = useState(null);
   const [showColorEditor, setShowColorEditor] = useState(false);
   const [editingColorIndex, setEditingColorIndex] = useState(null);
   const [colorInfo, setColorInfo] = useState(null);
   const [harmonies, setHarmonies] = useState(null);
   const [context, setContext] = useState(null);
-  const [cardOrder, setCardOrder] = useState(() => {
-    if (typeof window !== "undefined") {
-      const storedOrder = localStorage.getItem("dashboardCardOrder");
-      if (storedOrder) {
-        try {
-          const parsed = JSON.parse(storedOrder);
-          // Merge with implemented cards to include newly added cards
-          const implemented = getImplementedCards().map((card) => card.id);
-          const newCards = implemented.filter((id) => !parsed.includes(id));
-          return [...parsed, ...newCards];
-        } catch (e) {
-          console.warn("Failed to parse stored card order, resetting.", e);
-        }
-      }
-    }
-    return getImplementedCards().map((card) => card.id);
-  });
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [visibleCards, setVisibleCards] = useState(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("dashboardVisibleCards");
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          // Older versions stored an array of booleans; ensure we only keep string IDs
-          if (
-            Array.isArray(parsed) &&
-            parsed.every((item) => typeof item === "string")
-          ) {
-            // Merge with default visible cards to include newly added default-visible cards
-            const defaults = getDefaultVisibleCards();
-            const merged = Array.from(new Set([...parsed, ...defaults]));
-            return merged;
-          }
-        } catch (e) {
-          console.warn("Failed to parse stored visible cards, resetting.", e);
-        }
-      }
-    }
-    return getDefaultVisibleCards();
-  });
   const [paletteName, setPaletteName] = useState("");
   const [toast, setToast] = useState({ show: false, message: "" });
-  const [expandedCards, setExpandedCards] = useState({});
-  const [dashboardView, setDashboardView] = useState(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("dashboardView");
-      if (stored === "masonry" || stored === "stacked") return stored;
-    }
-    return "masonry";
-  });
   const [draggingPaletteIndex, setDraggingPaletteIndex] = useState(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showMobileToolbar, setShowMobileToolbar] = useState(false);
@@ -196,8 +182,32 @@ const PaletteGenerator = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
+  const [contextPanelOpen, setContextPanelOpen] = useState(false); // For mobile/tablet
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [visibleCards, setVisibleCards] = useState([]);
+
+  // Dashboard State
+  const [cardSlots, setCardSlots] = useState(() => {
+    const saved = localStorage.getItem('dashboardSlots');
+    let slots = saved ? JSON.parse(saved) : DEFAULT_SLOTS;
+    // Migration: Ensure we have enough slots for the new layout (7 items)
+    if (slots.length < DEFAULT_SLOTS.length) {
+      slots = [...slots, ...DEFAULT_SLOTS.slice(slots.length)];
+    }
+    return slots;
+  });
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedCardId, setSelectedCardId] = useState(null);
+  const [swapModalOpen, setSwapModalOpen] = useState(false);
+  const [swappingSlotIndex, setSwappingSlotIndex] = useState(null);
+
+  // Persist slots
+  useEffect(() => {
+    localStorage.setItem('dashboardSlots', JSON.stringify(cardSlots));
+  }, [cardSlots]);
   const aiCooldownTimerRef = useRef(null);
   const lastAiRequestRef = useRef(0);
+  const [headerExpanded, setHeaderExpanded] = useState(false);
   const showAiError = (message) => {
     setAiError(message);
     setToast({ show: true, message });
@@ -216,20 +226,13 @@ const PaletteGenerator = () => {
   const prevTutorial = () =>
     setTutorialStep((step) => Math.max(step - 1, 0));
 
-  // Save visible cards to localStorage
-  useEffect(() => {
-    localStorage.setItem("dashboardVisibleCards", JSON.stringify(visibleCards));
-  }, [visibleCards]);
-
-  // Save dashboard view preference
-  useEffect(() => {
-    localStorage.setItem("dashboardView", dashboardView);
-  }, [dashboardView]);
-
-  // Save card order to localStorage
-  useEffect(() => {
-    localStorage.setItem("dashboardCardOrder", JSON.stringify(cardOrder));
-  }, [cardOrder]);
+  const handleToggleCard = (cardId) => {
+    setVisibleCards((prev) =>
+      prev.includes(cardId)
+        ? prev.filter((id) => id !== cardId)
+        : [...prev, cardId]
+    );
+  };
 
   // Load palette passed from navigation (e.g., Popular Palettes)
   useEffect(() => {
@@ -695,40 +698,6 @@ const PaletteGenerator = () => {
     setShowExportModal(false);
   };
 
-  const toggleCardExpand = (cardId) => {
-    setExpandedCards((prev) => ({
-      ...prev,
-      [cardId]: !prev[cardId],
-    }));
-  };
-
-  const handleToggleCard = (cardId) => {
-    setVisibleCards((prev) => {
-      if (prev.includes(cardId)) {
-        return prev.filter((id) => id !== cardId);
-      }
-      // Ensure uniqueness and valid ids
-      const next = [...prev, cardId].filter((id) => typeof id === "string");
-      return Array.from(new Set(next));
-    });
-  };
-
-  const isCardVisible = (cardType) => {
-    return visibleCards.includes(cardType);
-  };
-
-  const handleExpandAll = () => {
-    const allExpanded = {};
-    visibleCards.forEach((cardId) => {
-      allExpanded[cardId] = true;
-    });
-    setExpandedCards(allExpanded);
-  };
-
-  const handleCollapseAll = () => {
-    setExpandedCards({});
-  };
-
   return (
     <DndProvider backend={HTML5Backend}>
       <SEO
@@ -737,649 +706,397 @@ const PaletteGenerator = () => {
         keywords="color palette generator, color schemes, monochromatic, complementary, triadic, tetradic, export palette, css colors"
         url="/palette-generator"
       />
-      <Container fluid className="p-0 palette-generator-container">
-        {/* Palette Display - Vertical Stack on Left (Desktop) / Horizontal Top (Mobile) */}
-        <div id="palette-display" className="palette-sidebar">
-          {palette.map((color, index) => (
-            <div
-              key={`${color.hex}-${index}`}
-              className="palette-card-item"
-              style={{
-                backgroundColor: color.hex,
-                color: color.textColor,
-              }}
-              onClick={() => handlePaletteColorClick(color.hex, index)}
-              draggable
-              onDragStart={(e) => handlePaletteDragStart(e, index)}
-              onDragOver={handlePaletteDragOver}
-              onDrop={(e) => handlePaletteDrop(e, index)}
-              onDragEnd={handlePaletteDragEnd}
-            >
-              <div
-                className="palette-drag-handle desktop-only"
-                title="Drag to reorder"
-              >
-                <i className="bi bi-grip-vertical"></i>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  gap: "8px",
-                  alignItems: "center",
-                  flexWrap: "wrap",
-                  justifyContent: "center",
-                }}
-              >
-                <h5
-                  style={{ margin: 0, fontWeight: "bold", fontSize: "1.1rem" }}
+      <LayoutContainer
+        headerContent={
+          <div className="d-flex justify-content-between align-items-center w-100 gap-3">
+            {/* AI Prompt */}
+            <div className="flex-grow-1" style={{ maxWidth: '600px', position: 'relative' }}>
+              {!currentUser && (
+                <div
+                  style={{
+                    ...aiLockOverlayStyle,
+                    borderRadius: '6px',
+                  }}
+                  onClick={() => setShowAuthModal(true)}
+                  role="button"
+                  aria-label="Sign in to use AI generation"
                 >
-                  {color.hex}
-                </h5>
-                <p style={{ margin: 0, fontSize: "0.85rem" }}>{color.name}</p>
-              </div>
-              <Button
-                variant={color.locked ? "warning" : "light"}
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleLock(index);
-                }}
-                id="lock-button"
-              >
-                <i
-                  className={color.locked ? "bi bi-lock-fill" : "bi bi-unlock"}
-                ></i>
-              </Button>
-              <div
-                className="palette-reorder-mobile mobile-only"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Button
-                  variant="light"
-                  size="sm"
-                  disabled={index === 0}
-                  onClick={() => movePaletteColor(index, index - 1)}
-                  aria-label="Move color up"
-                >
-                  <i className="bi bi-arrow-up"></i>
-                </Button>
-                <Button
-                  variant="light"
-                  size="sm"
-                  disabled={index === palette.length - 1}
-                  onClick={() => movePaletteColor(index, index + 1)}
-                  aria-label="Move color down"
-                >
-                  <i className="bi bi-arrow-down"></i>
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Dashboard - Always Visible on Right (Desktop) / Bottom (Mobile) */}
-        <div className="palette-dashboard-area">
-          {colorInfo ? (
-            <>
-              <div className="dashboard-sticky">
-                <div className="dashboard-header-row">
-                  <h3
-                    style={{
-                      margin: 0,
-                      fontSize: "1.1rem",
-                      fontWeight: 600,
-                      color: "var(--dashboard-text)",
-                    }}
-                  >
-                    Dashboard
-                  </h3>
-
-                  {/* AI Prompt - Inline */}
-
-                  <div className="dashboard-prompt-inline" style={{ position: "relative" }}>
-                    {!currentUser && (
-                      <div
-                        style={{
-                          ...aiLockOverlayStyle,
-                          borderRadius: "6px",
-                        }}
-                        onClick={() => setShowAuthModal(true)}
-                        role="button"
-                        aria-label="Sign in to use AI generation"
-                      >
-                        <i className="bi bi-lock-fill" style={{ fontSize: "0.9rem" }}></i>
-                        <span style={{ fontSize: "0.8rem" }}>Sign in</span>
-                      </div>
-                    )}
-
-                    <form
-                      onSubmit={handleGenerateWithPrompt}
-                      style={{ filter: !currentUser ? "blur(2px)" : "none" }}
-                    >
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="Describe a palette..."
-                        value={aiPrompt}
-                        maxLength={MAX_PROMPT_LENGTH}
-                        onChange={(e) => {
-                          setAiPrompt(e.target.value);
-                          if (aiError) setAiError("");
-                        }}
-                        disabled={aiStatus === "loading" || !currentUser}
-                        aria-label="Describe a palette to generate with AI"
-                      />
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        type="submit"
-                        disabled={
-                          !currentUser ||
-                          !aiPrompt.trim() ||
-                          aiStatus === "loading" ||
-                          cooldownSeconds > 0 ||
-                          aiUsesLeft <= 0
-                        }
-                        title={
-                          !currentUser
-                            ? "Sign in to use AI (10/day)"
-                            : aiUsesLeft <= 0
-                              ? "Limit reached"
-                              : cooldownSeconds > 0
-                                ? "Cooling down..."
-                                : "Generate"
-                        }
-                        className="dashboard-icon-btn"
-                        aria-label="Generate palette from prompt"
-                      >
-                        {aiStatus === "loading" ? (
-                          <i className="bi bi-hourglass-split"></i>
-                        ) : (
-                          <i className="bi bi-stars"></i>
-                        )}
-                      </Button>
-                    </form>
-                  </div>
-
-                  <div className="dashboard-action-bar">
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      onClick={() => setShowSettingsModal(true)}
-                      title="Manage Cards"
-                      className="dashboard-icon-btn"
-                    >
-                      <i className="bi bi-sliders"></i>
-                    </Button>
-                    <Button
-                      variant="outline-secondary"
-                      size="sm"
-                      onClick={startTutorial}
-                      title="How to use the palette generator"
-                      className="dashboard-icon-btn"
-                    >
-                      <i className="bi bi-question-circle"></i>
-                    </Button>
-                    <div className="vr mx-1"></div>
-                    <Button
-                      variant="outline-secondary"
-                      size="sm"
-                      onClick={
-                        visibleCards.length > 0 &&
-                          visibleCards.every((id) => expandedCards[id])
-                          ? handleCollapseAll
-                          : handleExpandAll
-                      }
-                      title={
-                        visibleCards.length > 0 &&
-                          visibleCards.every((id) => expandedCards[id])
-                          ? "Collapse All"
-                          : "Expand All"
-                      }
-                      className="dashboard-icon-btn"
-                    >
-                      <i
-                        className={`bi ${visibleCards.length > 0 &&
-                          visibleCards.every((id) => expandedCards[id])
-                          ? "bi-arrows-angle-contract"
-                          : "bi-arrows-angle-expand"
-                          }`}
-                      ></i>
-                    </Button>
-                    <Button
-                      variant={
-                        dashboardView === "masonry"
-                          ? "primary"
-                          : "outline-secondary"
-                      }
-                      size="sm"
-                      onClick={() => setDashboardView("masonry")}
-                      title="Masonry view"
-                      className="dashboard-icon-btn mobile-hidden"
-                      aria-label="Masonry view"
-                    >
-                      <i className="bi bi-grid-3x3-gap"></i>
-                    </Button>
-                    <Button
-                      variant={
-                        dashboardView === "stacked"
-                          ? "primary"
-                          : "outline-secondary"
-                      }
-                      size="sm"
-                      onClick={() => setDashboardView("stacked")}
-                      title="Stacked view"
-                      className="dashboard-icon-btn mobile-hidden"
-                      aria-label="Stacked view"
-                    >
-                      <i className="bi bi-view-stacked"></i>
-                    </Button>
-                    <Button
-                      variant="outline-secondary"
-                      size="sm"
-                      onClick={generatePalette}
-                      title="Generate New Palette"
-                      className="dashboard-icon-btn"
-                    >
-                      <i className="bi bi-arrow-clockwise"></i>
-                    </Button>
-                    <Button
-                      variant="outline-secondary"
-                      size="sm"
-                      onClick={openSaveModal}
-                      title="Save Palette"
-                      className="dashboard-icon-btn"
-                    >
-                      <i className="bi bi-floppy"></i>
-                    </Button>
-                    <Button
-                      variant="outline-secondary"
-                      size="sm"
-                      onClick={() => setShowShareModal(true)}
-                      title="Share Palette"
-                      disabled={palette.length === 0}
-                      className="dashboard-icon-btn"
-                    >
-                      <i className="bi bi-share"></i>
-                    </Button>
-                    <Button
-                      variant="outline-secondary"
-                      size="sm"
-                      onClick={() => setShowExportModal(true)}
-                      title="Export Palette"
-                      className="dashboard-icon-btn"
-                    >
-                      <i className="bi bi-download"></i>
-                    </Button>
-                  </div>
-
-                  {/* Mobile Toolbar Toggle */}
-                  <Button
-                    variant="outline-secondary"
-                    size="sm"
-                    onClick={() => setShowMobileToolbar(!showMobileToolbar)}
-                    className="mobile-toolbar-toggle dashboard-icon-btn"
-                    aria-label="Open tools"
-                  >
-                    <i className="bi bi-three-dots-vertical"></i>
-                  </Button>
+                  <i className="bi bi-lock-fill" style={{ fontSize: '0.9rem' }}></i>
+                  <span style={{ fontSize: '0.8rem' }}>Sign in</span>
                 </div>
-              </div>
-
-              {/* Mobile Toolbar Popout */}
-              <div
-                className={`mobile-toolbar-backdrop ${showMobileToolbar ? 'is-open' : ''}`}
-                onClick={() => setShowMobileToolbar(false)}
-              />
-              <div className={`mobile-toolbar-popout ${showMobileToolbar ? 'is-open' : ''}`}>
-                <Button
-                  variant="outline-secondary"
-                  size="sm"
-                  onClick={() => { startTutorial(); setShowMobileToolbar(false); }}
-                  title="How to use the palette generator"
-                >
-                  <i className="bi bi-question-circle me-2"></i>Tutorial
-                </Button>
+              )}
+              <form
+                onSubmit={handleGenerateWithPrompt}
+                style={{ filter: !currentUser ? 'blur(2px)' : 'none', display: 'flex', gap: '0.5rem' }}
+              >
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Describe a palette..."
+                  value={aiPrompt}
+                  maxLength={MAX_PROMPT_LENGTH}
+                  onChange={(e) => {
+                    setAiPrompt(e.target.value);
+                    if (aiError) setAiError('');
+                  }}
+                  disabled={aiStatus === 'loading' || !currentUser}
+                  aria-label="Describe a palette to generate with AI"
+                />
                 <Button
                   variant="primary"
                   size="sm"
-                  onClick={() => { setShowSettingsModal(true); setShowMobileToolbar(false); }}
-                  title="Manage Cards"
+                  type="submit"
+                  disabled={
+                    !currentUser ||
+                    !aiPrompt.trim() ||
+                    aiStatus === 'loading' ||
+                    cooldownSeconds > 0 ||
+                    aiUsesLeft <= 0
+                  }
+                  title={
+                    !currentUser
+                      ? 'Sign in to use AI (10/day)'
+                      : aiUsesLeft <= 0
+                        ? 'Limit reached'
+                        : cooldownSeconds > 0
+                          ? 'Cooling down...'
+                          : 'Generate'
+                  }
                 >
-                  <i className="bi bi-sliders me-2"></i>Cards
+                  {aiStatus === 'loading' ? (
+                    <i className="bi bi-hourglass-split"></i>
+                  ) : (
+                    <i className="bi bi-stars"></i>
+                  )}
                 </Button>
-                {/* <Button
-                  variant={dashboardView === "masonry" ? "primary" : "outline-secondary"}
-                  size="sm"
-                  onClick={() => { setDashboardView("masonry"); setShowMobileToolbar(false); }}
-                >
-                  <i className="bi bi-grid-3x3-gap me-2"></i>Masonry
-                </Button>
-                <Button
-                  variant={dashboardView === "stacked" ? "primary" : "outline-secondary"}
-                  size="sm"
-                  onClick={() => { setDashboardView("stacked"); setShowMobileToolbar(false); }}
-                >
-                  <i className="bi bi-view-stacked me-2"></i>Stacked
-                </Button> */}
-                <Button
-                  variant="outline-secondary"
-                  size="sm"
-                  onClick={() => { generatePalette(); setShowMobileToolbar(false); }}
-                >
-                  <i className="bi bi-arrow-clockwise "></i>
-                </Button>
-                <Button
-                  variant="outline-secondary"
-                  size="sm"
-                  onClick={() => { openSaveModal(); setShowMobileToolbar(false); }}
-                >
-                  <i className="bi bi-floppy "></i>
-                </Button>
-                <Button
-                  variant="outline-secondary"
-                  size="sm"
-                  onClick={() => { setShowShareModal(true); setShowMobileToolbar(false); }}
-                  disabled={palette.length === 0}
-                >
-                  <i className="bi bi-share "></i>
-                </Button>
-                <Button
-                  variant="outline-secondary"
-                  size="sm"
-                  onClick={() => { setShowExportModal(true); setShowMobileToolbar(false); }}
-                >
-                  <i className="bi bi-download me-2"></i>Export
-                </Button>
-              </div>
-              <div
-                className={`dashboard-grid ${dashboardView === "stacked" ? "dashboard-grid-stacked" : ""
-                  }`}
+              </form>
+            </div>
+
+            {/* Action buttons */}
+            <div className="d-flex gap-2 align-items-center">
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                onClick={generatePalette}
+                title="Generate New Palette"
               >
-                <AnimatePresence>
-                  {cardOrder.map((cardId, index) => {
-                    if (!isCardVisible(cardId)) return null;
-                    const isExpanded = !!expandedCards[cardId];
-                    const commonProps = {
-                      index,
-                      moveCard: (from, to) => {
-                        setCardOrder((prev) => {
-                          const updated = [...prev];
-                          const [moved] = updated.splice(from, 1);
-                          updated.splice(to, 0, moved);
-                          return updated;
-                        });
-                      },
-                      isExpanded,
-                      onToggleExpand: () => toggleCardExpand(cardId),
-                    };
+                <i className="bi bi-arrow-clockwise"></i>
+              </Button>
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                onClick={openSaveModal}
+                title="Save Palette"
+              >
+                <i className="bi bi-floppy"></i>
+              </Button>
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                onClick={() => setShowShareModal(true)}
+                title="Share Palette"
+                disabled={palette.length === 0}
+              >
+                <i className="bi bi-share"></i>
+              </Button>
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                onClick={() => setShowExportModal(true)}
+                title="Export Palette"
+              >
+                <i className="bi bi-download"></i>
+              </Button>
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                onClick={startTutorial}
+                title="Tutorial"
+              >
+                <i className="bi bi-question-circle"></i>
+              </Button>
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                onClick={toggleDensity}
+                title={`Density: ${density === 'comfortable' ? 'Comfortable' : 'Compact'}`}
+                aria-label="Toggle density mode"
+              >
+                <i className={`bi bi-${density === 'comfortable' ? 'layout-text-window-reverse' : 'layout-text-window'}`}></i>
+              </Button>
+            </div>
+          </div>
+        }
+        workbench={
+          <div className="dashboard-grid">
+            {palette.length > 0 && selectedColor ? (
+              cardSlots.map((cardId, index) => {
+                const cardDef = CARD_REGISTRY[cardId];
+                if (!cardDef) return null;
 
-                    const motionProps = {
-                      layout: true,
-                      initial: { opacity: 0, scale: 0.95 },
-                      animate: { opacity: 1, scale: 1 },
-                      exit: { opacity: 0, scale: 0.95 },
-                      transition: {
-                        type: "spring",
-                        stiffness: 250,
-                        damping: 20,
-                      },
-                      style: { width: "100%" },
-                    };
+                const Preview = cardDef.Preview;
+                const props = getCardProps(cardId);
 
-                    switch (cardId) {
-                      case CARD_TYPES.COLOR_DATA:
-                        return (
-                          <motion.div key={cardId} {...motionProps}>
-                            <ColorDataCard
-                              color={selectedColor}
-                              colorInfo={colorInfo}
-                              {...commonProps}
-                            />
-                          </motion.div>
-                        );
-                      case CARD_TYPES.COLOR_HARMONY:
-                        return (
-                          <motion.div key={cardId} {...motionProps}>
-                            <ColorHarmonyCard
-                              baseColor={selectedColor}
-                              colorHarmonies={harmonies}
-                              onHarmonySelect={handleHarmonySelect}
-                              {...commonProps}
-                            />
-                          </motion.div>
-                        );
-                      case CARD_TYPES.COLOR_CONTEXT:
-                        return (
-                          <motion.div key={cardId} {...motionProps}>
-                            <ColorContextCard
-                              color={selectedColor}
-                              contextData={context}
-                              {...commonProps}
-                            />
-                          </motion.div>
-                        );
-                      case CARD_TYPES.VISUALIZER:
-                        return (
-                          <motion.div key={cardId} {...motionProps}>
-                            <ColorVisualizerCard
-                              palette={palette}
-                              {...commonProps}
-                            />
-                          </motion.div>
-                        );
-                      case CARD_TYPES.GRADIENT_BUILDER:
-                        return (
-                          <motion.div key={cardId} {...motionProps}>
-                            <GradientBuilderCard
-                              color={selectedColor}
-                              colorInfo={colorInfo}
-                              {...commonProps}
-                            />
-                          </motion.div>
-                        );
-                      case CARD_TYPES.OKLCH_EXPLORER:
-                        return (
-                          <motion.div key={cardId} {...motionProps}>
-                            <OKLCHExplorerCard
-                              color={selectedColor}
-                              colorInfo={colorInfo}
-                              {...commonProps}
-                            />
-                          </motion.div>
-                        );
-                      case CARD_TYPES.COLOR_SCALES:
-                        return (
-                          <motion.div key={cardId} {...motionProps}>
-                            <ColorScalesCard
-                              color={selectedColor}
-                              colorInfo={colorInfo}
-                              {...commonProps}
-                            />
-                          </motion.div>
-                        );
-                      case CARD_TYPES.ACCESSIBILITY:
-                        return (
-                          <motion.div key={cardId} {...motionProps}>
-                            <AccessibilityCard
-                              color={selectedColor}
-                              colorInfo={colorInfo}
-                              {...commonProps}
-                            />
-                          </motion.div>
-                        );
-                      default:
-                        return null;
-                    }
-                  })}
-                </AnimatePresence>
+                // Asymmetric 6-column grid logic with Vertical Card:
+                // Row 1: Span 2, Span 2, Span 1, Vert Span 1 (Indices 0, 1, 2, 3)
+                // Row 2: Span 3, Span 2, (Vert continues) (Indices 4, 5)
+                // Row 3: Span 6 (Index 6)
+
+                let className = '';
+
+                if (index === 0 || index === 1) {
+                  className = 'col-span-2';
+                } else if (index === 2) {
+                  className = ''; // Span 1
+                } else if (index === 3) {
+                  className = 'row-span-2'; // Vertical card in col 6
+                } else if (index === 4) {
+                  className = 'col-span-3';
+                } else if (index === 5) {
+                  className = 'col-span-2';
+                } else if (index === 6) {
+                  className = 'col-span-6 only-visible-4k';
+                }
+
+                // Adaptive props
+                const isWide = [0, 1, 4, 5, 6].includes(index);
+                const isTall = index === 3;
+
+                return (
+                  <DashboardCardSlot
+                    key={`${cardId}-${index}`}
+                    cardType={cardId}
+                    title={cardDef.title}
+                    icon={cardDef.icon}
+                    isPremium={cardDef.isPremium}
+                    previewContent={<Preview {...props} isWide={isWide} isTall={isTall} />}
+                    onCardClick={() => handleCardClick(cardId)}
+                    onSwapClick={() => handleSwapClick(index)}
+                    className={className}
+                  />
+                );
+              })
+            ) : (
+              <div className="dashboard-empty-state">
+                <i className="bi bi-palette"></i>
+                <h4>Generate a palette to get started</h4>
+                <p>Click the shuffle button or describe a palette with AI</p>
               </div>
-            </>
-          ) : (
-            <div className="d-flex flex-column justify-content-center align-items-center h-100 text-muted">
-              <i
-                className="bi bi-palette"
-                style={{ fontSize: "3rem", marginBottom: "1rem" }}
-              ></i>
-              <h4>Select a color to view details</h4>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        }
+        paletteTray={
+          < PaletteTray
+            palette={palette}
+            onColorClick={handlePaletteColorClick}
+            onToggleLock={toggleLock}
+            onDragStart={handlePaletteDragStart}
+            onDragOver={handlePaletteDragOver}
+            onDrop={handlePaletteDrop}
+            onDragEnd={handlePaletteDragEnd}
+            draggingIndex={draggingPaletteIndex}
+          />
+        }
+      />
 
-        {/* Save Modal */}
-        <Modal
-          show={showSaveModal}
-          onHide={() => setShowSaveModal(false)}
-          centered
-        >
-          <Modal.Header closeButton>
-            <Modal.Title>Save Palette</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <input
-              type="text"
-              className="form-control"
-              value={paletteName}
-              onChange={(e) => setPaletteName(e.target.value)}
-              placeholder="Enter palette name"
-            />
-            <textarea
-              className="form-control mt-3"
-              value={paletteDescription}
-              onChange={(e) => setPaletteDescription(e.target.value)}
-              placeholder="Add a short description (optional)"
-              rows={3}
-            />
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowSaveModal(false)}>
-              Cancel
-            </Button>
-            <Button variant="primary" onClick={handleSave}>
-              Save
-            </Button>
-          </Modal.Footer>
-        </Modal>
+      {/* Modals */}
+      <Modal
+        show={showSaveModal}
+        onHide={() => setShowSaveModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Save Palette</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <input
+            type="text"
+            className="form-control"
+            value={paletteName}
+            onChange={(e) => setPaletteName(e.target.value)}
+            placeholder="Enter palette name"
+          />
+          <textarea
+            className="form-control mt-3"
+            value={paletteDescription}
+            onChange={(e) => setPaletteDescription(e.target.value)}
+            placeholder="Add a short description (optional)"
+            rows={3}
+          />
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowSaveModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleSave}>
+            Save
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
-        {/* Export Modal */}
-        <Modal
-          show={showExportModal}
-          onHide={() => setShowExportModal(false)}
-          centered
-          contentClassName="export-modal"
-        >
-          <Modal.Header closeButton className="border-0">
-            <div className="w-100">
-              <p className="share-chip">Export palette</p>
-              <h4 className="share-title mb-0">Choose a format</h4>
-            </div>
-          </Modal.Header>
-          <Modal.Body>
-            <div className="export-grid">
-              {[
-                { label: "PNG", icon: "bi bi-image" },
-                { label: "JPEG", icon: "bi bi-file-earmark-image" },
-                { label: "SVG", icon: "bi bi-vector-pen" },
-                { label: "CSS", icon: "bi bi-file-earmark-code" },
-                { label: "JSON", icon: "bi bi-braces" },
-                { label: "Text", icon: "bi bi-file-earmark-text" },
-              ].map((item) => (
-                <button
-                  key={item.label}
-                  className="export-card"
-                  onClick={() => handleExport(item.label.toLowerCase())}
-                >
-                  <i className={item.icon}></i>
-                  <span>{item.label}</span>
-                </button>
-              ))}
-            </div>
-          </Modal.Body>
-          <Modal.Footer className="border-0">
-            <Button
-              variant="secondary"
-              onClick={() => setShowExportModal(false)}
-            >
-              Close
-            </Button>
-          </Modal.Footer>
-        </Modal>
+      {/* Export Modal */}
+      <Modal
+        show={showExportModal}
+        onHide={() => setShowExportModal(false)}
+        centered
+        contentClassName="export-modal"
+      >
+        <Modal.Header closeButton className="border-0">
+          <div className="w-100">
+            <p className="share-chip">Export palette</p>
+            <h4 className="share-title mb-0">Choose a format</h4>
+          </div>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="export-grid">
+            {[
+              { label: "PNG", icon: "bi bi-image" },
+              { label: "JPEG", icon: "bi bi-file-earmark-image" },
+              { label: "SVG", icon: "bi bi-vector-pen" },
+              { label: "CSS", icon: "bi bi-file-earmark-code" },
+              { label: "JSON", icon: "bi bi-braces" },
+              { label: "Text", icon: "bi bi-file-earmark-text" },
+            ].map((item) => (
+              <button
+                key={item.label}
+                className="export-card"
+                onClick={() => handleExport(item.label.toLowerCase())}
+              >
+                <i className={item.icon}></i>
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </div>
+        </Modal.Body>
+        <Modal.Footer className="border-0">
+          <Button
+            variant="secondary"
+            onClick={() => setShowExportModal(false)}
+          >
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
-        {/* Dashboard Settings Modal */}
-        <DashboardSettings
-          show={showSettingsModal}
-          onHide={() => setShowSettingsModal(false)}
-          visibleCards={visibleCards}
-          onToggleCard={handleToggleCard}
-        />
+      {/* Dashboard Settings Modal */}
+      <DashboardSettings
+        show={showSettingsModal}
+        onHide={() => setShowSettingsModal(false)}
+        visibleCards={visibleCards}
+        onToggleCard={handleToggleCard}
+      />
 
-        {/* Toast */}
-        <Toast
-          show={toast.show}
-          onClose={() => setToast({ show: false, message: "" })}
-          delay={3000}
-          autohide
-          style={{
-            position: "fixed",
-            bottom: "20px",
-            right: "20px",
-            zIndex: 1100,
-          }}
+      {/* Detail Modal */}
+      {selectedCardId && CARD_REGISTRY[selectedCardId] && (
+        <CardDetailModal
+          show={detailModalOpen}
+          onHide={() => setDetailModalOpen(false)}
+          title={CARD_REGISTRY[selectedCardId].title}
         >
-          <Toast.Header>
-            <strong className="me-auto">Notification</strong>
-          </Toast.Header>
-          <Toast.Body>{toast.message}</Toast.Body>
-        </Toast>
-        <Modal
-          show={showAuthModal}
-          onHide={() => setShowAuthModal(false)}
-          centered
-          size="md"
-          backdrop="static"
-          contentClassName="glass-card"
-        >
-          <div style={{ borderRadius: "8px", overflow: "hidden" }}>
+          {(() => {
+            const Detail = CARD_REGISTRY[selectedCardId].Detail;
+            const props = getCardProps(selectedCardId);
+            return <Detail {...props} />;
+          })()}
+        </CardDetailModal>
+      )}
+
+      {/* Swap Modal */}
+      <Modal show={swapModalOpen} onHide={() => setSwapModalOpen(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Customize Dashboard</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="d-grid gap-2">
+            {Object.values(CARD_REGISTRY).map(card => (
+              <Button
+                key={card.id}
+                variant="outline-light"
+                className="d-flex align-items-center gap-3 p-3 text-start border"
+                style={{ color: '#1f2937' }}
+                onClick={() => handleSwapConfirm(card.id)}
+              >
+                <i className={`bi ${card.icon} fs-4 text-primary`}></i>
+                <div>
+                  <div className="fw-bold d-flex align-items-center gap-2">
+                    {card.title}
+                    {card.isPremium && <span className="badge bg-warning text-dark" style={{ fontSize: '0.6em' }}>PRO</span>}
+                  </div>
+                  <div className="small text-muted">Click to select</div>
+                </div>
+              </Button>
+            ))}
+          </div>
+        </Modal.Body>
+      </Modal>
+
+      {/* Toast */}
+      <Toast
+        show={toast.show}
+        onClose={() => setToast({ show: false, message: "" })}
+        delay={3000}
+        autohide
+        style={{
+          position: "fixed",
+          bottom: "20px",
+          right: "20px",
+          zIndex: 1100,
+        }}
+      >
+        <Toast.Header>
+          <strong className="me-auto">Notification</strong>
+        </Toast.Header>
+        <Toast.Body>{toast.message}</Toast.Body>
+      </Toast>
+      <Modal
+        show={showAuthModal}
+        onHide={() => setShowAuthModal(false)}
+        centered
+        size="md"
+        backdrop="static"
+        contentClassName="glass-card"
+      >
+        <div style={{ borderRadius: "8px", overflow: "hidden" }}>
+          <div
+            style={{
+              background:
+                "linear-gradient(120deg, #1b1f3a 0%, #2d3d7a 55%, #0b1329 100%)",
+              color: "#f8f9ff",
+              padding: "20px 24px",
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+            }}
+          >
             <div
               style={{
-                background:
-                  "linear-gradient(120deg, #1b1f3a 0%, #2d3d7a 55%, #0b1329 100%)",
-                color: "#f8f9ff",
-                padding: "20px 24px",
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
+                width: "46px",
+                height: "46px",
+                borderRadius: "12px",
+                background: "rgba(255, 215, 128, 0.22)",
+                display: "grid",
+                placeItems: "center",
+                color: "#f5d776",
+                fontSize: "1.45rem",
               }}
             >
+              <i className="bi bi-lock-fill"></i>
+            </div>
+            <div>
               <div
                 style={{
-                  width: "46px",
-                  height: "46px",
-                  borderRadius: "12px",
-                  background: "rgba(255, 215, 128, 0.22)",
-                  display: "grid",
-                  placeItems: "center",
-                  color: "#f5d776",
-                  fontSize: "1.45rem",
+                  fontSize: "1rem",
+                  letterSpacing: "0.2px",
+                  fontWeight: 700,
                 }}
               >
-                <i className="bi bi-lock-fill"></i>
+                Unlock AI + saving
               </div>
-              <div>
-                <div
-                  style={{
-                    fontSize: "1rem",
-                    letterSpacing: "0.2px",
-                    fontWeight: 700,
-                  }}
-                >
-                  Unlock AI + saving
-                </div>
-                <div style={{ opacity: 0.88, fontSize: "0.9rem" }}>
-                  Sign in to access premium tools and keep your palettes.
-                </div>
+              <div style={{ opacity: 0.88, fontSize: "0.9rem" }}>
+                Sign in to access premium tools and keep your palettes.
               </div>
-              {/* <div style={{
+            </div>
+            {/* <div style={{
                                 marginLeft: 'auto',
                                 padding: '8px 14px',
                                 borderRadius: '12px',
@@ -1390,95 +1107,96 @@ const PaletteGenerator = () => {
                             }}>
                                 10 Prompts
                             </div> */}
-            </div>
-            <div style={{ background: "#f6f7fb", padding: "20px 24px 8px" }}>
-              <div className="d-grid gap-2 mb-3">
-                {[
-                  {
-                    icon: "bi-stars",
-                    title: "AI palette generator",
-                    desc: "Describe your idea and get a curated palette in seconds.",
-                  },
-                  {
-                    icon: "bi-shield-check",
-                    title: "Daily AI allowance",
-                    desc: "10 generations per day to explore, iterate, and refine.",
-                  },
-                  {
-                    icon: "bi-bookmark-heart",
-                    title: "Save & reuse",
-                    desc: "Store palettes to revisit, export, and share anytime.",
-                  },
-                ].map((item) => (
+          </div>
+          <div style={{ background: "#f6f7fb", padding: "20px 24px 8px" }}>
+            <div className="d-grid gap-2 mb-3">
+              {[
+                {
+                  icon: "bi-stars",
+                  title: "AI palette generator",
+                  desc: "Describe your idea and get a curated palette in seconds.",
+                },
+                {
+                  icon: "bi-shield-check",
+                  title: "Daily AI allowance",
+                  desc: "10 generations per day to explore, iterate, and refine.",
+                },
+                {
+                  icon: "bi-bookmark-heart",
+                  title: "Save & reuse",
+                  desc: "Store palettes to revisit, export, and share anytime.",
+                },
+              ].map((item) => (
+                <div
+                  key={item.title}
+                  className="d-flex align-items-center gap-3 p-3 rounded-3"
+                  style={{
+                    background: "#ffffff",
+                    border: "1px solid rgba(0,0,0,0.05)",
+                    boxShadow: "0 6px 16px rgba(0,0,0,0.06)",
+                  }}
+                >
                   <div
-                    key={item.title}
-                    className="d-flex align-items-center gap-3 p-3 rounded-3"
+                    className="rounded-3"
                     style={{
-                      background: "#ffffff",
-                      border: "1px solid rgba(0,0,0,0.05)",
-                      boxShadow: "0 6px 16px rgba(0,0,0,0.06)",
+                      width: 52,
+                      height: 52,
+                      background: "#e9edff",
+                      color: "#3f2ee8",
+                      fontSize: "1.6rem",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
-                    <div
-                      className="rounded-3"
-                      style={{
-                        width: 52,
-                        height: 52,
-                        background: "#e9edff",
-                        color: "#3f2ee8",
-                        fontSize: "1.6rem",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <i className={`bi ${item.icon}`}></i>
-                    </div>
-                    <div>
-                      <div style={{ fontWeight: 800 }}>{item.title}</div>
-                      <div className="text-muted small">{item.desc}</div>
-                    </div>
+                    <i className={`bi ${item.icon}`}></i>
                   </div>
-                ))}
-              </div>
-            </div>
-            <div
-              style={{
-                padding: "0 24px 20px",
-                display: "flex",
-                gap: "10px",
-                background: "#f6f7fb",
-                justifyContent: "flex-end",
-              }}
-            >
-              <Button
-                variant="secondary"
-                onClick={() => setShowAuthModal(false)}
-              >
-                Maybe later
-              </Button>
-              <Button
-                variant="primary"
-                onClick={() => {
-                  setShowAuthModal(false);
-                  window.location.href = "/signup";
-                }}
-              >
-                Sign up
-              </Button>
-              <Button
-                variant="outline-primary"
-                onClick={() => {
-                  setShowAuthModal(false);
-                  window.location.href = "/login";
-                }}
-              >
-                Log in
-              </Button>
+                  <div>
+                    <div style={{ fontWeight: 800 }}>{item.title}</div>
+                    <div className="text-muted small">{item.desc}</div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        </Modal>
-        {showShareModal && (
+          <div
+            style={{
+              padding: "0 24px 20px",
+              display: "flex",
+              gap: "10px",
+              background: "#f6f7fb",
+              justifyContent: "flex-end",
+            }}
+          >
+            <Button
+              variant="secondary"
+              onClick={() => setShowAuthModal(false)}
+            >
+              Maybe later
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => {
+                setShowAuthModal(false);
+                window.location.href = "/signup";
+              }}
+            >
+              Sign up
+            </Button>
+            <Button
+              variant="outline-primary"
+              onClick={() => {
+                setShowAuthModal(false);
+                window.location.href = "/login";
+              }}
+            >
+              Log in
+            </Button>
+          </div>
+        </div>
+      </Modal>
+      {
+        showShareModal && (
           <SharePalette
             show={showShareModal}
             onClose={() => setShowShareModal(false)}
@@ -1495,19 +1213,21 @@ const PaletteGenerator = () => {
               return `${window.location.origin}/palette-generator?palette=${encoded}`;
             }}
           />
-        )}
-        <ColorEditorDrawer
-          show={showColorEditor}
-          color={
-            editingColorIndex !== null && palette[editingColorIndex]
-              ? palette[editingColorIndex].hex
-              : selectedColor || "#7b5bff"
-          }
-          onClose={() => setShowColorEditor(false)}
-          onChange={handleColorEditorChange}
-        />
+        )
+      }
+      <ColorEditorDrawer
+        show={showColorEditor}
+        color={
+          editingColorIndex !== null && palette[editingColorIndex]
+            ? palette[editingColorIndex].hex
+            : selectedColor || "#7b5bff"
+        }
+        onClose={() => setShowColorEditor(false)}
+        onChange={handleColorEditorChange}
+      />
 
-        {showTutorial && (
+      {
+        showTutorial && (
           <div className="tutorial-overlay" role="dialog" aria-modal="true">
             <div className="tutorial-card">
               <div className="d-flex justify-content-between align-items-start">
@@ -1571,10 +1291,17 @@ const PaletteGenerator = () => {
               </div>
             </div>
           </div>
-        )}
-      </Container>
-    </DndProvider>
+        )
+      }
+    </DndProvider >
   );
 };
 
-export default PaletteGenerator;
+// Wrap with DensityProvider at export level so useDensity hook works inside component
+const PaletteGeneratorWithDensity = () => (
+  <DensityProvider>
+    <PaletteGenerator />
+  </DensityProvider>
+);
+
+export default PaletteGeneratorWithDensity;

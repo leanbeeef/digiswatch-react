@@ -1,0 +1,107 @@
+/* Layout Container Styles */
+
+.palette-layout-container {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    height: calc(100vh - 58px);
+    background: var(--dashboard-bg, #f3f4f6);
+    overflow: hidden;
+}
+
+.palette-layout-header {
+    grid-row: 1;
+    background: rgba(255, 255, 255, 0.96);
+    border-bottom: 1px solid rgba(12, 25, 48, 0.08);
+    padding: 0.75rem 1rem;
+    z-index: 10;
+}
+
+.palette-layout-body {
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 0;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.palette-layout-workbench {
+    grid-column: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0rem 1rem 1rem 1rem;
+    background: var(--dashboard-bg, #f3f4f6);
+}
+
+.palette-layout-context {
+    grid-column: 2;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: #ffffff;
+    border-left: 1px solid rgba(12, 25, 48, 0.08);
+}
+
+.palette-layout-tray {
+    grid-row: 3;
+    z-index: 5;
+}
+
+/* Responsive - Tablet */
+@media (max-width: 1199px) {
+    .palette-layout-body {
+        grid-template-columns: 1fr;
+    }
+
+    .palette-layout-context {
+        position: fixed;
+        right: -400px;
+        top: 58px;
+        width: 380px;
+        height: calc(100vh - 58px);
+        z-index: 1000;
+        transition: right 300ms ease;
+        box-shadow: none;
+        border-left: 1px solid rgba(12, 25, 48, 0.08);
+    }
+
+    .palette-layout-context.is-open {
+        right: 0;
+        box-shadow: -8px 0 24px rgba(0, 0, 0, 0.15);
+    }
+}
+
+/* Responsive - Mobile */
+@media (max-width: 767px) {
+    .palette-layout-context {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        top: auto;
+        width: 100%;
+        height: 70vh;
+        transform: translateY(100%);
+        transition: transform 300ms ease;
+        border-left: none;
+        border-top: 1px solid rgba(12, 25, 48, 0.08);
+        border-radius: 16px 16px 0 0;
+    }
+
+    .palette-layout-context.is-open {
+        transform: translateY(0);
+        box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .palette-layout-workbench {
+        padding: 0.5rem;
+    }
+}
+
+/* Density mode support */
+[data-density="compact"] .palette-layout-workbench {
+    padding: 0.5rem;
+}
+
+[data-density="compact"] .palette-layout-header {
+    padding: 0.5rem 0.75rem;
+}

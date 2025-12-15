@@ -5,34 +5,43 @@ import React from 'react';
 import DashboardCard from './DashboardCard';
 import '../styles/dashboard.css';
 
-const ColorContextCard = ({ color, contextData, index, moveCard, isExpanded, onToggleExpand }) => {
-    if (!contextData) return null;
+export const ColorContextPreview = ({ color, contextData }) => {
+    if (!contextData) {
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: color || '#ccc' }}></div>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#999' }}>No Context Data</span>
+                </div>
+            </div>
+        );
+    }
+    const { emotional, moods } = contextData;
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', height: '100%', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: color, flexShrink: 0 }}></div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: '1.1rem', fontWeight: 700, lineHeight: 1.2 }}>{emotional?.description?.split('.')[0] || 'Context'}</span>
+                    <span style={{ fontSize: '0.85rem', color: '#6b7280' }}>Based on psychological associations</span>
+                </div>
+            </div>
+            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                {moods?.slice(0, 4).map((mood, i) => (
+                    <span key={i} style={{ fontSize: '0.75rem', background: '#f5f5f4', color: '#57534e', padding: '4px 8px', borderRadius: '0', fontWeight: 500 }}>{mood}</span>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+export const ColorContextDetail = ({ contextData }) => {
+    if (!contextData) return <div className="p-3 text-muted">No context data available for this color.</div>;
 
     const { emotional, cultural, industry, moods } = contextData;
 
     return (
-        <DashboardCard
-            id="color-context"
-            title="Color Context"
-            isDraggable={true}
-            index={index}
-            moveCard={moveCard}
-            isExpanded={isExpanded}
-            onToggle={onToggleExpand}
-            previewContent={
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: color }}></div>
-                        <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{emotional?.description?.split('.')[0] || 'Context'}</span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '4px' }}>
-                        {moods?.slice(0, 3).map((mood, i) => (
-                            <span key={i} style={{ fontSize: '0.7rem', background: 'var(--bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>{mood}</span>
-                        ))}
-                    </div>
-                </div>
-            }
-        >
+        <React.Fragment>
             {/* Emotional Context */}
             {emotional && (
                 <div className="context-section">
@@ -96,6 +105,23 @@ const ColorContextCard = ({ color, contextData, index, moveCard, isExpanded, onT
                     </div>
                 </div>
             )}
+        </React.Fragment>
+    );
+};
+
+const ColorContextCard = ({ color, contextData, index, moveCard, isExpanded, onToggleExpand }) => {
+    return (
+        <DashboardCard
+            id="color-context"
+            title="Color Context"
+            isDraggable={true}
+            index={index}
+            moveCard={moveCard}
+            isExpanded={isExpanded}
+            onToggle={onToggleExpand}
+            previewContent={<ColorContextPreview color={color} contextData={contextData} />}
+        >
+            <ColorContextDetail contextData={contextData} />
         </DashboardCard>
     );
 };

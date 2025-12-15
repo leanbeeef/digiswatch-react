@@ -34,13 +34,24 @@ const DashboardCard = ({
 
     const [, drop] = useDrop({
         accept: CARD_TYPE,
-        hover: (item) => {
+        hover: (item, monitor) => {
             if (!ref.current || !moveCard) return;
 
             const dragIndex = item.index;
             const hoverIndex = index;
 
             if (dragIndex === hoverIndex) return;
+
+            const hoverBoundingRect = ref.current.getBoundingClientRect();
+            const hoverMiddleY =
+                (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+            const clientOffset = monitor.getClientOffset();
+            if (!clientOffset) return;
+            const hoverClientY = clientOffset.y - hoverBoundingRect.top;
+
+            // Only swap once the cursor crosses the halfway point to reduce jitter.
+            if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) return;
+            if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) return;
 
             moveCard(dragIndex, hoverIndex);
             item.index = hoverIndex;
@@ -75,9 +86,9 @@ const DashboardCard = ({
                     {isDraggable && (
                         <div
                             ref={drag}
-                            className="dashboard-card-action-btn"
-                            style={{ cursor: 'grab', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            className="dashboard-card-action-btn dashboard-card-drag-handle"
                             title="Drag to reorder"
+                            aria-label="Drag card to reorder"
                         >
                             <i className="bi bi-grip-vertical"></i>
                         </div>

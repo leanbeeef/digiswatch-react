@@ -1,0 +1,59 @@
+/* Resize Handle Styles */
+
+.resize-handle {
+    position: absolute;
+    left: -6px;
+    top: 0;
+    bottom: 0;
+    width: 12px;
+    cursor: ew-resize;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+.resize-handle:hover,
+.resize-handle.dragging {
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+.resize-handle-grip {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 8px 0;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.resize-handle:hover .resize-handle-grip,
+.resize-handle.dragging .resize-handle-grip {
+    opacity: 1;
+}
+
+.resize-handle-line {
+    width: 2px;
+    height: 16px;
+    background-color: rgba(59, 130, 246, 0.5);
+    border-radius: 1px;
+}
+
+.resize-handle.dragging .resize-handle-line {
+    background-color: rgba(59, 130, 246, 0.8);
+}
+
+/* Prevent text selection while dragging */
+.resize-handle.dragging * {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+}
+
+/* Mobile - hide resize handle */
+@media (max-width: 1199px) {
+    .resize-handle {
+        display: none;
+    }
+}

@@ -4,7 +4,48 @@ import { Card, Form, Button } from 'react-bootstrap';
 import DashboardCard from './DashboardCard';
 import chroma from 'chroma-js';
 
-const OKLCHExplorerCard = ({ color, colorInfo, index, moveCard, isExpanded, onToggleExpand, onClose, isDraggable }) => {
+export const OKLCHExplorerPreview = ({ color, l, c, h }) => {
+    // If internal state isn't available, we can derive it or just show simple info. 
+    // Here we might need passed in l,c,h or just color. 
+    // For simplicity, let's just use color to derive if needed or pass in formatted string if available
+    // Actually the Preview in `DashboardCard` context doesn't have the state of the Detail.
+    // So we should re-derive or accept props.
+
+    // Recalculate if not passed (Preview is standalone)
+    let displayL = l, displayC = c, displayH = h;
+    if (color && (l === undefined)) {
+        try {
+            const [lightness, chromaVal, hue] = chroma(color).oklch();
+            displayL = lightness;
+            displayC = chromaVal;
+            displayH = hue;
+        } catch (e) { }
+    }
+
+    return (
+        <div style={{
+            background: color,
+            width: '100%',
+            height: '100%',
+            minHeight: '100px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'column',
+            color: chroma.contrast(color, 'white') > 4.5 ? 'white' : 'black',
+            textAlign: 'center'
+        }}>
+            <div style={{ fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
+                {color}
+            </div>
+            <div style={{ fontSize: '0.8rem', opacity: 0.8, fontFamily: 'monospace' }}>
+                {displayL !== undefined ? `oklch(${displayL.toFixed(2)} ${displayC.toFixed(3)} ${Math.round(displayH)})` : 'Invalid Color'}
+            </div>
+        </div>
+    );
+};
+
+export const OKLCHExplorerDetail = ({ color, onClose }) => {
     const [l, setL] = useState(0.5);
     const [c, setC] = useState(0.1);
     const [h, setH] = useState(0);
@@ -44,10 +85,10 @@ const OKLCHExplorerCard = ({ color, colorInfo, index, moveCard, isExpanded, onTo
     }, [l, c, h, color]);
 
     const handleCopy = () => {
-    navigator.clipboard.writeText(oklchString);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-};
+        navigator.clipboard.writeText(oklchString);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
 
     const handleReset = () => {
         if (color) {
@@ -59,7 +100,6 @@ const OKLCHExplorerCard = ({ color, colorInfo, index, moveCard, isExpanded, onTo
         }
     };
 
-    // Format delta E description
     const getDeltaEDescription = () => {
         if (deltaE < 1) return 'Imperceptible';
         if (deltaE < 2) return 'Barely noticeable';
@@ -69,33 +109,18 @@ const OKLCHExplorerCard = ({ color, colorInfo, index, moveCard, isExpanded, onTo
     };
 
     return (
-        <DashboardCard
-            index={index}
-            title="OKLCH Explorer"
-            moveCard={moveCard}
-            isExpanded={isExpanded}
-            onToggle={onToggleExpand}
-            onClose={onClose}
-            isDraggable={isDraggable}
-            extraHeaderActions={isExpanded ? (
+        <div>
+            <div className="d-flex justify-content-end mb-3">
                 <Button
                     variant="outline-secondary"
                     size="sm"
                     onClick={handleReset}
                     title="Reset OKLCH sliders to selected color"
                 >
-                    <i className="bi bi-arrow-counterclockwise"></i>
+                    <i className="bi bi-arrow-counterclockwise"></i> Reset
                 </Button>
-            ) : null}
-            previewContent={
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '6px', background: color, border: '1px solid var(--dashboard-border)' }}></div>
-                    <div style={{ fontSize: '0.85rem', fontFamily: 'monospace' }}>
-                        L:{l.toFixed(2)} C:{c.toFixed(3)} H:{h.toFixed(1)}
-                    </div>
-                </div>
-            }
-        >
+            </div>
+
             <Card.Body>
                 {/* Color Comparison */}
                 <div className="d-flex gap-2 mb-3">
@@ -187,7 +212,7 @@ const OKLCHExplorerCard = ({ color, colorInfo, index, moveCard, isExpanded, onTo
                     <code style={{ fontSize: '0.85rem' }}>
                         oklch({(l * 100).toFixed(1)}% {c.toFixed(3)} {Math.round(h)})
                     </code>
-                    
+
                 </div>
 
                 {/* Copy Button */}
@@ -201,6 +226,23 @@ const OKLCHExplorerCard = ({ color, colorInfo, index, moveCard, isExpanded, onTo
                     {copied ? 'Copied!' : `Copy`}
                 </Button>
             </Card.Body>
+        </div>
+    );
+};
+
+const OKLCHExplorerCard = ({ color, colorInfo, index, moveCard, isExpanded, onToggleExpand, onClose, isDraggable }) => {
+    return (
+        <DashboardCard
+            index={index}
+            title="OKLCH Explorer"
+            moveCard={moveCard}
+            isExpanded={isExpanded}
+            onToggle={onToggleExpand}
+            onClose={onClose}
+            isDraggable={isDraggable}
+            previewContent={<OKLCHExplorerPreview color={color} />}
+        >
+            <OKLCHExplorerDetail color={color} onClose={onClose} />
         </DashboardCard>
     );
 };

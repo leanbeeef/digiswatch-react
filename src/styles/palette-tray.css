@@ -125,6 +125,12 @@
     z-index: 2;
 }
 
+.palette-swatch.is-active {
+    outline: 2px solid var(--dashboard-accent, #0366d6);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.65);
+    z-index: 3;
+}
+
 .palette-swatch.is-dragging {
     opacity: 0.5;
     cursor: grabbing;

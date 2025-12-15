@@ -9,6 +9,8 @@ import '../styles/palette-tray.css';
 const PaletteTray = ({
     palette = [],
     onColorClick,
+    onSwatchSelect,
+    activeColor,
     onToggleLock,
     onDragStart,
     onDragOver,
@@ -84,7 +86,7 @@ const PaletteTray = ({
                 {palette.map((color, index) => (
                     <div
                         key={index}
-                        className={`palette-swatch ${draggingIndex === index ? 'is-dragging' : ''}`}
+                        className={`palette-swatch ${draggingIndex === index ? 'is-dragging' : ''} ${color.hex === activeColor ? 'is-active' : ''}`}
                         style={{ backgroundColor: color.hex }}
                         draggable
                         onDragStart={(e) => onDragStart && onDragStart(e, index)}
@@ -92,6 +94,7 @@ const PaletteTray = ({
                         onDrop={(e) => onDrop && onDrop(e, index)}
                         onDragEnd={() => onDragEnd && onDragEnd()}
                         title={collapsed ? `${color.hex} - ${color.name}` : ''}
+                        onClick={() => onSwatchSelect && onSwatchSelect(color.hex, index)}
                     >
                         {!collapsed && (
                             <>

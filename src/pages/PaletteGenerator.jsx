@@ -1,12 +1,11 @@
 // src/pages/PaletteGenerator.jsx
-import React, { useEffect, useRef, useState } from "react";
-import { Container, Button, Toast, Modal } from "react-bootstrap";
+import { useEffect, useRef, useState } from "react";
+import { Button, Toast, Modal } from "react-bootstrap";
 import { useLocation } from "react-router-dom";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import SharePalette from "../components/SharePalette";
 import LayoutContainer from "../components/LayoutContainer";
-import ContextPanel from "../components/ContextPanel";
 import PaletteTray from "../components/PaletteTray";
 import ColorEditorDrawer from "../components/ColorEditorDrawer";
 import DashboardSettings from "../components/DashboardSettings";
@@ -67,10 +66,6 @@ const AI_TIMEOUT_MS = 12000;
 const MAX_PROMPT_LENGTH = 180;
 const MIN_PROMPT_LENGTH = 6;
 const OWNER_EMAIL = "jodrey48@gmail.com, heather@velsoft.com";
-const DEFAULT_PALETTE_HEIGHT = 180;
-const MIN_PALETTE_HEIGHT = 120;
-const MAX_PALETTE_HEIGHT = 320;
-const MIN_DASHBOARD_HEIGHT = 360;
 const aiLockOverlayStyle = {
   position: "absolute",
   inset: 0,
@@ -172,7 +167,6 @@ const PaletteGenerator = () => {
   const [toast, setToast] = useState({ show: false, message: "" });
   const [draggingPaletteIndex, setDraggingPaletteIndex] = useState(null);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [showMobileToolbar, setShowMobileToolbar] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiStatus, setAiStatus] = useState("idle"); // idle | loading | success | error
   const [aiError, setAiError] = useState("");
@@ -182,7 +176,6 @@ const PaletteGenerator = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
-  const [contextPanelOpen, setContextPanelOpen] = useState(false); // For mobile/tablet
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [visibleCards, setVisibleCards] = useState([]);
 
@@ -207,7 +200,6 @@ const PaletteGenerator = () => {
   }, [cardSlots]);
   const aiCooldownTimerRef = useRef(null);
   const lastAiRequestRef = useRef(0);
-  const [headerExpanded, setHeaderExpanded] = useState(false);
   const showAiError = (message) => {
     setAiError(message);
     setToast({ show: true, message });
@@ -218,7 +210,6 @@ const PaletteGenerator = () => {
   const startTutorial = () => {
     setTutorialStep(0);
     setShowTutorial(true);
-    setShowMobileToolbar(false);
   };
   const closeTutorial = () => setShowTutorial(false);
   const nextTutorial = () =>
@@ -889,6 +880,8 @@ const PaletteGenerator = () => {
           < PaletteTray
             palette={palette}
             onColorClick={handlePaletteColorClick}
+            onSwatchSelect={handleColorClick}
+            activeColor={selectedColor}
             onToggleLock={toggleLock}
             onDragStart={handlePaletteDragStart}
             onDragOver={handlePaletteDragOver}

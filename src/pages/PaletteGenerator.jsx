@@ -66,7 +66,7 @@ const AI_COOLDOWN_MS = 8000;
 const AI_TIMEOUT_MS = 12000;
 const MAX_PROMPT_LENGTH = 180;
 const MIN_PROMPT_LENGTH = 6;
-const OWNER_EMAIL = "jodrey48@gmail.com, heather@velsoft.com";
+const OWNER_EMAILS = ["jodrey48@gmail.com", "heather@velsoft.com"];
 const aiLockOverlayStyle = {
   position: "absolute",
   inset: 0,
@@ -124,7 +124,8 @@ const PaletteGenerator = () => {
   const { currentUser } = useAuth();
   const { palette, setPalette, selectedColor, setSelectedColor, removeColor: removeColorFromWorkspace } =
     usePaletteWorkspace();
-  const isOwner = currentUser?.email === OWNER_EMAIL;
+  const normalizedEmail = currentUser?.email?.toLowerCase();
+  const isOwner = !!normalizedEmail && OWNER_EMAILS.includes(normalizedEmail);
 
   const handleSwapConfirm = (newCardId) => {
     const newSlots = [...cardSlots];

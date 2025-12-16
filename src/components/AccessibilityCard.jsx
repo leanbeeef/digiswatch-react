@@ -34,7 +34,7 @@ export const AccessibilityPreview = ({ color }) => {
             <div style={{
                 width: '64px',
                 height: '64px',
-                borderRadius: '0',
+                borderRadius: '5px',
                 background: color,
                 border: '1px solid #e5e7eb',
                 display: 'flex',
@@ -70,10 +70,8 @@ export const AccessibilityDetail = ({ color }) => {
     const whiteCompliance = checkCompliance(contrastWhite);
     const blackCompliance = checkCompliance(contrastBlack);
 
-    const getBadgeVariant = (passes) => passes ? 'success' : 'secondary'; // Use secondary for fail to be cleaner
-
     const renderLargePreview = (bgColor, label, ratio, compliance) => (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', border: '1px solid var(--dashboard-border)' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', border: '1px solid var(--dashboard-border)', borderRadius: '5px'  }}>
             {/* Visual Preview */}
             <div style={{
                 flex: 1,
@@ -84,24 +82,25 @@ export const AccessibilityDetail = ({ color }) => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 minHeight: '120px',
-                padding: '1rem'
+                padding: '1rem',
+                borderRadius: '5px 5px 0px 0px'
             }}>
                 <span style={{ fontSize: '3.5rem', fontWeight: 700, lineHeight: 1 }}>Aa</span>
                 <span style={{ fontSize: '1.2rem', fontWeight: 500, marginTop: '0.5rem' }}>Text Preview</span>
             </div>
 
             {/* Data Footer */}
-            <div style={{ padding: '1rem', background: 'var(--dashboard-surface)', borderTop: '1px solid var(--dashboard-border)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.5rem' }}>
+            <div style={{ padding: '1rem', background: 'var(--dashboard-surface)', borderTop: '1px solid var(--dashboard-border)', borderRadius: '0px 0px 5px 5px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.5rem', borderRadius: '0px 0px 5px 5px' }}>
                     <span style={{ fontWeight: 600, fontSize: '0.9rem', color: '#666' }}>On {label}</span>
                     <span style={{ fontWeight: 800, fontSize: '1.4rem', fontFamily: 'monospace' }}>{ratio.toFixed(2)}</span>
                 </div>
 
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    <div style={{ flex: 1, textAlign: 'center', padding: '4px', background: compliance.aaNormal ? '#dcfce7' : '#fee2e2', color: compliance.aaNormal ? '#166534' : '#991b1b', fontSize: '0.8rem', fontWeight: 700, borderRadius: 0 }}>
+                    <div style={{ flex: 1, textAlign: 'center', padding: '4px', background: compliance.aaNormal ? '#dcfce7' : '#fee2e2', color: compliance.aaNormal ? '#166534' : '#991b1b', fontSize: '0.8rem', fontWeight: 700, borderRadius: 5 }}>
                         AA {compliance.aaNormal ? 'PASS' : 'FAIL'}
                     </div>
-                    <div style={{ flex: 1, textAlign: 'center', padding: '4px', background: compliance.aaaNormal ? '#dcfce7' : '#fee2e2', color: compliance.aaaNormal ? '#166534' : '#991b1b', fontSize: '0.8rem', fontWeight: 700, borderRadius: 0 }}>
+                    <div style={{ flex: 1, textAlign: 'center', padding: '4px', background: compliance.aaaNormal ? '#dcfce7' : '#fee2e2', color: compliance.aaaNormal ? '#166534' : '#991b1b', fontSize: '0.8rem', fontWeight: 700, borderRadius: 5 }}>
                         AAA {compliance.aaaNormal ? 'PASS' : 'FAIL'}
                     </div>
                 </div>

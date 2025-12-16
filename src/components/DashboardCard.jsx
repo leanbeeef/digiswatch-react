@@ -109,7 +109,7 @@ const DashboardCard = ({
                     <div
                         className="dashboard-card-preview"
                         onClick={onToggle}
-                        style={{ cursor: 'pointer' }}
+                        style={{ cursor: 'pointer', borderRadius: '6px' }}
                         title="Click to expand"
                     >
                         {previewContent}

@@ -73,25 +73,26 @@ export const OKLCHExplorerDetail = ({
         <div>
             <Card.Body>
                 {/* Color Comparison */}
-                <div className="d-flex gap-2 mb-3">
+                <div className="d-flex gap-2 mb-3 rounded-2">
                     <div style={{ flex: 1, textAlign: 'center' }}>
                         <div
+                            className='rounded-2'
                             style={{
                                 background: color,
                                 height: '80px',
-                                borderRadius: '0',
                                 border: '1px solid var(--dashboard-border)',
-                                marginBottom: '0.5rem'
+                                marginBottom: '0.5rem',
                             }}
                         ></div>
                         <small className="text-muted">Original</small>
                     </div>
-                    <div style={{ flex: 1, textAlign: 'center' }}>
+                    <div style={{ flex: 1, textAlign: 'center', borderRadius: '5' }}>
                         <div
+                            className='rounded-2'
                             style={{
                                 background: oklchString,
                                 height: '80px',
-                                borderRadius: '0',
+                                borderRadius: '5',
                                 border: '2px solid var(--dashboard-accent)',
                                 marginBottom: '0.5rem'
                             }}
@@ -101,7 +102,7 @@ export const OKLCHExplorerDetail = ({
                 </div>
 
                 {/* Delta E Display */}
-                <div className="mb-3 p-2 bg-light rounded-0 text-center">
+                <div className="mb-3 p-2 bg-light rounded-2 text-center">
                     <small className="text-muted d-block">Perceptual Difference (ΔE)</small>
                     <strong style={{ fontSize: '1.25rem', color: 'var(--dashboard-accent)' }}>
                         {deltaE.toFixed(2)}
@@ -159,7 +160,7 @@ export const OKLCHExplorerDetail = ({
 
                 {/* Value & Copy Row */}
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'stretch' }}>
-                    <div className="p-2 bg-light rounded-0 d-flex align-items-center" style={{ flex: 1, border: '1px solid var(--dashboard-border)' }}>
+                    <div className="p-2 bg-light rounded-2 d-flex align-items-center" style={{ flex: 1, border: '1px solid var(--dashboard-border)' }}>
                         <code style={{ fontSize: '0.85rem', color: 'var(--dashboard-text)' }}>
                             oklch({(l * 100).toFixed(1)}% {c.toFixed(3)} {Math.round(h)})
                         </code>
@@ -168,7 +169,7 @@ export const OKLCHExplorerDetail = ({
                         variant="primary"
                         size="sm"
                         onClick={handleCopy}
-                        style={{ borderRadius: 0, minWidth: '80px' }}
+                        style={{ borderRadius: 5, minWidth: '80px' }}
                     >
                         <i className={`bi ${copied ? 'bi-check-lg' : 'bi-clipboard'} me-1`}></i>
                         {copied ? 'Copied' : `Copy`}

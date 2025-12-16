@@ -46,6 +46,7 @@ export const ColorContextDetail = ({ contextData }) => {
         background: 'var(--dashboard-surface)',
         height: '100%',
         display: 'flex',
+        borderRadius: '6px',
         flexDirection: 'column',
         justifyContent: 'space-between'
     };

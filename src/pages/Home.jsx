@@ -163,7 +163,9 @@ const Home = () => {
                   </div>
                   <div>
                     <h3>Palette Generator</h3>
-                    <p className="mb-0" style={{ maxWidth: '80%' }}>Lock, shuffle, and fine-tune colors with our advanced editor. Export to CSS, JSON, and more in one click. The core tool for your workflow.</p>
+                    <p className="mb-0" style={{ maxWidth: '80%' }}>
+                      Lock, shuffle, and fine-tune up to 10 colors. Switch Evaluate / Generate / Output tabs to see the right tools, then export to CSS, JSON, or image in one click.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -176,7 +178,11 @@ const Home = () => {
                       <i className="bi bi-stars"></i>
                     </div>
                     <h3>AI Gen</h3>
-                    <p className="mb-0">Describe a vibe, get a palette. <br /> <span className="text-muted small">Powered by You.</span></p>
+                    <p className="mb-0">
+                      Describe a vibe and generate palettes that respect your current locks and color count.
+                      <br />
+                      <span className="text-muted small">Works with up to 10 colors.</span>
+                    </p>
                   </div>
                 </div>
               </div>
@@ -190,7 +196,7 @@ const Home = () => {
                       <i className="bi bi-eye"></i>
                     </div>
                     <h3>Contrast Checker</h3>
-                    <p className="mb-0">Validate WCAG AA/AAA scores instantly.</p>
+                    <p className="mb-0">Validate WCAG AA/AAA scores instantly in a dashboard layout.</p>
                   </div>
                 </div>
               </div>
@@ -204,8 +210,8 @@ const Home = () => {
                       <i className="bi bi-image"></i>
                     </div>
                     <div>
-                      <h3 className="mb-1">Image Extractor</h3>
-                      <p className="mb-0">Pull precise colors from your inspiration.</p>
+                    <h3 className="mb-1">Image Extractor</h3>
+                    <p className="mb-0">Pull precise colors from your inspiration in a two-card dashboard.</p>
                     </div>
                   </div>
                 </div>

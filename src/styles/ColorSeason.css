@@ -268,7 +268,7 @@
 .cs-palette-strip-swatch {
     flex: 1;
     position: relative;
-    border-radius: 0;
+    border-radius: 5px;
     transition: flex 0.25s ease, transform 0.18s ease;
     cursor: pointer;
 }

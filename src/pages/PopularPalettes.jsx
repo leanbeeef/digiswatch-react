@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Toast } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { fetchPublicPalettes } from "../utils/fetchPalettes";
+import { fetchTrendingPalettes } from "../utils/trendingPalettes";
+import { fetchPexelsImage } from "../utils/pexelsClient";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import SharePalette from '../components/SharePalette';
 import { useAuth } from '../AuthContext';
@@ -21,7 +23,7 @@ import '../PopularPalettes.css'; // Import custom styles
 import SEO from '../components/SEO';
 
 const PopularPalettes = () => {
-  const [palettes, setPalettes] = useState(paletteData);
+  const [palettes, setPalettes] = useState([]);
   const [userPalettes, setUserPalettes] = useState([]);
   // Start on community tab so public palettes are shown first
   const [activeTab, setActiveTab] = useState('predefined');
@@ -39,12 +41,17 @@ const PopularPalettes = () => {
     }
   });
   const [toast, setToast] = useState({ show: false, message: '' });
+  const [imageMap, setImageMap] = useState({});
+  const [activeCategory, setActiveCategory] = useState('all');
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const trending = await fetchTrendingPalettes();
+        setPalettes(trending?.length ? trending : paletteData);
+
         const publicPalettes = await fetchPublicPalettes();
         // If fetching fails or returns empty (e.g., unauthenticated rules), fall back to bundled data
         if (publicPalettes && publicPalettes.length > 0) {
@@ -54,7 +61,8 @@ const PopularPalettes = () => {
         }
       } catch (error) {
         console.error(error.message);
-        // Gracefully show bundled palettes when public fetch isn't available (e.g., not logged in)
+        // Gracefully show bundled palettes when public/trending fetch isn't available (e.g., not logged in)
+        setPalettes(paletteData);
         setUserPalettes(paletteData);
       }
     };
@@ -81,6 +89,29 @@ const PopularPalettes = () => {
       // ignore
     }
   }, [likedPalettes]);
+
+  // Fetch Pexels imagery for visible palettes (up to 12 to keep it light)
+  useEffect(() => {
+    const loadImages = async () => {
+      const key = import.meta?.env?.VITE_PEXELS_API_KEY;
+      if (!key) return;
+
+      const sourceList =
+        activeTab === 'predefined' ? palettes : userPalettes;
+      const filtered = getFilteredPalettes(sourceList).slice(0, 12);
+
+      for (const p of filtered) {
+        if (imageMap[p.name]) continue;
+        const query = p.imageQuery || p.name || p.brand?.industry || 'color palette';
+        const url = await fetchPexelsImage(query);
+        if (url) {
+          setImageMap((prev) => ({ ...prev, [p.name]: url }));
+        }
+      }
+    };
+    loadImages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, palettes, userPalettes, activeCategory]);
 
   const fetchLikes = async () => {
     try {
@@ -185,6 +216,29 @@ const PopularPalettes = () => {
     setPalettes(sortedPalettes);
   };
 
+  const normalizeColors = (arr = []) => {
+    const normalized = (arr || []).map((c) => (c?.startsWith('#') ? c : `#${c}`));
+    while (normalized.length < 6 && normalized.length > 0) {
+      normalized.push(normalized[normalized.length - 1]);
+    }
+    return normalized.slice(0, 6);
+  };
+
+  const getFilteredPalettes = (list) => {
+    return list.filter((p) => {
+      const category = p.category || p.brand?.industry || 'Featured';
+      return activeCategory === 'all' || category === activeCategory;
+    });
+  };
+
+  const categories = Array.from(
+    new Set(
+      [...palettes, ...userPalettes].map(
+        (p) => p.category || p.brand?.industry || 'Featured'
+      )
+    )
+  );
+
   const handleShareClick = (palette) => {
     setSelectedPalette(palette);
     setShowShareModal(true);
@@ -196,67 +250,85 @@ const PopularPalettes = () => {
 
   const renderPalettes = (palettesToRender) => (
     <div className="pp-grid">
-      {palettesToRender.map((palette) => (
-        <div key={palette.name} className="pp-card">
-          <div className="pp-card-body">
-            <div className="pp-card-head">
-              <div className="pp-palette-name">{palette.name}</div>
-              <div className="pp-card-head-actions">
+      {palettesToRender.map((palette) => {
+        const colors = normalizeColors(palette.colors);
+        const category = palette.category || palette.brand?.industry || 'Featured';
+        const img = imageMap[palette.name] || palette.imageUrl || null;
+
+        return (
+          <div key={palette.name} className="pp-card">
+            <div className="pp-card-body">
+              <div className="pp-card-head">
+                <div className="pp-palette-name">{palette.name}</div>
+                <span className="badge bg-light text-dark border">{category}</span>
+                <div className="pp-card-head-actions">
+                  <button
+                    className={`pp-like-inline ${likes[palette.name] ? 'is-active' : ''} ${animateLike[palette.name] ? 'animate-like' : ''}`}
+                    onClick={() => handleLike(palette.name)}
+                    title="Like palette"
+                    disabled={!!likedPalettes[palette.name]}
+                  >
+                    <i className={`bi ${likes[palette.name] ? 'bi-heart-fill' : 'bi-heart'}`}></i>
+                    <span className="pp-like-count-inline">{likes[palette.name] || 0}</span>
+                  </button>
+                  <button
+                    className="pp-open-generator"
+                    onClick={() => handleOpenInGenerator(palette)}
+                    title="Open in Palette Generator"
+                  >
+                    <img src="/favicon.ico" alt="Open in generator" height="18" width="18" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="pp-visual">
+                <div
+                  className="pp-visual-img"
+                  style={{
+                    backgroundImage: img
+                      ? `url(${img})`
+                      : `linear-gradient(120deg, ${colors[0] || '#f5f5f5'}, ${colors[3] || colors[0] || '#e5e5e5'})`,
+                  }}
+                  role="img"
+                  aria-label={`Palette ${palette.name}`}
+                />
+                <div className="pp-color-strip overlay">
+                  {colors.map((color, idx) => (
+                    <div
+                      key={idx}
+                      className="pp-color-swatch"
+                      style={{ backgroundColor: color }}
+                      data-color={color}
+                      onClick={() => {
+                        navigator.clipboard.writeText(color);
+                      }}
+                      title="Click to copy hex"
+                    ></div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pp-actions">
                 <button
-                  className={`pp-like-inline ${likes[palette.name] ? 'is-active' : ''} ${animateLike[palette.name] ? 'animate-like' : ''}`}
-                  onClick={() => handleLike(palette.name)}
-                  title="Like palette"
-                  disabled={!!likedPalettes[palette.name]}
+                  className={`pp-action-ghost ${savedPalettes[palette.name] ? 'is-active' : ''}`}
+                  onClick={() => handleSave(palette)}
                 >
-                  <i className={`bi ${likes[palette.name] ? 'bi-heart-fill' : 'bi-heart'}`}></i>
-                  <span className="pp-like-count-inline">{likes[palette.name] || 0}</span>
+                  <i className={`bi ${savedPalettes[palette.name] ? 'bi-bookmark-fill' : 'bi-bookmark'}`}></i>
+                  <span>{savedPalettes[palette.name] ? 'Saved' : 'Save'}</span>
                 </button>
+
                 <button
-                  className="pp-open-generator"
-                  onClick={() => handleOpenInGenerator(palette)}
-                  title="Open in Palette Generator"
+                  className="pp-action-ghost"
+                  onClick={() => handleShareClick(palette)}
                 >
-                  <img src="/favicon.ico" alt="Open in generator" height="18" width="18" />
+                  <i className="bi bi-share-fill"></i>
+                  <span>Share</span>
                 </button>
               </div>
             </div>
-
-            <div className="pp-color-strip">
-              {palette.colors.map((color, idx) => (
-                <div
-                  key={idx}
-                  className="pp-color-swatch"
-                  style={{ backgroundColor: color }}
-                  data-color={color}
-                  onClick={() => {
-                    navigator.clipboard.writeText(color);
-                    // Optional: Add toast notification here
-                  }}
-                  title="Click to copy hex"
-                ></div>
-              ))}
-            </div>
-
-            <div className="pp-actions">
-              <button
-                className={`pp-action-ghost ${savedPalettes[palette.name] ? 'is-active' : ''}`}
-                onClick={() => handleSave(palette)}
-              >
-                <i className={`bi ${savedPalettes[palette.name] ? 'bi-bookmark-fill' : 'bi-bookmark'}`}></i>
-                <span>{savedPalettes[palette.name] ? 'Saved' : 'Save'}</span>
-              </button>
-
-              <button
-                className="pp-action-ghost"
-                onClick={() => handleShareClick(palette)}
-              >
-                <i className="bi bi-share-fill"></i>
-                <span>Share</span>
-              </button>
-            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 
@@ -294,8 +366,28 @@ const PopularPalettes = () => {
           </div>
         </div>
 
-        {activeTab === 'userCreated' && renderPalettes(userPalettes)}
-        {activeTab === 'predefined' && renderPalettes(palettes)}
+        {categories.length > 0 && (
+          <div className="pp-category-row">
+            <button
+              className={`pp-category-pill ${activeCategory === 'all' ? 'is-active' : ''}`}
+              onClick={() => setActiveCategory('all')}
+            >
+              All
+            </button>
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                className={`pp-category-pill ${activeCategory === cat ? 'is-active' : ''}`}
+                onClick={() => setActiveCategory(cat)}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {activeTab === 'userCreated' && renderPalettes(getFilteredPalettes(userPalettes))}
+        {activeTab === 'predefined' && renderPalettes(getFilteredPalettes(palettes))}
       </Container>
 
       {selectedPalette && (

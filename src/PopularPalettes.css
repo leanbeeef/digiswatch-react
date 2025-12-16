@@ -428,6 +428,56 @@
     box-sizing: border-box;
 }
 
+/* Visual with image + overlay strip */
+.pp-visual {
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+    margin-bottom: 0.75rem;
+}
+
+.pp-visual-img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background-size: cover;
+    background-position: center;
+}
+
+.pp-color-strip.overlay {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    margin-bottom: 0;
+    height: 70px;
+}
+
+.pp-category-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin: 1rem 0 1.5rem;
+}
+
+.pp-category-pill {
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    border-radius: 999px;
+    padding: 0.35rem 0.9rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 120ms ease;
+    color: #1f2937;
+}
+
+.pp-category-pill.is-active {
+    background: #0d6efd;
+    color: #fff;
+    border-color: #0d6efd;
+    box-shadow: 0 6px 14px rgba(13, 110, 253, 0.25);
+}
+
 .pp-action-ghost {
     display: inline-flex;
     align-items: center;

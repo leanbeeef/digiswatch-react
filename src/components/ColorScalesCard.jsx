@@ -164,11 +164,11 @@ export const ColorScalesDetail = ({ color }) => {
                                 style={{ gap: '0.5rem' }}
                             >
                                 <div
+                                    className='rounded-1'
                                     style={{
                                         width: '40px',
                                         height: '24px',
                                         background: c,
-                                        borderRadius: '0',
                                         border: '1px solid var(--dashboard-border)',
                                         flexShrink: 0
                                     }}
@@ -201,7 +201,9 @@ export const ColorScalesDetail = ({ color }) => {
 
                     {/* Export Code Preview */}
                     <div className="mb-3">
-                        <pre style={{
+                        <pre 
+                            className='rounded-2'
+                            style={{
                             fontSize: '0.7rem',
                             background: 'var(--dashboard-bg)',
                             padding: '0.75rem',
@@ -222,7 +224,7 @@ export const ColorScalesDetail = ({ color }) => {
                         variant="primary"
                         size="sm"
                         onClick={handleCopyCode}
-                        className="w-100"
+                        className="w-100 rounded-2"
                         onMouseDown={(e) => e.stopPropagation()}
                         style={{ borderRadius: 0 }}
                     >

@@ -70,7 +70,7 @@ const ColorDataCard = ({ color, colorInfo, index, moveCard, isExpanded, onToggle
                                 className="copy-btn"
                                 onClick={() => copyToClipboard(format.value, format.label)}
                                 title={`Copy ${format.label}`}
-                                style={{ padding: '0.2rem 0.4rem', fontSize: '0.75rem', borderRadius: 0 }}
+                                style={{ padding: '0.2rem 0.4rem', fontSize: '0.75rem', borderRadius: 5 }}
                             >
                                 {copiedFormat === format.label ? (
                                     <i className="bi bi-check"></i>

@@ -1,19 +1,24 @@
-import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import favicon from '/favicon.svg';
+import { useAuth } from '../AuthContext';
+import logo from '../assets/ds_hz_black.svg';
 
 const AppTopBar = ({ onCommand }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { currentUser } = useAuth();
   const sectionLabel = location.pathname === '/' ? 'Home' : location.pathname.replace('/', '') || 'Home';
+  const avatarUrl = currentUser?.photoURL || currentUser?.avatar;
+  const initial =
+    currentUser?.displayName?.[0]?.toUpperCase() ||
+    currentUser?.email?.[0]?.toUpperCase() ||
+    'U';
 
   return (
     <header className="app-topbar">
       <div className="app-topbar__left" onClick={() => navigate('/home')} role="button" aria-label="Go home">
         <div className="app-topbar__logo">
-          <img src={favicon} alt="Logo" className="app-topbar__mark-img" />
-          <span className="app-topbar__wordmark">DigiSwatch</span>
+          <img src={logo} alt="Logo" className="app-topbar__mark-img" />
         </div>
         <span className="app-topbar__section">{sectionLabel}</span>
       </div>
@@ -22,8 +27,47 @@ const AppTopBar = ({ onCommand }) => {
           <i className="bi bi-command"></i>
           <span className="d-none d-md-inline">Command</span>
         </button>
-        <button className="ghost-btn" onClick={() => navigate('/profile')} aria-label="Profile">
-          <i className="bi bi-person-circle"></i>
+        <button
+          className="ghost-btn"
+          onClick={() => navigate(currentUser ? '/profile' : '/login')}
+          aria-label={currentUser ? 'Profile' : 'Login'}
+          title={currentUser ? 'Profile' : 'Login'}
+        >
+          {currentUser ? (
+            avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt="User avatar"
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  boxShadow: '0 0 0 1px rgba(0,0,0,0.08)',
+                }}
+              />
+            ) : (
+              <span
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: '50%',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: '#e5e7eb',
+                  color: '#111827',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  boxShadow: '0 0 0 1px rgba(0,0,0,0.08)',
+                }}
+              >
+                {initial}
+              </span>
+            )
+          ) : (
+            <i className="bi bi-person-circle"></i>
+          )}
         </button>
       </div>
     </header>

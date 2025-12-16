@@ -9,10 +9,9 @@ import LayoutContainer from "../components/LayoutContainer";
 import PaletteTray from "../components/PaletteTray";
 import ColorEditorDrawer from "../components/ColorEditorDrawer";
 import DashboardSettings from "../components/DashboardSettings";
-import DashboardCardSlot from "../components/DashboardCardSlot";
 import CardDetailModal from "../components/CardDetailModal";
 import { CARD_REGISTRY, DEFAULT_SLOTS } from "../components/CardRegistry";
-import { DensityProvider, useDensity } from "../contexts/DensityContext";
+import { DensityProvider } from "../contexts/DensityContext";
 import { getColorContext } from "../utils/getColorContext";
 import ContextPanel from "../components/ContextPanel";
 import "../styles/dashboard.css";
@@ -87,65 +86,34 @@ const aiLockOverlayStyle = {
 
 const TUTORIAL_STEPS = [
   {
-    title: "Pick a swatch",
-    body: "Click any palette swatch on the left to load its data, harmonies, and context on the dashboard.",
+    title: "Use the palette tray",
+    body: "Click a swatch to load it, lock/unlock colors, or trim down to two before generating. You can keep up to 10 colors in the tray.",
     tips: [
-      "Drag swatches to reorder",
-      "Tap the lock to keep a color while shuffling",
+      "Copy hex with the clipboard icon",
+      "Locked colors stay put when shuffling",
     ],
   },
   {
-    title: "Generate colors",
-    body: "Use the AI prompt to request a vibe (10/day). Or click the shuffle button to spin up a random set.",
-    tips: ["Short prompts work best", "Locked colors stay put when shuffling"],
+    title: "Generate in the toolbar",
+    body: "Ask AI for a vibe or hit the shuffle arrow to create a set. Generate will respect however many colors you currently have.",
+    tips: ["Short prompts work best", "Locked colors stay put when generating"],
   },
   {
-    title: "Fine-tune quickly",
-    body: "Open the color drawer by clicking a swatch to tweak HSL/OKLCH, then drag cards to reorder your tools.",
-    tips: [
-      "Expand/collapse cards to focus",
-      "Switch Masonry/Stacked to suit your layout",
-    ],
+    title: "Switch views",
+    body: "Use the Evaluate / Generate / Output tabs to swap the context panel. Cards stay fixed; just switch tabs to change what you see.",
+    tips: ["Evaluate for checks, Generate for ideas, Output to export"],
   },
   {
-    title: "Check accessibility",
-    body: "Use Contrast & Accessibility cards to verify WCAG scores and see readable text pairs automatically.",
-    tips: [
-      "Try dark/light modes in the visualizer",
-      "Keep ratios ≥ 4.5 for body text",
-    ],
+    title: "Review the cards",
+    body: "Skim harmonies, context, and checks without reordering or collapsing.",
+    tips: ["Use the active tab to choose which set of cards shows"],
   },
   {
     title: "Share or export",
-    body: "Save palettes to your account, share a link, or export as CSS, JSON, SVG, PNG, or Text.",
-    tips: [
-      "Name the palette before saving",
-      "Exports respect your current order",
-    ],
+    body: "Use the right-side actions to save, share, or export as CSS, JSON, SVG, PNG, or text.",
+    tips: ["Name the palette before saving", "Exports respect your current order"],
   },
 ];
-
-// Component to toggle density mode
-const DensityToggle = () => {
-  const { density, toggleDensity } = useDensity();
-  return (
-    <Button
-      variant="outline-secondary"
-      size="sm"
-      onClick={toggleDensity}
-      title={`Density: ${density === "compact" ? "Compact" : "Comfortable"}`}
-      className="dashboard-icon-btn"
-    >
-      <i
-        className={`bi ${
-          density === "compact"
-            ? "bi-arrows-angle-contract"
-            : "bi-arrows-angle-expand"
-        }`}
-      ></i>
-    </Button>
-  );
-};
 
 const getTextColor = (bg) => {
   return tinycolor.readability(bg, "#FFFFFF") >= 4.5 ? "#FFFFFF" : "#000000";
@@ -156,18 +124,7 @@ const PaletteGenerator = () => {
   const { currentUser } = useAuth();
   const { palette, setPalette, selectedColor, setSelectedColor, removeColor: removeColorFromWorkspace } =
     usePaletteWorkspace();
-  const { density, toggleDensity } = useDensity();
   const isOwner = currentUser?.email === OWNER_EMAIL;
-  // Dashboard Card Handlers
-  const handleCardClick = (cardId) => {
-    setSelectedCardId(cardId);
-    setDetailModalOpen(true);
-  };
-
-  const handleSwapClick = (index) => {
-    setSwappingSlotIndex(index);
-    setSwapModalOpen(true);
-  };
 
   const handleSwapConfirm = (newCardId) => {
     const newSlots = [...cardSlots];
@@ -237,7 +194,7 @@ const PaletteGenerator = () => {
     return slots;
   });
   const [detailModalOpen, setDetailModalOpen] = useState(false);
-  const [selectedCardId, setSelectedCardId] = useState(null);
+  const [selectedCardId] = useState(null);
   const [swapModalOpen, setSwapModalOpen] = useState(false);
   const [swappingSlotIndex, setSwappingSlotIndex] = useState(null);
 
@@ -580,6 +537,8 @@ const PaletteGenerator = () => {
     }
   }, []);
 
+  const isTourStep = (stepIndex) => showTutorial && tutorialStep === stepIndex;
+
   const handleColorClick = (color) => {
     setSelectedColor(color);
     setColorInfo(getColorInfo(color));
@@ -775,7 +734,12 @@ const PaletteGenerator = () => {
       />
       <LayoutContainer
         headerContent={
-          <div className="d-flex align-items-center w-100 gap-3 flex-wrap generator-toolbar">
+            <div
+              className={`d-flex align-items-center w-100 gap-3 flex-wrap generator-toolbar ${
+                isTourStep(1) ? "tour-highlight" : ""
+              }`}
+              style={{ position: "relative", zIndex: isTourStep(1) ? 9999 : "auto" }}
+            >
             {/* AI Prompt */}
             <div
               className="flex-grow-1"
@@ -883,7 +847,11 @@ const PaletteGenerator = () => {
               <div className="toolbar-divider" aria-hidden="true"></div>
 
               {/* Action buttons */}
-              <div className="d-flex gap-2 align-items-center">
+              <div
+                className={`d-flex gap-2 align-items-center ${
+                  isTourStep(4) ? "tour-highlight" : ""
+                }`}
+              >
               <Button
                 variant="outline-secondary"
                 size="sm"
@@ -932,7 +900,16 @@ const PaletteGenerator = () => {
           </div>
         }
         workbench={
-          <div className="h-100 d-flex flex-column" style={{ minHeight: 0 }}>
+          <div
+            className={`h-100 d-flex flex-column ${
+              isTourStep(2) || isTourStep(3) ? "tour-highlight" : ""
+            }`}
+            style={{
+              minHeight: 0,
+              position: "relative",
+              zIndex: isTourStep(2) || isTourStep(3) ? 9999 : "auto",
+            }}
+          >
             <ContextPanel
               activeTab={contextTab}
               onTabChange={setContextTab}
@@ -950,20 +927,28 @@ const PaletteGenerator = () => {
         }
         contextPanel={null}
         paletteTray={
-          <PaletteTray
-            palette={palette}
-            onColorClick={handlePaletteColorClick}
-            onSwatchSelect={handleColorClick}
-            activeColor={selectedColor}
-            onToggleLock={toggleLock}
-            onDragStart={handlePaletteDragStart}
-            onDragOver={handlePaletteDragOver}
-            onDrop={handlePaletteDrop}
-            onDragEnd={handlePaletteDragEnd}
-            draggingIndex={draggingPaletteIndex}
-            onAddColor={handleAddColor}
-            onRemoveColor={removeColor}
-          />
+          <div
+            className={isTourStep(0) ? "tour-highlight" : ""}
+            style={{
+              position: "relative",
+              zIndex: isTourStep(0) ? 9999 : "auto",
+            }}
+          >
+            <PaletteTray
+              palette={palette}
+              onColorClick={handlePaletteColorClick}
+              onSwatchSelect={handleColorClick}
+              activeColor={selectedColor}
+              onToggleLock={toggleLock}
+              onDragStart={handlePaletteDragStart}
+              onDragOver={handlePaletteDragOver}
+              onDrop={handlePaletteDrop}
+              onDragEnd={handlePaletteDragEnd}
+              draggingIndex={draggingPaletteIndex}
+              onAddColor={handleAddColor}
+              onRemoveColor={removeColor}
+            />
+          </div>
         }
       />
 
@@ -1298,8 +1283,12 @@ const PaletteGenerator = () => {
       />
 
       {showTutorial && (
-        <div className="tutorial-overlay" role="dialog" aria-modal="true">
-          <div className="tutorial-card">
+        <div
+          className={`tutorial-overlay tutorial-step-${tutorialStep}`}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className={`tutorial-card tutorial-step-${tutorialStep}`}>
             <div className="d-flex justify-content-between align-items-start">
               <div>
                 <div className="tutorial-step-badge">

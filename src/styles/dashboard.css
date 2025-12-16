@@ -156,7 +156,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0px;
+  border-radius: 5px;
 }
 
 .dashboard-card-action-btn:hover {
@@ -171,7 +171,7 @@
 .dashboard-card-drag-handle {
   width: 34px;
   height: 34px;
-  border-radius: 0px;
+  border-radius: 5px;
   border: 1px solid var(--dashboard-border);
   background: #f3f5f9;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
@@ -257,7 +257,7 @@
   background: transparent;
   border: 1px solid var(--dashboard-border);
   padding: 0.25rem 0.5rem;
-  border-radius: 0px;
+  border-radius: 5px;
   cursor: pointer;
   color: var(--dashboard-text-muted);
   font-size: 0.75rem;
@@ -286,7 +286,7 @@
 .harmony-swatches {
   display: flex;
   gap: 4px;
-  border-radius: 0px;
+  border-radius: 5px;
   overflow: hidden;
   cursor: pointer;
   box-shadow: var(--card-shadow-sm);
@@ -321,7 +321,7 @@
   background: rgba(3, 102, 214, 0.1);
   color: var(--dashboard-accent);
   padding: 0.35rem 0.75rem;
-  border-radius: 0px;
+  border-radius: 5px;
   font-size: 0.8rem;
   font-weight: 500;
 }
@@ -351,7 +351,7 @@
 .color-preview-swatch {
   width: 100%;
   height: 80px;
-  border-radius: 0px;
+  border-radius: 5px;
   margin-bottom: 1rem;
   box-shadow: var(--card-shadow-sm);
   position: relative;
@@ -380,7 +380,7 @@
 .contrast-box {
   flex: 1;
   padding: 1rem;
-  border-radius: 0px;
+  border-radius: 5px;
   text-align: center;
   font-size: 0.85rem;
   font-weight: 600;
@@ -826,14 +826,41 @@
 .tutorial-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(6px);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 1.25rem;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.tutorial-overlay.tutorial-step-0 {
+  align-items: flex-end;
   justify-content: center;
-  padding: 1rem;
-  z-index: 2100;
+}
+
+.tutorial-overlay.tutorial-step-1 {
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.tutorial-overlay.tutorial-step-2 {
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+
+.tutorial-overlay.tutorial-step-3 {
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding-left: 2rem;
+}
+
+.tutorial-overlay.tutorial-step-4 {
+  align-items: flex-start;
+  justify-content: flex-end;
 }
 
 .tutorial-card {
@@ -841,9 +868,33 @@
   color: var(--dashboard-text, #1f2933);
   border: 1px solid var(--dashboard-border, #e5e7eb);
   border-radius: 16px;
-  width: min(640px, 100%);
+  width: min(420px, 100%);
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
   padding: 1.25rem 1.25rem 1rem;
+  margin-top: 0.5rem;
+  pointer-events: auto;
+  position: relative;
+  z-index: 9999;
+}
+
+.tutorial-card.tutorial-step-0 {
+  margin-bottom: 1rem;
+}
+
+.tutorial-card.tutorial-step-1 {
+  margin-top: 1rem;
+}
+
+.tutorial-card.tutorial-step-2 {
+  margin-top: 1rem;
+}
+
+.tutorial-card.tutorial-step-3 {
+  margin-top: 2rem;
+}
+
+.tutorial-card.tutorial-step-4 {
+  margin-top: 6rem;
 }
 
 .tutorial-step-badge {
@@ -889,6 +940,30 @@
   align-items: center;
   gap: 0.75rem;
   margin-top: 0.5rem;
+}
+
+.tour-highlight {
+  position: relative;
+  z-index: 9999;
+  border-radius: 14px;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.9), 0 18px 42px rgba(0, 0, 0, 0.22);
+  transition: box-shadow 160ms ease, transform 160ms ease;
+  background: rgba(59, 130, 246, 0.06);
+}
+
+.tour-highlight::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+  pointer-events: none;
+}
+
+.tutorial-card {
+  position: relative;
+  z-index: 9999;
+  pointer-events: auto;
 }
 
 /* Mobile Toolbar Toggle */

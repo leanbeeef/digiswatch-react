@@ -37,7 +37,7 @@
 .generator-toolbar {
     background: transparent;
     border: none;
-    border-radius: 0;
+    border-radius: 5px;
     padding: 0;
     gap: 0.75rem;
     align-items: center;

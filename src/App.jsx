@@ -72,7 +72,11 @@ const AppShell = () => {
     location.pathname.startsWith('/feed') ||
     location.pathname.startsWith('/popular-palettes') ||
     location.pathname.startsWith('/color-season') ||
-    location.pathname.startsWith('/palette-generator');
+    location.pathname.startsWith('/palette-generator') ||
+    location.pathname.startsWith('/login') ||
+    location.pathname.startsWith('/signup') ||
+    location.pathname.startsWith('/profile') ||
+    location.pathname.startsWith('/u/:userId');
 
   const shellClass = hideGlobalTray ? 'app-shell immersive-shell' : 'app-shell immersive-shell has-global-tray';
 

@@ -1,13 +1,11 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { useAuth } from '../AuthContext';
 import logo from '../assets/ds_hz_black.svg';
 
-const AppTopBar = ({ onCommand }) => {
+const AppTopBar = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { currentUser } = useAuth();
-  const sectionLabel = location.pathname === '/' ? 'Home' : location.pathname.replace('/', '') || 'Home';
   const avatarUrl = currentUser?.photoURL || currentUser?.avatar;
   const initial =
     currentUser?.displayName?.[0]?.toUpperCase() ||
@@ -20,13 +18,8 @@ const AppTopBar = ({ onCommand }) => {
         <div className="app-topbar__logo">
           <img src={logo} alt="Logo" className="app-topbar__mark-img" />
         </div>
-        <span className="app-topbar__section">{sectionLabel}</span>
       </div>
       <div className="app-topbar__actions">
-        <button className="ghost-btn" onClick={onCommand} aria-label="Open command palette">
-          <i className="bi bi-command"></i>
-          <span className="d-none d-md-inline">Command</span>
-        </button>
         <button
           className="ghost-btn"
           onClick={() => navigate(currentUser ? '/profile' : '/login')}

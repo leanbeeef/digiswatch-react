@@ -22,12 +22,16 @@ export const fetchPexelsImage = async (query) => {
     if (!res.ok) throw new Error(`Pexels error: ${res.status}`);
     const data = await res.json();
     const photo = data?.photos?.[0];
-    return (
-      photo?.src?.large2x ||
-      photo?.src?.large ||
-      photo?.src?.medium ||
-      null
-    );
+    if (!photo) return null;
+    return {
+      url:
+        photo?.src?.large2x ||
+        photo?.src?.large ||
+        photo?.src?.medium ||
+        null,
+      avgColor: photo?.avg_color || null,
+      photographer: photo?.photographer || "",
+    };
   } catch (err) {
     console.warn("Pexels fetch failed", err?.message || err);
     return null;

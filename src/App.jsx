@@ -25,6 +25,8 @@ import GlobalPaletteTray from './components/GlobalPaletteTray';
 import { PaletteWorkspaceProvider } from './contexts/PaletteWorkspaceContext';
 import './index.css';
 
+const DESKTOP_MIN_WIDTH = 1024;
+
 const AppShell = () => {
   const location = useLocation();
   const [showSplash, setShowSplash] = useState(() => {
@@ -34,6 +36,10 @@ const AppShell = () => {
     } catch {
       return true;
     }
+  });
+  const [isMobileBlocked, setIsMobileBlocked] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < DESKTOP_MIN_WIDTH;
   });
 
   const handleSplashDone = () => {
@@ -50,8 +56,6 @@ const AppShell = () => {
   const shouldShowFooter = false; // footer hidden to maximize workspace
   const [showCommand, setShowCommand] = useState(false);
 
-  const handleCommand = () => setShowCommand(true);
-
   React.useEffect(() => {
     const handleKey = (event) => {
       const isCmdK = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k';
@@ -67,6 +71,16 @@ const AppShell = () => {
     return () => window.removeEventListener('keydown', handleKey);
   }, []);
 
+  React.useEffect(() => {
+    const handleResize = () => {
+      setIsMobileBlocked(window.innerWidth < DESKTOP_MIN_WIDTH);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const hideGlobalTray =
     location.pathname.startsWith('/home') ||
     location.pathname.startsWith('/feed') ||
@@ -76,14 +90,29 @@ const AppShell = () => {
     location.pathname.startsWith('/login') ||
     location.pathname.startsWith('/signup') ||
     location.pathname.startsWith('/profile') ||
-    location.pathname.startsWith('/u/:userId');
+    location.pathname.startsWith('/u/');
 
   const shellClass = hideGlobalTray ? 'app-shell immersive-shell' : 'app-shell immersive-shell has-global-tray';
+
+  if (isMobileBlocked) {
+    return (
+      <div className="mobile-blocker">
+        <div className="mobile-blocker__card">
+          <div className="mobile-blocker__badge">Desktop only</div>
+          <h1 className="mobile-blocker__title">Digiswatch works best on desktop</h1>
+          <p className="mobile-blocker__body">
+            The mobile experience is temporarily paused while we finish responsive updates. Please switch to a larger
+            screen to continue.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={shellClass}>
       <PwaSplash show={showSplash} onDone={handleSplashDone} />
-      <AppTopBar onCommand={handleCommand} />
+      <AppTopBar />
       <div className="app-shell__body">
         <AppRail />
         <main className="app-main immersive-main">

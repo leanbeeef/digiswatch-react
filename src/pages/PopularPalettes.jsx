@@ -43,6 +43,7 @@ const PopularPalettes = () => {
   const [toast, setToast] = useState({ show: false, message: '' });
   const [imageMap, setImageMap] = useState({});
   const [activeCategory, setActiveCategory] = useState('all');
+  const [sortOption, setSortOption] = useState('name');
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
@@ -224,20 +225,41 @@ const PopularPalettes = () => {
     return normalized.slice(0, 6);
   };
 
+  const normalizeCategory = (val) => (val || "Featured").trim();
+
   const getFilteredPalettes = (list) => {
     return list.filter((p) => {
-      const category = p.category || p.brand?.industry || 'Featured';
-      return activeCategory === 'all' || category === activeCategory;
+      const category = normalizeCategory(p.category || p.brand?.industry || 'Featured');
+      const active = normalizeCategory(activeCategory);
+      return activeCategory === 'all' || category === active;
     });
   };
 
   const categories = Array.from(
     new Set(
       [...palettes, ...userPalettes].map(
-        (p) => p.category || p.brand?.industry || 'Featured'
+        (p) => normalizeCategory(p.category || p.brand?.industry || 'Featured')
       )
     )
   );
+
+  const applySort = (list) => {
+    const sorted = [...list];
+    sorted.sort((a, b) => {
+      const tagA = (a.tags && a.tags[0]) || "";
+      const tagB = (b.tags && b.tags[0]) || "";
+      switch (sortOption) {
+        case "category":
+          return (a.category || "").localeCompare(b.category || "");
+        case "tag":
+          return tagA.localeCompare(tagB);
+        case "name":
+        default:
+          return (a.name || "").localeCompare(b.name || "");
+      }
+    });
+    return sorted;
+  };
 
   const handleShareClick = (palette) => {
     setSelectedPalette(palette);
@@ -250,17 +272,16 @@ const PopularPalettes = () => {
 
   const renderPalettes = (palettesToRender) => (
     <div className="pp-grid">
-      {palettesToRender.map((palette) => {
+      {applySort(palettesToRender).map((palette, idx) => {
         const colors = normalizeColors(palette.colors);
-        const category = palette.category || palette.brand?.industry || 'Featured';
+        const category = normalizeCategory(palette.category || palette.brand?.industry || 'Featured');
         const img = imageMap[palette.name] || palette.imageUrl || null;
 
         return (
-          <div key={palette.name} className="pp-card">
+          <div key={palette.id || `${palette.name}-${idx}`} className="pp-card w-100">
             <div className="pp-card-body">
               <div className="pp-card-head">
                 <div className="pp-palette-name">{palette.name}</div>
-                <span className="badge bg-light text-dark border">{category}</span>
                 <div className="pp-card-head-actions">
                   <button
                     className={`pp-like-inline ${likes[palette.name] ? 'is-active' : ''} ${animateLike[palette.name] ? 'animate-like' : ''}`}
@@ -281,13 +302,28 @@ const PopularPalettes = () => {
                 </div>
               </div>
 
+              <div className="pp-tag-row">
+                <span className="badge bg-light text-dark border">{category}</span>
+                {(palette.tags || []).map((tag, idx) => (
+                  <span key={idx} className="pp-tag-pill">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+
+              {palette.industry && (
+                <div className="text-muted small mb-1">
+                  Industry: <strong>{palette.industry}</strong>
+                </div>
+              )}
+
               <div className="pp-visual">
                 <div
                   className="pp-visual-img"
                   style={{
                     backgroundImage: img
                       ? `url(${img})`
-                      : `linear-gradient(120deg, ${colors[0] || '#f5f5f5'}, ${colors[3] || colors[0] || '#e5e5e5'})`,
+                      : `linear-gradient(160deg, ${colors[0]}, ${colors[1]}, ${colors[2]}, ${colors[3]}, ${colors[4]}, ${colors[5]})`
                   }}
                   role="img"
                   aria-label={`Palette ${palette.name}`}
@@ -348,7 +384,10 @@ const PopularPalettes = () => {
         </div>
       </div>
 
-      <Container>
+      <Container className="m-0"
+        style={{ maxWidth: '100%' }}>
+          
+
         <div className="d-flex justify-content-center">
           <div className="pp-nav-pills">
             <div
@@ -365,6 +404,19 @@ const PopularPalettes = () => {
             </div>
           </div>
         </div>
+        <div className="ms-auto d-flex align-items-center gap-2 pp-sort-wrap">
+              <span className="text-muted small">Sort:</span>
+              <select
+                className="form-select form-select-sm"
+                value={sortOption}
+                onChange={(e) => setSortOption(e.target.value)}
+                style={{ maxWidth: 180 }}
+              >
+                <option value="name">Name (A-Z)</option>
+                <option value="category">Category</option>
+                <option value="tag">First tag</option>
+              </select>
+            </div>
 
         {categories.length > 0 && (
           <div className="pp-category-row">

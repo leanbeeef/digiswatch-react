@@ -174,8 +174,32 @@ const Profile = () => {
     }
   };
 
+  const reserveUsername = async (nextName) => {
+    const desired = (nextName || '').trim().toLowerCase();
+    if (!desired) throw new Error('Username cannot be empty.');
+    const currentName = (profileData?.username || '').trim().toLowerCase();
+    if (desired === currentName) return;
+
+    const desiredRef = doc(db, 'usernames', desired);
+    const desiredSnap = await getDoc(desiredRef);
+    if (desiredSnap.exists() && desiredSnap.data()?.uid !== currentUser.uid) {
+      throw new Error('That username is already taken.');
+    }
+
+    // reserve new name
+    await setDoc(desiredRef, { uid: currentUser.uid }, { merge: true });
+
+    // release old name if it was set
+    if (currentName && currentName !== desired) {
+      const oldRef = doc(db, 'usernames', currentName);
+      await deleteDoc(oldRef);
+    }
+  };
+
   const handleUpdateProfile = async () => {
     try {
+       await reserveUsername(newUsername);
+
       const profileDocRef = doc(db, 'users', currentUser.uid);
       await setDoc(
         profileDocRef,
@@ -194,7 +218,7 @@ const Profile = () => {
       fetchProfile();
     } catch (error) {
       console.error('Error updating profile: ', error);
-      setToastMessage('Failed to update profile.');
+      setToastMessage(error?.message || 'Failed to update profile.');
       setShowToast(true);
     }
   };
@@ -202,6 +226,8 @@ const Profile = () => {
   const handleOnboardingComplete = async ({ avatar: avatarUrl, username, usageGoal }) => {
     if (!currentUser) return;
     try {
+      await reserveUsername(username || currentUser.email?.split('@')[0] || 'New user');
+
       const profileDocRef = doc(db, 'users', currentUser.uid);
       const payload = {
         avatar: avatarUrl || avatars[0].src,
@@ -220,7 +246,7 @@ const Profile = () => {
       setShowToast(true);
     } catch (error) {
       console.error('Error saving onboarding profile:', error);
-      setToastMessage('Could not save profile setup.');
+      setToastMessage(error?.message || 'Could not save profile setup.');
       setShowToast(true);
     }
   };

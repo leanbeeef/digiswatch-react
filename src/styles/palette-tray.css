@@ -251,11 +251,11 @@
     padding: 0.1rem;
   }
 
-  .swatch-hex {
+  .swatch-name {
     display: none;
   }
 
-  .swatch-name {
+  .swatch-hex {
     font-size: 0.65rem;
   }
 

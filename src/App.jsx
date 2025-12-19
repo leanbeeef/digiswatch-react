@@ -1,7 +1,7 @@
 // src/App.jsx
 
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider } from './AuthContext';
 import Footer from './components/Footer';
 import PaletteGenerator from './pages/PaletteGenerator';
@@ -19,13 +19,58 @@ import ColorSeason from './pages/ColorSeason';
 import MoodBoardPage from './moodboard/MoodBoardPage';
 import PwaSplash from './components/PwaSplash';
 import AppTopBar from './components/AppTopBar';
-import AppRail from './components/AppRail';
+import AppRail, { NAV_ITEMS } from './components/AppRail';
 import AppCommandPalette from './components/AppCommandPalette';
 import GlobalPaletteTray from './components/GlobalPaletteTray';
 import { PaletteWorkspaceProvider } from './contexts/PaletteWorkspaceContext';
 import './index.css';
 
 const DESKTOP_MIN_WIDTH = 1024;
+
+const MobileNavMenu = ({ open, onClose }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  return (
+    <div className={`mobile-nav ${open ? 'is-open' : ''}`} aria-hidden={!open}>
+      <button className="mobile-nav__backdrop" onClick={onClose} aria-label="Close menu overlay" />
+      <div className="mobile-nav__sheet" role="menu">
+        <div className="mobile-nav__header">
+          <span>Explore</span>
+          <button className="ghost-btn" onClick={onClose} aria-label="Close menu">
+            <i className="bi bi-x-lg"></i>
+          </button>
+        </div>
+        <div className="mobile-nav__list">
+          {NAV_ITEMS.map((item) => {
+            const active = location.pathname.startsWith(item.path);
+            return (
+              <button
+                key={item.path}
+                className={`mobile-nav__item ${active ? 'is-active' : ''}`}
+                onClick={() => {
+                  navigate(item.path);
+                  onClose();
+                }}
+                role="menuitem"
+                aria-pressed={active}
+              >
+                <div className="mobile-nav__item-icon">
+                  <i className={`bi ${item.icon}`}></i>
+                </div>
+                <div className="mobile-nav__item-text">
+                  <span className="mobile-nav__item-label">{item.label}</span>
+                  <span className="mobile-nav__item-path">{item.path}</span>
+                </div>
+                <i className="bi bi-chevron-right mobile-nav__item-caret"></i>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const AppShell = () => {
   const location = useLocation();
@@ -37,10 +82,11 @@ const AppShell = () => {
       return true;
     }
   });
-  const [isMobileBlocked, setIsMobileBlocked] = useState(() => {
+  const [isMobile, setIsMobile] = useState(() => {
     if (typeof window === 'undefined') return false;
     return window.innerWidth < DESKTOP_MIN_WIDTH;
   });
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const handleSplashDone = () => {
     if (typeof window !== 'undefined') {
@@ -73,7 +119,7 @@ const AppShell = () => {
 
   React.useEffect(() => {
     const handleResize = () => {
-      setIsMobileBlocked(window.innerWidth < DESKTOP_MIN_WIDTH);
+      setIsMobile(window.innerWidth < DESKTOP_MIN_WIDTH);
     };
 
     handleResize();
@@ -81,40 +127,46 @@ const AppShell = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const hideGlobalTray =
+  React.useEffect(() => {
+    if (mobileNavOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileNavOpen]);
+
+  React.useEffect(() => {
+    setMobileNavOpen(false);
+  }, [location.pathname]);
+
+  const isPaletteGenerator = location.pathname.startsWith('/palette-generator');
+  const shouldHideBaseTray =
     location.pathname.startsWith('/home') ||
     location.pathname.startsWith('/feed') ||
     location.pathname.startsWith('/popular-palettes') ||
     location.pathname.startsWith('/color-season') ||
-    location.pathname.startsWith('/palette-generator') ||
     location.pathname.startsWith('/login') ||
     location.pathname.startsWith('/signup') ||
     location.pathname.startsWith('/profile') ||
     location.pathname.startsWith('/u/');
 
-  const shellClass = hideGlobalTray ? 'app-shell immersive-shell' : 'app-shell immersive-shell has-global-tray';
-
-  if (isMobileBlocked) {
-    return (
-      <div className="mobile-blocker">
-        <div className="mobile-blocker__card">
-          <div className="mobile-blocker__badge">Desktop only</div>
-          <h1 className="mobile-blocker__title">Digiswatch works best on desktop</h1>
-          <p className="mobile-blocker__body">
-            The mobile experience is temporarily paused while we finish responsive updates. Please switch to a larger
-            screen to continue.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const showGlobalTray = !shouldHideBaseTray && (!isMobile || isPaletteGenerator);
+  const shellClass = showGlobalTray ? 'app-shell immersive-shell has-global-tray' : 'app-shell immersive-shell';
 
   return (
     <div className={shellClass}>
       <PwaSplash show={showSplash} onDone={handleSplashDone} />
-      <AppTopBar />
+      <AppTopBar
+        showMenuButton={isMobile}
+        isMenuOpen={mobileNavOpen}
+        onMenuToggle={() => setMobileNavOpen((open) => !open)}
+      />
+      {isMobile && <MobileNavMenu open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />}
       <div className="app-shell__body">
-        <AppRail />
+        {!isMobile && <AppRail />}
         <main className="app-main immersive-main">
           <Routes>
             <Route path="/" element={<Navigate to="/home" replace />} />
@@ -135,7 +187,7 @@ const AppShell = () => {
         </main>
         <AppCommandPalette open={showCommand} onClose={() => setShowCommand(false)} />
       </div>
-      {!hideGlobalTray && <GlobalPaletteTray />}
+      {showGlobalTray && <GlobalPaletteTray />}
       {shouldShowFooter && <Footer />}
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Container, Row, Col, Toast } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { fetchPublicPalettes } from "../utils/fetchPalettes";
@@ -44,6 +44,10 @@ const PopularPalettes = () => {
   const [imageMap, setImageMap] = useState({});
   const [activeCategory, setActiveCategory] = useState('all');
   const [sortOption, setSortOption] = useState('name');
+  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
+  const [sortMenuOpen, setSortMenuOpen] = useState(false);
+  const categoryMenuRef = useRef(null);
+  const sortMenuRef = useRef(null);
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
@@ -81,6 +85,18 @@ const PopularPalettes = () => {
   useEffect(() => {
     sortPalettesByLikes();
   }, [likes]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const clickedCategory =
+        categoryMenuRef.current && categoryMenuRef.current.contains(event.target);
+      const clickedSort = sortMenuRef.current && sortMenuRef.current.contains(event.target);
+      if (!clickedCategory) setCategoryMenuOpen(false);
+      if (!clickedSort) setSortMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Persist liked palettes locally to prevent multiple likes from the same user/device
   useEffect(() => {
@@ -404,39 +420,91 @@ const PopularPalettes = () => {
             </div>
           </div>
         </div>
-        <div className="ms-auto d-flex align-items-center gap-2 pp-sort-wrap">
-              <span className="text-muted small">Sort:</span>
-              <select
-                className="form-select form-select-sm"
-                value={sortOption}
-                onChange={(e) => setSortOption(e.target.value)}
-                style={{ maxWidth: 180 }}
-              >
-                <option value="name">Name (A-Z)</option>
-                <option value="category">Category</option>
-                <option value="tag">First tag</option>
-              </select>
-            </div>
-
-        {categories.length > 0 && (
-          <div className="pp-category-row">
+        <div className="pp-filter-bar">
+          <div className="pp-filter-group" ref={categoryMenuRef}>
             <button
-              className={`pp-category-pill ${activeCategory === 'all' ? 'is-active' : ''}`}
-              onClick={() => setActiveCategory('all')}
+              className={`pp-filter-button ${categoryMenuOpen ? 'is-open' : ''}`}
+              onClick={() => setCategoryMenuOpen((open) => !open)}
+              aria-haspopup="true"
+              aria-expanded={categoryMenuOpen}
             >
-              All
+              <i className="bi bi-funnel"></i>
+              <span>{activeCategory === 'all' ? 'All categories' : activeCategory}</span>
+              <i className={`bi bi-chevron-${categoryMenuOpen ? 'up' : 'down'}`}></i>
             </button>
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                className={`pp-category-pill ${activeCategory === cat ? 'is-active' : ''}`}
-                onClick={() => setActiveCategory(cat)}
-              >
-                {cat}
-              </button>
-            ))}
+            {categoryMenuOpen && categories.length > 0 && (
+              <div className="pp-filter-dropdown">
+                <button
+                  className={`pp-filter-option ${activeCategory === 'all' ? 'is-active' : ''}`}
+                  onClick={() => {
+                    setActiveCategory('all');
+                    setCategoryMenuOpen(false);
+                  }}
+                >
+                  All
+                </button>
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    className={`pp-filter-option ${activeCategory === cat ? 'is-active' : ''}`}
+                    onClick={() => {
+                      setActiveCategory(cat);
+                      setCategoryMenuOpen(false);
+                    }}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+
+          <div className="pp-filter-group" ref={sortMenuRef}>
+            <button
+              className={`pp-filter-button ${sortMenuOpen ? 'is-open' : ''}`}
+              onClick={() => setSortMenuOpen((open) => !open)}
+              aria-haspopup="true"
+              aria-expanded={sortMenuOpen}
+            >
+              <i className="bi bi-sort-alpha-down"></i>
+              <span>
+                Sort: {sortOption === 'name' ? 'Name' : sortOption === 'category' ? 'Category' : 'First tag'}
+              </span>
+              <i className={`bi bi-chevron-${sortMenuOpen ? 'up' : 'down'}`}></i>
+            </button>
+            {sortMenuOpen && (
+              <div className="pp-filter-dropdown align-right">
+                <button
+                  className={`pp-filter-option ${sortOption === 'name' ? 'is-active' : ''}`}
+                  onClick={() => {
+                    setSortOption('name');
+                    setSortMenuOpen(false);
+                  }}
+                >
+                  Name (A-Z)
+                </button>
+                <button
+                  className={`pp-filter-option ${sortOption === 'category' ? 'is-active' : ''}`}
+                  onClick={() => {
+                    setSortOption('category');
+                    setSortMenuOpen(false);
+                  }}
+                >
+                  Category
+                </button>
+                <button
+                  className={`pp-filter-option ${sortOption === 'tag' ? 'is-active' : ''}`}
+                  onClick={() => {
+                    setSortOption('tag');
+                    setSortMenuOpen(false);
+                  }}
+                >
+                  First tag
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
 
         {activeTab === 'userCreated' && renderPalettes(getFilteredPalettes(userPalettes))}
         {activeTab === 'predefined' && renderPalettes(getFilteredPalettes(palettes))}

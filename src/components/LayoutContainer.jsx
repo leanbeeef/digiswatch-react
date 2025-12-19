@@ -69,9 +69,9 @@ const LayoutContainer = ({
             </div>
 
             {/* Bottom palette tray - Collapsible palette strip */}
-            <div className="palette-layout-tray">
+            {/* <div className="palette-layout-tray">
                 {paletteTray}
-            </div>
+            </div> */}
 
             {/* Fallback for children prop if needed */}
             {children}

@@ -2,7 +2,7 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
-const navItems = [
+export const NAV_ITEMS = [
   { path: '/home', icon: 'bi-house', label: 'Home' },
   { path: '/palette-generator', icon: 'bi-palette', label: 'Generator' },
   { path: '/popular-palettes', icon: 'bi-fire', label: 'Popular' },
@@ -18,7 +18,7 @@ const AppRail = () => {
 
   return (
     <nav className="app-rail" aria-label="Primary">
-      {navItems.map((item) => {
+      {NAV_ITEMS.map((item) => {
         const active = location.pathname.startsWith(item.path);
         return (
           <button

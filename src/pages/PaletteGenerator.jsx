@@ -1,6 +1,6 @@
 // src/pages/PaletteGenerator.jsx
 import { useEffect, useRef, useState } from "react";
-import { Button, Toast, Modal, Nav } from "react-bootstrap";
+import { Button, Toast, Modal } from "react-bootstrap";
 import { useLocation } from "react-router-dom";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -115,6 +115,12 @@ const TUTORIAL_STEPS = [
   },
 ];
 
+const TAB_OPTIONS = [
+  { key: "evaluate", icon: "bi-shield-check", label: "Evaluate" },
+  { key: "generate", icon: "bi-palette", label: "Generate" },
+  { key: "output", icon: "bi-download", label: "Output" },
+];
+
 const getTextColor = (bg) => {
   return tinycolor.readability(bg, "#FFFFFF") >= 4.5 ? "#FFFFFF" : "#000000";
 };
@@ -183,6 +189,8 @@ const PaletteGenerator = () => {
   const [tutorialStep, setTutorialStep] = useState(0);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [visibleCards, setVisibleCards] = useState([]);
+  const [toolbarMenuOpen, setToolbarMenuOpen] = useState(false);
+  const toolbarMenuRef = useRef(null);
 
   // Dashboard State
   const [cardSlots, setCardSlots] = useState(() => {
@@ -205,6 +213,16 @@ const PaletteGenerator = () => {
   }, [cardSlots]);
   const aiCooldownTimerRef = useRef(null);
   const lastAiRequestRef = useRef(0);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (toolbarMenuRef.current && !toolbarMenuRef.current.contains(event.target)) {
+        setToolbarMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
   const showAiError = (message) => {
     setAiError(message);
     setToast({ show: true, message });
@@ -227,6 +245,11 @@ const PaletteGenerator = () => {
         ? prev.filter((id) => id !== cardId)
         : [...prev, cardId]
     );
+  };
+
+  const handleTabSelect = (tab) => {
+    setContextTab(tab);
+    setToolbarMenuOpen(false);
   };
 
   // Load palette passed from navigation (e.g., Popular Palettes)
@@ -735,16 +758,13 @@ const PaletteGenerator = () => {
       />
       <LayoutContainer
         headerContent={
-            <div
-              className={`d-flex align-items-center w-100 gap-3 flex-wrap generator-toolbar ${
-                isTourStep(1) ? "tour-highlight" : ""
-              }`}
-              style={{ position: "relative", zIndex: isTourStep(1) ? 9999 : "auto" }}
-            >
+          <div className="generator-toolbar">
             {/* AI Prompt */}
             <div
-              className="flex-grow-1"
-              style={{ minWidth: 260, maxWidth: 440, position: "relative" }}
+              className={`generator-toolbar__prompt ${
+                isTourStep(1) ? "tour-highlight" : ""
+              }`}
+              style={{ zIndex: isTourStep(1) ? 9999 : "auto" }}
             >
               {!currentUser && (
                 <div
@@ -767,8 +787,6 @@ const PaletteGenerator = () => {
                 onSubmit={handleGenerateWithPrompt}
                 style={{
                   filter: !currentUser ? "blur(2px)" : "none",
-                  display: "flex",
-                  gap: "0.5rem",
                 }}
               >
                 <input
@@ -814,90 +832,108 @@ const PaletteGenerator = () => {
               </form>
             </div>
 
-            <div className="toolbar-divider" aria-hidden="true"></div>
-
-            {/* Tabs */}
-            <div className="flex-grow-1 d-flex justify-content-center">
-              <Nav
-                variant="tabs"
-                activeKey={contextTab}
-                onSelect={setContextTab}
-                className="context-tab-nav"
+            <div className="generator-toolbar__menu" ref={toolbarMenuRef}>
+              <button
+                type="button"
+                className={`ghost-btn generator-toolbar__menu-btn ${toolbarMenuOpen ? "is-open" : ""}`}
+                onClick={() => setToolbarMenuOpen((open) => !open)}
+                aria-expanded={toolbarMenuOpen}
+                aria-haspopup="true"
               >
-                <Nav.Item>
-                  <Nav.Link eventKey="evaluate">
-                    <i className="bi bi-shield-check"></i>
-                    <span>Evaluate</span>
-                  </Nav.Link>
-                </Nav.Item>
-                <Nav.Item>
-                  <Nav.Link eventKey="generate">
-                    <i className="bi bi-palette"></i>
-                    <span>Generate</span>
-                  </Nav.Link>
-                </Nav.Item>
-                <Nav.Item>
-                  <Nav.Link eventKey="output">
-                    <i className="bi bi-download"></i>
-                    <span>Output</span>
-                  </Nav.Link>
-                </Nav.Item>
-              </Nav>
+                <i className="bi bi-sliders"></i>
+                <span>Tools & Tabs</span>
+                <i className={`bi bi-chevron-${toolbarMenuOpen ? "up" : "down"}`}></i>
+              </button>
+
+              {toolbarMenuOpen && (
+                <div className="generator-toolbar__dropdown">
+                  <div className="generator-toolbar__section">
+                    <div className="generator-toolbar__section-label">Tabs</div>
+                    <div className="generator-toolbar__tabs">
+                      {TAB_OPTIONS.map((tab) => (
+                        <button
+                          key={tab.key}
+                          type="button"
+                          className={`generator-tab-btn ${contextTab === tab.key ? "is-active" : ""}`}
+                          onClick={() => handleTabSelect(tab.key)}
+                        >
+                          <i className={`bi ${tab.icon}`}></i>
+                          <span>{tab.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div
+                    className={`generator-toolbar__section ${
+                      isTourStep(4) ? "tour-highlight" : ""
+                    }`}
+                    style={{ zIndex: isTourStep(4) ? 9999 : "auto" }}
+                  >
+                    <div className="generator-toolbar__section-label">Actions</div>
+                    <div className="generator-toolbar__actions">
+                      <Button
+                        variant="outline-secondary"
+                        size="sm"
+                        onClick={() => {
+                          generatePalette();
+                          setToolbarMenuOpen(false);
+                        }}
+                        title={`Generate ${palette.length} colors`}
+                      >
+                        <i className="bi bi-arrow-clockwise"></i>
+                      </Button>
+
+                      <Button
+                        variant="outline-secondary"
+                        size="sm"
+                        onClick={() => {
+                          openSaveModal();
+                          setToolbarMenuOpen(false);
+                        }}
+                        title="Save Palette"
+                      >
+                        <i className="bi bi-floppy"></i>
+                      </Button>
+                      <Button
+                        variant="outline-secondary"
+                        size="sm"
+                        onClick={() => {
+                          setShowShareModal(true);
+                          setToolbarMenuOpen(false);
+                        }}
+                        title="Share Palette"
+                        disabled={palette.length === 0}
+                      >
+                        <i className="bi bi-share"></i>
+                      </Button>
+                      <Button
+                        variant="outline-secondary"
+                        size="sm"
+                        onClick={() => {
+                          setShowExportModal(true);
+                          setToolbarMenuOpen(false);
+                        }}
+                        title="Export Palette"
+                      >
+                        <i className="bi bi-download"></i>
+                      </Button>
+                      <Button
+                        variant="outline-secondary"
+                        size="sm"
+                        onClick={() => {
+                          startTutorial();
+                          setToolbarMenuOpen(false);
+                        }}
+                        title="Tutorial"
+                      >
+                        <i className="bi bi-question-circle"></i>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-
-              <div className="toolbar-divider" aria-hidden="true"></div>
-
-              {/* Action buttons */}
-              <div
-                className={`d-flex gap-2 align-items-center ${
-                  isTourStep(4) ? "tour-highlight" : ""
-                }`}
-              >
-              <Button
-                variant="outline-secondary"
-                size="sm"
-                onClick={generatePalette}
-                title={`Generate ${palette.length} colors`}
-              >
-                <i className="bi bi-arrow-clockwise"></i>
-              </Button>
-
-                <Button
-                  variant="outline-secondary"
-                  size="sm"
-                  onClick={openSaveModal}
-                  title="Save Palette"
-                >
-                  <i className="bi bi-floppy"></i>
-                </Button>
-                <Button
-                  variant="outline-secondary"
-                  size="sm"
-                  onClick={() => setShowShareModal(true)}
-                  title="Share Palette"
-                  disabled={palette.length === 0}
-                >
-                  <i className="bi bi-share"></i>
-                </Button>
-                <Button
-                  variant="outline-secondary"
-                  size="sm"
-                  onClick={() => setShowExportModal(true)}
-                  title="Export Palette"
-                >
-                  <i className="bi bi-download"></i>
-                </Button>
-                <Button
-                  variant="outline-secondary"
-                  size="sm"
-                  onClick={startTutorial}
-                  title="Tutorial"
-                >
-                  <i className="bi bi-question-circle"></i>
-                </Button>
-              </div>
-
-            <div className="toolbar-divider" aria-hidden="true"></div>
           </div>
         }
         workbench={

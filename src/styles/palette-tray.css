@@ -6,6 +6,8 @@
     border-top: 1px solid rgba(12, 25, 48, 0.08);
     transition: height 250ms cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -12px 32px rgba(12, 25, 48, 0.08);
 }
 
 .palette-tray.is-collapsed {
@@ -18,13 +20,12 @@
 
 .palette-tray-toggle {
     position: absolute;
-    top: 0.5rem;
+   
     left: 50%;
     transform: translateX(-50%);
     width: 48px;
-    height: 24px;
-    background: rgba(3, 102, 214, 0.08);
-    border: 1px solid rgba(3, 102, 214, 0.2);
+    background: transparent !important ; 
+    /* border: 1px solid rgba(3, 102, 214, 0.2); */
     border-radius: 12px;
     cursor: pointer;
     display: flex;
@@ -36,8 +37,8 @@
 }
 
 .palette-tray-toggle:hover {
-    background: rgba(3, 102, 214, 0.12);
-    border-color: var(--dashboard-accent, #0366d6);
+    /* background: rgba(3, 102, 214, 0.12);
+    border-color: var(--dashboard-accent, #0366d6); */
     transform: translateX(-50%) scale(1.05);
 }
 
@@ -47,12 +48,16 @@
 }
 
 .palette-tray-toggle i {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     transition: transform 200ms ease;
 }
 
 .palette-tray.is-collapsed .palette-tray-toggle i {
-    transform: rotate(0deg);
+    transform: rotate(0deg); 
+}
+
+.palette-tray.is-collapsed .palette-tray-toggle {
+    bottom: 1rem; 
 }
 
 .palette-tray.is-expanded .palette-tray-toggle i {
@@ -68,7 +73,7 @@
     padding: 0.5rem 1rem;
     font-size: 0.85rem;
     color: var(--dashboard-text-muted, #6a737d);
-    margin-top: 2rem;
+    margin-top: 1rem;
 }
 
 .palette-tray.is-expanded .palette-tray-summary {
@@ -94,15 +99,17 @@
 /* Swatches container */
 .palette-tray-swatches {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-auto-rows: 1fr;
     gap: 0;
     height: 100%;
-    padding-top: 2.5rem;
+    padding: 2.5rem 0.75rem 1rem;
+    align-items: stretch;
 }
 
 .palette-tray.is-collapsed .palette-tray-swatches {
-    grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
-    padding-top: 2.5rem;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    padding: 2.5rem 0.5rem 0.75rem;
 }
 
 /* Individual swatch */
@@ -118,6 +125,7 @@
     justify-content: center;
     padding: 0.75rem;
     overflow: hidden;
+    border-radius: 0;
 }
 
 .palette-swatch:hover {
@@ -140,6 +148,7 @@
 .palette-tray.is-collapsed .palette-swatch {
     padding: 0.25rem;
     min-height: 40px;
+    border-radius: 0;
 }
 
 /* Swatch content (expanded state) */
@@ -231,14 +240,6 @@
 
     .palette-tray.is-expanded {
         height: 140px;
-    }
-
-    .palette-tray-swatches {
-        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-    }
-
-    .palette-tray.is-collapsed .palette-tray-swatches {
-        grid-template-columns: repeat(auto-fit, minmax(35px, 1fr));
     }
 
     .palette-tray-summary {

@@ -3,7 +3,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 import { useAuth } from '../AuthContext';
 import logo from '../assets/ds_hz_black.svg';
 
-const AppTopBar = () => {
+const AppTopBar = ({ showMenuButton = false, isMenuOpen = false, onMenuToggle }) => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const avatarUrl = currentUser?.photoURL || currentUser?.avatar;
@@ -14,8 +14,22 @@ const AppTopBar = () => {
 
   return (
     <header className="app-topbar">
-      <div className="app-topbar__left" onClick={() => navigate('/home')} role="button" aria-label="Go home">
-        <div className="app-topbar__logo">
+      <div className="app-topbar__left">
+        {showMenuButton && (
+          <button
+            className={`app-topbar__menu-btn ${isMenuOpen ? 'is-active' : ''}`}
+            onClick={onMenuToggle}
+            aria-label="Toggle navigation"
+          >
+            <i className={`bi ${isMenuOpen ? 'bi-x-lg' : 'bi-list'}`}></i>
+          </button>
+        )}
+        <div
+          className="app-topbar__logo"
+          onClick={() => navigate('/home')}
+          role="button"
+          aria-label="Go home"
+        >
           <img src={logo} alt="Logo" className="app-topbar__mark-img" />
         </div>
       </div>

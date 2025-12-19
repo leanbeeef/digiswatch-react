@@ -55,7 +55,7 @@ const ColorDataCard = ({ color, colorInfo, index, moveCard, isExpanded, onToggle
 
             {/* Color Formats - Vertical List */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-                {[...colorFormats, { label: 'CSS', value: colorInfo.rgbString }].map((format, idx) => (
+                {[...colorFormats ].map((format, idx) => (
                     <div key={format.label} className="data-row" style={{
                         borderBottom: idx !== 7 ? '1px solid rgba(0,0,0,0.05)' : 'none',
                         padding: '0.6rem 0.25rem',

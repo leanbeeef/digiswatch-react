@@ -66,14 +66,14 @@ const PaletteTray = ({
                         <i className="bi bi-palette-fill"></i>
                         {palette.length} colors
                     </span>
-                    <span className="summary-divider">•</span>
+                    <span className="summary-divider">|</span>
                     <span className="summary-item">
                         <i className="bi bi-check-circle-fill text-success"></i>
                         {passCount} AA
                     </span>
                     {warningCount > 0 && (
                         <>
-                            <span className="summary-divider">•</span>
+                            <span className="summary-divider">|</span>
                             <span className="summary-item">
                                 <i className="bi bi-exclamation-triangle-fill text-warning"></i>
                                 {warningCount} warnings

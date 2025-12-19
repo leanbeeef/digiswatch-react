@@ -247,6 +247,10 @@
     gap: 0.375rem;
   }
 
+  .palette-swatch {
+    padding: 0.1rem;
+  }
+
   .swatch-hex {
     display: none;
   }
@@ -255,9 +259,15 @@
     font-size: 0.65rem;
   }
 
+  .swatch-content {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
   .swatch-action-btn {
     background: transparent;
     border-radius: 0px;
+    border: none;
     padding: 7px 4px 0px 4px;
     font-size: 0.75rem;
     display: flex;

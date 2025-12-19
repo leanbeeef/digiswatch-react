@@ -629,10 +629,6 @@ body,
   height: calc(100vh - 58px - 120px);
 }
 
-.has-global-tray .app-main {
-  padding-bottom: 200px;
-}
-
 .command-palette-backdrop {
   position: fixed;
   inset: 0;

@@ -261,7 +261,7 @@
 
   .swatch-content {
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0rem;
   }
 
   .swatch-action-btn {

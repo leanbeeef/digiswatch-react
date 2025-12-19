@@ -1,5 +1,5 @@
 // src/pages/PaletteGenerator.jsx
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Button, Toast, Modal } from "react-bootstrap";
 import { useLocation } from "react-router-dom";
 import { DndProvider } from "react-dnd";
@@ -128,7 +128,7 @@ const getTextColor = (bg) => {
 const PaletteGenerator = () => {
   const location = useLocation();
   const { currentUser } = useAuth();
-  const { palette, setPalette, selectedColor, setSelectedColor, removeColor: removeColorFromWorkspace } =
+  const { palette, setPalette, selectedColor, setSelectedColor, removeColor: removeColorFromWorkspace, registerSwatchStudioHandler } =
     usePaletteWorkspace();
   const normalizedEmail = currentUser?.email?.toLowerCase();
   const isOwner = !!normalizedEmail && OWNER_EMAILS.includes(normalizedEmail);
@@ -563,7 +563,7 @@ const PaletteGenerator = () => {
 
   const isTourStep = (stepIndex) => showTutorial && tutorialStep === stepIndex;
 
-  const handleColorClick = (color) => {
+  const handleColorClick = useCallback((color) => {
     setSelectedColor(color);
     setColorInfo(getColorInfo(color));
     setHarmonies({
@@ -575,13 +575,18 @@ const PaletteGenerator = () => {
       tetradic: generateTetradic(color),
     });
     setContext(getColorContext(color));
-  };
+  }, []);
 
-  const handlePaletteColorClick = (colorHex, index) => {
+  const handlePaletteColorClick = useCallback((colorHex, index) => {
     handleColorClick(colorHex);
     setEditingColorIndex(index);
     setShowColorEditor(true);
-  };
+  }, [handleColorClick]);
+
+  useEffect(() => {
+    registerSwatchStudioHandler(handlePaletteColorClick);
+    return () => registerSwatchStudioHandler(null);
+  }, [handlePaletteColorClick, registerSwatchStudioHandler]);
 
   const updateColorAtIndex = (index, nextHex) => {
     const normalizedHex = new TinyColor(nextHex).toHexString();

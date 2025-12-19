@@ -93,35 +93,34 @@ const tweakColor = (hex, seed = 0) => {
   return `#${toHex(clamp(r))}${toHex(clamp(g))}${toHex(clamp(b))}`.toUpperCase();
 };
 
-const funName = (base, idx) => {
-  const prefixes = [
-    "Pixelated",
-    "Coffee-Fueled",
-    "Chaos Unicorn",
-    "Snackable",
-    "Meme-Ready",
-    "Overcaffeinated",
-    "Sneakerhead",
-    "Happy Hour",
-    "404 Not Found",
-    "Ctrl+Z",
-  ];
-  const suffixes = [
-    "Vibes",
-    "Gradient",
-    "Palette",
-    "Swizzle",
-    "Mix",
-    "Moodboard",
-    "Glow",
-    "Refactor",
-    "Hotfix",
-    "Remix",
-  ];
-  const pre = prefixes[idx % prefixes.length];
-  const suf = suffixes[(idx + 3) % suffixes.length];
-  return `${pre} ${suf} (${base})`;
-};
+// const funName = (base, idx) => {
+//   const prefixes = [
+//     "Pixelated",
+//     "Coffee-Fueled",
+//     "Chaos Unicorn",
+//     "Snackable",
+//     "Meme-Ready",
+//     "Overcaffeinated",
+//     "Sneakerhead",
+//     "Happy Hour",
+//     "Ctrl+Z",
+//   ];
+//   const suffixes = [
+//     "Vibes",
+//     "Gradient",
+//     "Palette",
+//     "Swizzle",
+//     "Mix",
+//     "Moodboard",
+//     "Glow",
+//     "Refactor",
+//     "Hotfix",
+//     "Remix",
+//   ];
+//   const pre = prefixes[idx % prefixes.length];
+//   const suf = suffixes[(idx + 3) % suffixes.length];
+//   return `${pre} ${suf} (${base})`;
+// };
 
 const categorizeByName = (name = "") => {
   const lower = name.toLowerCase();
@@ -203,7 +202,7 @@ export const fetchTrendingPalettes = async () => {
       filled.push({
         ...base,
         id: `${base.id || base.name || cat}-alt-${idx + 1}`,
-        name: funName(base.name || cat, idx + 1),
+        name: `${base.name || cat} ${idx + 1}`,
         colors: rotated.map(normalizeColor),
       });
       idx += 1;

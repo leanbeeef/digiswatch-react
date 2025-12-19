@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import chroma from "chroma-js";
 import { HexColorInput, HexColorPicker } from "react-colorful";
 import "../styles/colorEditor.css";
+import { usePaletteWorkspace } from "../contexts/PaletteWorkspaceContext";
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
@@ -104,10 +105,42 @@ const buildDisplayValues = (color) => {
 };
 
 const ColorEditorDrawer = ({ color, show, onClose, onChange }) => {
-  if (!show) return null;
+  const { trayCollapsed } = usePaletteWorkspace();
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.innerWidth <= 768;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (!show) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [show]);
 
   const workingHex = safeHex(color);
   const display = useMemo(() => buildDisplayValues(workingHex), [workingHex]);
+
+  if (!show) return null;
+
+  const trayOffset = show
+    ? isMobile
+      ? trayCollapsed
+        ? 0
+        : 0
+      : trayCollapsed
+        ? 0
+        : 0
+    : 0;
 
   const commit = (next) => {
     const normalized = safeHex(next, null);
@@ -219,9 +252,13 @@ const ColorEditorDrawer = ({ color, show, onClose, onChange }) => {
   };
 
   return (
-    <div className={`color-editor-shell ${show ? "is-open" : ""}`}>
+    <div
+      className={`color-editor-shell ${show ? "is-open" : ""}`}
+      style={{ "--tray-offset": `${trayOffset}px` }}
+    >
       <div className="color-editor-overlay" onClick={onClose} />
       <div className="color-editor-panel">
+        <div className="color-editor-handle" aria-hidden="true" />
         <div className="color-editor-header">
           <div className="color-editor-title">
             <div

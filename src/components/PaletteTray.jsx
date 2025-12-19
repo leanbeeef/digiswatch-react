@@ -18,7 +18,8 @@ const PaletteTray = ({
     onDragEnd,
     draggingIndex = null,
     onAddColor,
-    onRemoveColor
+    onRemoveColor,
+    onCollapsedChange,
 }) => {
     const [collapsed, setCollapsed] = useState(() => {
         if (typeof window !== 'undefined') {
@@ -32,11 +33,17 @@ const PaletteTray = ({
         if (typeof window !== 'undefined') {
             localStorage.setItem('paletteTrayCollapsed', String(collapsed));
         }
-    }, [collapsed]);
+        onCollapsedChange && onCollapsedChange(collapsed);
+    }, [collapsed, onCollapsedChange]);
 
     const toggleCollapsed = () => {
         setCollapsed(!collapsed);
     };
+    
+    // sync initial collapse value to listeners
+    useEffect(() => {
+        onCollapsedChange && onCollapsedChange(collapsed);
+    }, [collapsed, onCollapsedChange]);
 
     // Calculate summary stats
     const passCount = palette.filter(c => {

@@ -7,10 +7,12 @@ const GlobalPaletteTray = () => {
   const {
     palette,
     selectedColor,
-    setSelectedColor,
+    triggerSwatchStudio,
     toggleLock,
+    removeColor,
     moveColor,
     addRandomColor,
+    setTrayCollapsed,
   } = usePaletteWorkspace();
   const [draggingIndex, setDraggingIndex] = useState(null);
 
@@ -42,8 +44,8 @@ const GlobalPaletteTray = () => {
       <PaletteTray
         palette={palette}
         activeColor={selectedColor}
-        onSwatchSelect={setSelectedColor}
-        onColorClick={setSelectedColor}
+        onSwatchSelect={triggerSwatchStudio}
+        onColorClick={triggerSwatchStudio}
         onToggleLock={toggleLock}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
@@ -51,6 +53,8 @@ const GlobalPaletteTray = () => {
         onDragEnd={handleDragEnd}
         draggingIndex={draggingIndex}
         onAddColor={addRandomColor}
+        onRemoveColor={removeColor}
+        onCollapsedChange={setTrayCollapsed}
       />
     </div>
   );

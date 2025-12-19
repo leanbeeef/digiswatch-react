@@ -48,6 +48,11 @@ const createDefaultPalette = () => {
 export const PaletteWorkspaceProvider = ({ children }) => {
   const [palette, setPalette] = useState(() => loadStoredPalette() || createDefaultPalette());
   const [selectedColor, setSelectedColor] = useState(() => (loadStoredPalette() || [])[0]?.hex || null);
+  const [trayCollapsed, setTrayCollapsed] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return localStorage.getItem('paletteTrayCollapsed') === 'true';
+  });
+  const [swatchStudioHandler, setSwatchStudioHandler] = useState(null);
 
   // Persist palette
   useEffect(() => {
@@ -140,8 +145,18 @@ export const PaletteWorkspaceProvider = ({ children }) => {
       setPaletteFromHexes,
       updateColorAtIndex,
       removeColor,
+      trayCollapsed,
+      setTrayCollapsed,
+      registerSwatchStudioHandler: (handler) => setSwatchStudioHandler(() => handler || null),
+      triggerSwatchStudio: (hex, index) => {
+        if (swatchStudioHandler) {
+          swatchStudioHandler(hex, index);
+        } else {
+          setSelectedColor(hex);
+        }
+      },
     }),
-    [palette, selectedColor]
+    [palette, selectedColor, swatchStudioHandler, trayCollapsed]
   );
 
   return (

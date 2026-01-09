@@ -82,7 +82,7 @@ const Home = () => {
                   <label>L</label>
                   <input
                     type="range"
-                    min="0.85"
+                    min="0.01"
                     max="0.99"
                     step="0.01"
                     value={oklch.l}
